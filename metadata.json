@@ -1,0 +1,6 @@
+{
+  "name": "PremDigital TUNNEL",
+  "description": "Fast Secure SSH & VPN Tunneling. Create free VPN and SSH accounts in seconds with WebSocket, OpenVPN, V2Ray, Vless, Trojan, and Wireguard.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

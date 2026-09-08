@@ -1,0 +1,15 @@
+// Firebase Applet Configuration
+export const firebaseConfig = {
+  projectId: "integrated-wharf-pf6jr",
+  appId: "1:613043222846:web:e38cf882fddcbbe74bd46f",
+  apiKey: "AIzaSyAymTIeAbbtdD5JdbzkpwMZZHPi05YIlGU",
+  authDomain: "integrated-wharf-pf6jr.firebaseapp.com",
+  firestoreDatabaseId: "ai-studio-premdigitaltunne-563571df-29ee-44be-a591-c6690b4a41c4",
+  storageBucket: "integrated-wharf-pf6jr.firebasestorage.app",
+  messagingSenderId: "613043222846",
+  measurementId: "",
+  oAuthClientId: "613043222846-6rgil90jt3dno84gm2mg83k85l63lgjs.apps.googleusercontent.com",
+  recaptchaSiteKey: ""
+};
+
+export default firebaseConfig;
