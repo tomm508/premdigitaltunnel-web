@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { X, LogIn, Shield, Check, Lock, Mail, User as UserIcon } from 'lucide-react';
 import { auth, googleProvider, signInWithPopup, db, doc, getDoc, setDoc } from '../lib/firebase';
 import { User } from 'firebase/auth';
+import { LogoMark } from './Logo';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -21,9 +22,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   onLogout
 }) => {
   const [isLogin, setIsLogin] = useState(true);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [username, setUsername] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
@@ -58,49 +56,52 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     }
   };
 
-  const handleEmailSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    handleGoogleSignIn();
-  };
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md">
+    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center p-3 sm:p-4 bg-[#0a0f1c]/95 backdrop-blur-md overflow-y-auto py-10">
+      
+      {/* Header Logo & Text (Outside Card) */}
+      {!currentUser && (
+        <div className="flex flex-col items-center justify-center mb-8 text-center animate-fade-in-up">
+          <div className="mb-5 relative">
+             <LogoMark size={64} isDark={true} className="shadow-lg shadow-indigo-500/30" />
+          </div>
+          <h2 className="text-3xl font-bold text-white mb-2 tracking-tight">Welcome back</h2>
+          <p className="text-slate-400 text-sm">Sign in to your account to continue</p>
+        </div>
+      )}
+
+      {/* Main Card */}
       <div 
         id="auth-modal-container"
-        className="relative w-full max-w-md bg-[#161138] border border-purple-500/30 rounded-3xl shadow-2xl text-white overflow-hidden"
+        className={`relative w-full max-w-[420px] bg-[#1a2035] rounded-3xl shadow-2xl text-white overflow-hidden transition-all duration-300 ${currentUser ? 'mt-0' : ''}`}
       >
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-purple-500/20 bg-[#120d30]">
-          <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-purple-600/20 text-purple-300 border border-purple-400/30">
-              <Shield className="w-5 h-5" />
-            </div>
-            <div>
-              <h3 className="font-bold text-base sm:text-lg text-white">
-                {currentUser ? 'Akun Member PremDigital' : isLogin ? 'Member Login' : 'Create Member Account'}
-              </h3>
-              <p className="text-xs text-purple-300/80">
-                {currentUser ? currentUser.email : 'Akses simpan tunnel, saldo top-up & server VIP'}
-              </p>
-            </div>
-          </div>
-          <button
-            onClick={onClose}
-            className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
+        {/* Close Button */}
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 z-10 p-2 rounded-full text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+        >
+          <X className="w-5 h-5" />
+        </button>
 
         {/* Body */}
-        <div className="p-6">
+        <div className="p-6 sm:p-8">
           {currentUser ? (
             /* Logged in view */
-            <div className="space-y-5">
-              <div className="p-4 rounded-2xl bg-purple-950/40 border border-purple-500/25 flex items-center justify-between">
+            <div className="space-y-6 pt-4">
+               <div className="flex items-center gap-4 mb-2">
+                 <div className="w-12 h-12 rounded-full bg-indigo-500/20 flex items-center justify-center border border-indigo-500/30">
+                    <UserIcon className="w-6 h-6 text-indigo-400" />
+                 </div>
+                 <div>
+                    <h3 className="font-bold text-lg text-white">Akun Member</h3>
+                    <p className="text-xs text-slate-400">{currentUser.email}</p>
+                 </div>
+               </div>
+
+              <div className="p-5 rounded-2xl bg-[#13172a] border border-indigo-500/20 flex items-center justify-between shadow-inner">
                 <div>
-                  <span className="text-xs text-slate-400">Saldo Akun</span>
-                  <div className="text-2xl font-black text-emerald-400">
+                  <span className="text-xs text-slate-400 block mb-1">Saldo Akun</span>
+                  <div className="text-2xl font-black text-emerald-400 tracking-tight">
                     Rp {userBalance.toLocaleString()}
                   </div>
                 </div>
@@ -109,59 +110,111 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     onClose();
                     onOpenTopup();
                   }}
-                  className="py-2.5 px-4 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 shadow-md cursor-pointer"
+                  className="py-2.5 px-4 rounded-xl text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-500 shadow-lg shadow-indigo-600/20 cursor-pointer transition-colors"
                 >
-                  + Top Up Saldo
+                  + Top Up
                 </button>
               </div>
 
-              <div className="space-y-2 text-xs">
-                <div className="p-3 rounded-xl bg-purple-950/30 border border-purple-500/10 flex justify-between">
+              <div className="space-y-3 text-xs">
+                <div className="p-3.5 rounded-xl bg-[#13172a] border border-slate-700/50 flex justify-between items-center">
                   <span className="text-slate-400">User ID</span>
-                  <span className="font-mono text-slate-200">{currentUser.uid.slice(0, 10)}...</span>
-                </div>
-                <div className="p-3 rounded-xl bg-purple-950/30 border border-purple-500/10 flex justify-between">
-                  <span className="text-slate-400">Email</span>
-                  <span className="font-medium text-purple-300">{currentUser.email}</span>
+                  <span className="font-mono text-slate-300 bg-slate-800/50 px-2 py-1 rounded">{currentUser.uid.slice(0, 12)}</span>
                 </div>
               </div>
 
-              <div className="pt-2 flex gap-3">
-                <button
-                  onClick={() => {
-                    onClose();
-                    onOpenTopup();
-                  }}
-                  className="flex-1 py-3 rounded-xl text-xs font-bold text-white bg-purple-600 hover:bg-purple-500 cursor-pointer"
-                >
-                  Isi Saldo
-                </button>
+              <div className="pt-4 flex gap-3">
                 <button
                   onClick={() => {
                     onLogout();
                     onClose();
                   }}
-                  className="py-3 px-4 rounded-xl text-xs font-semibold text-rose-300 hover:bg-rose-950/30 border border-rose-500/30 cursor-pointer"
+                  className="w-full py-3.5 px-4 rounded-xl text-sm font-semibold text-rose-400 bg-[#13172a] hover:bg-rose-500/10 border border-rose-500/20 cursor-pointer transition-colors"
                 >
-                  Logout
+                  Sign Out
                 </button>
               </div>
             </div>
           ) : (
             /* Login Form */
-            <div className="space-y-4">
+            <div className="space-y-5">
               {errorMsg && (
-                <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs">
+                <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs text-center">
                   {errorMsg}
                 </div>
               )}
 
-              {/* 1-Click Google Sign In */}
+              <form onSubmit={(e) => { e.preventDefault(); handleGoogleSignIn(); }} className="space-y-5">
+                {/* Email */}
+                <div>
+                  <label className="block text-[13px] font-medium text-slate-300 mb-2">
+                    Email Address
+                  </label>
+                  <div className="relative">
+                    <span className="absolute left-4 top-3 text-slate-400 font-serif text-lg leading-none">@</span>
+                    <input
+                      type="email"
+                      required
+                      placeholder="Enter your email"
+                      className="w-full pl-11 pr-4 py-3 rounded-xl bg-[#232a42] border border-indigo-500/40 focus:border-indigo-400 text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-indigo-400/50 text-sm transition-all shadow-inner"
+                    />
+                  </div>
+                </div>
+
+                {/* Password */}
+                <div>
+                  <label className="block text-[13px] font-medium text-slate-300 mb-2">
+                    Password
+                  </label>
+                  <div className="relative">
+                    <Lock className="w-4 h-4 text-slate-400 absolute left-4 top-3.5" />
+                    <input
+                      type="password"
+                      required
+                      placeholder="Enter your password"
+                      className="w-full pl-11 pr-4 py-3 rounded-xl bg-[#232a42] border border-slate-600/50 focus:border-slate-500 text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500/50 text-sm transition-all shadow-inner"
+                    />
+                  </div>
+                </div>
+
+                {/* Remember Me & Forgot Password */}
+                <div className="flex items-center justify-between pt-1">
+                  <label className="flex items-center gap-2 cursor-pointer group">
+                    <div className="w-4 h-4 rounded bg-[#232a42] border border-slate-600 group-hover:border-indigo-400 flex items-center justify-center">
+                       {/* Unchecked state by default visually */}
+                    </div>
+                    <span className="text-xs text-slate-400 group-hover:text-slate-300 transition-colors">Remember me</span>
+                  </label>
+                  <a href="#" className="text-xs text-indigo-400 hover:text-indigo-300 transition-colors">
+                    Forgot password?
+                  </a>
+                </div>
+
+                {/* Sign In Button */}
+                <div className="pt-2">
+                  <button
+                    type="submit"
+                    className="w-full py-3.5 rounded-xl font-bold text-sm text-white bg-[#8b3dff] hover:bg-[#7e36e8] shadow-lg shadow-[#8b3dff]/20 flex items-center justify-center gap-2 cursor-pointer transition-colors"
+                  >
+                    <Lock className="w-4 h-4 opacity-70" />
+                    <span>Sign in</span>
+                  </button>
+                </div>
+              </form>
+
+              {/* Divider */}
+              <div className="flex items-center py-2">
+                <div className="flex-1 border-t border-slate-700/70"></div>
+                <span className="px-4 text-[11px] text-slate-400">Or continue with</span>
+                <div className="flex-1 border-t border-slate-700/70"></div>
+              </div>
+
+              {/* Google Sign In */}
               <button
                 type="button"
                 onClick={handleGoogleSignIn}
                 disabled={isProcessing}
-                className="w-full py-3.5 px-4 rounded-2xl font-bold text-xs sm:text-sm text-slate-900 bg-white hover:bg-slate-100 shadow-lg flex items-center justify-center gap-3 cursor-pointer transition-transform active:scale-98 disabled:opacity-60"
+                className="w-full py-3.5 px-4 rounded-xl font-medium text-sm text-slate-200 bg-[#2a3249] hover:bg-[#323b54] border border-slate-600/50 flex items-center justify-center gap-3 cursor-pointer transition-all disabled:opacity-60"
               >
                 <svg className="w-4 h-4" viewBox="0 0 24 24">
                   <path fill="#EA4335" d="M12 5c1.6 0 3 .6 4.1 1.6l3.1-3.1C17.3 1.8 14.8 1 12 1 7.5 1 3.7 3.6 1.9 7.3l3.7 2.9C6.5 7.4 9 5 12 5z" />
@@ -169,60 +222,16 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   <path fill="#FBBC05" d="M5.6 14.8c-.2-.7-.4-1.5-.4-2.3s.2-1.6.4-2.3L1.9 7.3C.7 9.7 0 12 0 14.5s.7 4.8 1.9 7.2l3.7-2.9z" />
                   <path fill="#34A853" d="M12 23.5c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3 0-5.5-2-6.4-4.8L1.9 16.9C3.7 20.6 7.5 23.5 12 23.5z" />
                 </svg>
-                <span>{isProcessing ? 'Connecting...' : 'Masuk dengan Akun Google (1-Klik)'}</span>
+                <span>{isProcessing ? 'Connecting...' : 'Sign in with Google'}</span>
               </button>
 
-              <div className="flex items-center my-4">
-                <div className="flex-1 border-t border-purple-500/20"></div>
-                <span className="px-3 text-[11px] text-slate-400 uppercase">Atau Email Member</span>
-                <div className="flex-1 border-t border-purple-500/20"></div>
+              {/* Sign Up Link */}
+              <div className="text-center pt-2">
+                <p className="text-xs text-slate-400">
+                  Don't have an account? <a href="#" className="text-indigo-400 font-medium hover:text-indigo-300">Sign up</a>
+                </p>
               </div>
 
-              <form onSubmit={handleEmailSubmit} className="space-y-3">
-                <div>
-                  <label className="block text-xs font-medium text-slate-300 mb-1">
-                    Email Address
-                  </label>
-                  <div className="relative">
-                    <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
-                    <input
-                      type="email"
-                      required
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="name@example.com"
-                      className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[#120d2d] border border-purple-500/30 text-white placeholder-slate-500 focus:outline-none focus:border-purple-400 text-sm"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-medium text-slate-300 mb-1">
-                    Password
-                  </label>
-                  <div className="relative">
-                    <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
-                    <input
-                      type="password"
-                      required
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      placeholder="••••••••"
-                      className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[#120d2d] border border-purple-500/30 text-white placeholder-slate-500 focus:outline-none focus:border-purple-400 text-sm"
-                    />
-                  </div>
-                </div>
-
-                <div className="pt-2">
-                  <button
-                    type="submit"
-                    className="w-full py-3.5 rounded-2xl font-bold text-sm text-white bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 shadow-xl shadow-purple-600/30 flex items-center justify-center gap-2 cursor-pointer"
-                  >
-                    <LogIn className="w-4 h-4" />
-                    <span>Login Member</span>
-                  </button>
-                </div>
-              </form>
             </div>
           )}
         </div>
