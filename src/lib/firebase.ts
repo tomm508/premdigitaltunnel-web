@@ -28,8 +28,8 @@ export async function testFirestoreConnection() {
   try {
     await getDocFromServer(doc(db, 'test', 'connection'));
   } catch (error) {
-    if (error instanceof Error && error.message.includes('the client is offline')) {
-      console.warn("Firestore offline or connecting...");
+    if (error instanceof Error) {
+      console.warn("Firestore connection warning:", error.message);
     }
   }
 }
