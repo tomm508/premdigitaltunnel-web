@@ -27,6 +27,7 @@ interface AccountModalProps {
   isOpen: boolean;
   onClose: () => void;
   onAccountCreated: (acc: GeneratedAccount) => void;
+  initialAccount?: GeneratedAccount | null;
 }
 
 export const AccountModal: React.FC<AccountModalProps> = ({
@@ -34,6 +35,7 @@ export const AccountModal: React.FC<AccountModalProps> = ({
   isOpen,
   onClose,
   onAccountCreated,
+  initialAccount
 }) => {
   const [selectedServer, setSelectedServer] = useState<TunnelServer>(SERVERS_LIST[0]);
   const [username, setUsername] = useState('');
@@ -51,14 +53,19 @@ export const AccountModal: React.FC<AccountModalProps> = ({
   // Auto-fill random username
   useEffect(() => {
     if (isOpen) {
-      const randNum = Math.floor(1000 + Math.random() * 9000);
-      setUsername(`prem_${randNum}`);
-      setPassword(Math.random().toString(36).slice(-8));
-      setGeneratedAccount(null);
-      setQrDataUrl('');
-      setActiveResultTab('info');
+      if (initialAccount) {
+        setGeneratedAccount(initialAccount);
+        setActiveResultTab('info');
+      } else {
+        const randNum = Math.floor(1000 + Math.random() * 9000);
+        setUsername(`prem_${randNum}`);
+        setPassword(Math.random().toString(36).slice(-8));
+        setGeneratedAccount(null);
+        setQrDataUrl('');
+        setActiveResultTab('info');
+      }
     }
-  }, [isOpen, protocol]);
+  }, [isOpen, protocol, initialAccount]);
 
   // Update SNI default when server changes
   useEffect(() => {

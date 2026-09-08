@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { 
   Shield, 
   Menu, 
@@ -31,7 +32,6 @@ interface NavbarProps {
   onOpenTool: (toolId: string) => void;
   onOpenAuth: () => void;
   onOpenTopup?: () => void;
-  onScrollToSection: (sectionId: string) => void;
   currentUser?: User | null;
   userBalance?: number;
 }
@@ -43,16 +43,16 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenTool,
   onOpenAuth,
   onOpenTopup,
-  onScrollToSection,
   currentUser,
   userBalance = 0
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [servicesOpen, setServicesOpen] = useState(false);
   const [toolsOpen, setToolsOpen] = useState(false);
+  const navigate = useNavigate();
 
-  const servicesList: { id: ProtocolType; label: string; icon: React.ReactNode }[] = [
-    { id: 'ssh', label: 'SSH Tunnel', icon: <Share2 className="w-4 h-4 text-blue-400" /> },
+  const servicesList: { id: ProtocolType; label: string; icon: React.ReactNode; path?: string }[] = [
+    { id: 'ssh', label: 'SSH Tunnel', icon: <Share2 className="w-4 h-4 text-blue-400" />, path: '/ssh-tunnel' },
     { id: 'vmess', label: 'V2Ray Vmess', icon: <Zap className="w-4 h-4 text-emerald-400" /> },
     { id: 'vless', label: 'Xray Vless', icon: <Shield className="w-4 h-4 text-purple-400" /> },
     { id: 'trojan', label: 'Trojan VPN', icon: <Lock className="w-4 h-4 text-red-400" /> },
@@ -82,7 +82,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* Brand Logo */}
           <div 
             id="brand-logo"
-            onClick={() => onScrollToSection('hero')} 
+            onClick={() => navigate('/')} 
             className="cursor-pointer group hover:opacity-95 transition-opacity"
           >
             <Logo isDark={isDark} size={40} />
@@ -92,7 +92,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           <nav className="hidden md:flex items-center space-x-1 lg:space-x-2">
             <button 
               id="nav-home-btn"
-              onClick={() => onScrollToSection('hero')} 
+              onClick={() => navigate('/')} 
               className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
                 isDark 
                   ? 'text-slate-200 hover:text-white hover:bg-white/10' 
@@ -127,7 +127,11 @@ export const Navbar: React.FC<NavbarProps> = ({
                     key={service.id}
                     id={`nav-service-${service.id}`}
                     onClick={() => {
-                      onSelectProtocol(service.id);
+                      if (service.path) {
+                        navigate(service.path);
+                      } else {
+                        onSelectProtocol(service.id);
+                      }
                     }}
                     className={`w-full flex items-center gap-2.5 px-3 py-2 text-sm rounded-lg text-left transition-colors ${
                       isDark 
@@ -259,7 +263,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <button
               id="mobile-nav-home"
               onClick={() => {
-                onScrollToSection('hero');
+                navigate('/');
                 setMobileMenuOpen(false);
               }}
               className={`w-full flex items-center px-4 py-2.5 text-sm font-medium rounded-xl text-left transition-colors ${
@@ -292,7 +296,11 @@ export const Navbar: React.FC<NavbarProps> = ({
                       key={service.id}
                       id={`mobile-service-${service.id}`}
                       onClick={() => {
-                        onSelectProtocol(service.id);
+                        if (service.path) {
+                          navigate(service.path);
+                        } else {
+                          onSelectProtocol(service.id);
+                        }
                         setMobileMenuOpen(false);
                       }}
                       className={`w-full flex items-center gap-2.5 px-3 py-2 text-sm rounded-lg text-left ${

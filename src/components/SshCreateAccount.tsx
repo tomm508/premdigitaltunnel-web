@@ -1,31 +1,36 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   ArrowLeft, 
   Sparkles, 
   Copy, 
-  Check, 
-  ShieldCheck, 
+  Check,
+  CheckCircle2,
+  AlertTriangle,
   User as UserIcon, 
   Lock, 
-  CheckCircle2,
-  Calendar,
-  Layers,
-  Radio,
-  Download,
-  AlertCircle
+  Server,
+  MapPin,
+  Clock,
+  ShieldCheck,
+  Zap,
+  Globe2,
+  BarChart3,
+  Star,
+  ChevronRight
 } from 'lucide-react';
 import { TunnelServer, GeneratedAccount } from '../types';
 import { User } from 'firebase/auth';
 import { db, collection, addDoc, doc, updateDoc } from '../lib/firebase';
 
 interface SshCreateAccountProps {
-  server: TunnelServer;
+  server: TunnelServer | null;
   isDark: boolean;
   currentUser: User | null;
   userBalance: number;
   onBack: () => void;
   onAccountCreated: (account: GeneratedAccount) => void;
   onOpenTopup: () => void;
+  onOpenLogin: () => void;
 }
 
 export const SshCreateAccount: React.FC<SshCreateAccountProps> = ({
@@ -35,41 +40,61 @@ export const SshCreateAccount: React.FC<SshCreateAccountProps> = ({
   userBalance,
   onBack,
   onAccountCreated,
-  onOpenTopup
+  onOpenTopup,
+  onOpenLogin
 }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [selectedPlan, setSelectedPlan] = useState<'free' | 'vip7' | 'vip30'>('free');
+  const [selectedPlan, setSelectedPlan] = useState<'free' | 'vip3' | 'vip7' | 'vip30'>('free');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [createdAccount, setCreatedAccount] = useState<GeneratedAccount | null>(null);
-  const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const planPrices = {
     free: 0,
-    vip7: 5000,
-    vip30: 15000
+    vip3: 750,
+    vip7: 1650,
+    vip30: 6250
   };
 
   const planDays = {
     free: 3,
+    vip3: 3,
     vip7: 7,
     vip30: 30
   };
 
-  const handleCopy = (text: string, key: string) => {
-    navigator.clipboard.writeText(text);
-    setCopiedKey(key);
-    setTimeout(() => setCopiedKey(null), 2000);
-  };
+  useEffect(() => {
+    if (!server || !server.id) {
+      onBack();
+    }
+  }, [server, onBack]);
+
+  // If server is not ready yet, return a blank slate to prevent route errors
+  if (!server || !server.id) {
+    return <div className="min-h-screen"></div>;
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
 
+    // Validate Server Capacity for Free Tier
+    if (selectedPlan === 'free' && server.used >= server.capacity) {
+      setErrorMessage(`Maaf, kapasitas server ${server.country} sedang penuh (${server.used}/${server.capacity}). Silakan pilih server lain atau gunakan paket Premium.`);
+      return;
+    }
+
     const price = planPrices[selectedPlan];
+    
+    // Validate Login for Premium
+    if (price > 0 && !currentUser) {
+      setErrorMessage('Anda harus Login atau Daftar terlebih dahulu untuk menggunakan paket Premium.');
+      return;
+    }
+
+    // Validate Balance for Premium
     if (price > 0 && userBalance < price) {
-      setErrorMessage(`Saldo Anda tidak mencukupi untuk paket VIP (Rp ${price.toLocaleString()}). Silakan Top Up saldo terlebih dahulu.`);
+      setErrorMessage(`Saldo Anda kosong / tidak mencukupi untuk paket premium (Rp ${price.toLocaleString()}). Silakan Top Up terlebih dahulu.`);
       return;
     }
 
@@ -98,354 +123,320 @@ export const SshCreateAccount: React.FC<SshCreateAccountProps> = ({
         ports: {
           sslTls: 443,
           dropbear: 888,
-          openSsh: 22,
-          wsCdn: 80,
-          udpCustom: '1 - 65535'
+          wsStunnel: 443,
+          wsDropbear: 443,
+          wsOpenVpn: 2086,
+          squid: 3128,
+          udpgw: '7100-7900'
         },
-        payloadString: payload,
-        createdAt: new Date().toISOString()
+        payload
       };
 
-      // If user logged in, persist account in Firestore subcollection
       if (currentUser) {
-        try {
-          if (price > 0) {
-            // Deduct balance
-            const userRef = doc(db, 'users', currentUser.uid);
-            await updateDoc(userRef, {
-              balance: userBalance - price
-            });
-          }
-
-          await addDoc(collection(db, 'users', currentUser.uid, 'accounts'), {
-            userId: currentUser.uid,
-            serverName: `SSH ${server.country}`,
-            host: server.host,
-            username: username,
-            activeDays: activeDays,
-            expiresAt: expiryDateStr,
-            createdAt: new Date().toISOString()
+        if (price > 0) {
+          const userRef = doc(db, 'users', currentUser.uid);
+          await updateDoc(userRef, {
+             balance: userBalance - price
           });
-        } catch (dbErr) {
-          console.warn("Could not save to firestore history or deduct balance:", dbErr);
         }
+        await addDoc(collection(db, 'users', currentUser.uid, 'accounts'), {
+          ...newAccount,
+          createdAt: new Date().toISOString()
+        });
       }
 
-      setCreatedAccount(newAccount);
-      onAccountCreated(newAccount);
+      setTimeout(() => {
+        setIsSubmitting(false);
+        onAccountCreated(newAccount);
+      }, 1500);
+
+    } catch (error: any) {
       setIsSubmitting(false);
-    } catch (err: any) {
-      setErrorMessage(err.message || 'Gagal membuat akun');
-      setIsSubmitting(false);
+      setErrorMessage(error.message || 'Terjadi kesalahan saat membuat akun.');
     }
   };
 
-  const getExportText = () => {
-    if (!createdAccount) return '';
-    return `══════════════════════════════════
-❖ PREMDIGITAL SSH TUNNEL VIP ❖
-══════════════════════════════════
-Server: ${createdAccount.server.country} (${createdAccount.server.city})
-Host: ${createdAccount.server.host}
-IP: ${createdAccount.server.ip}
-Username: ${createdAccount.username}
-Password: ${createdAccount.password}
-SSL/TLS Port: 443
-Dropbear Port: 888, 777, 443
-WebSocket CDN Port: 80, 8880
-SSH UDP Custom Port: 1 - 65535
-Masa Aktif: ${createdAccount.activeDays} Hari (s/d ${createdAccount.expiryDate})
-WebSocket Payload:
-${createdAccount.payloadString}
-══════════════════════════════════
-Official Website: https://premdigital.web.id
-══════════════════════════════════`;
-  };
-
   return (
-    <div className="py-8 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto">
-      {/* Navigation */}
-      <div className="flex items-center justify-between mb-6">
-        <button
-          onClick={onBack}
-          className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-semibold text-purple-300 hover:text-white bg-purple-950/40 hover:bg-purple-900/40 border border-purple-500/20 transition-all cursor-pointer"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          <span>Ganti Lokasi Server</span>
-        </button>
-
-        <span className="text-xs font-semibold text-purple-400 bg-purple-500/10 px-3 py-1 rounded-full border border-purple-500/20">
-          Step 3 of 3: Buat Akun
-        </span>
-      </div>
-
-      {/* Header Banner */}
-      <div className="text-center mb-8">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs font-semibold mb-3">
-          <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-          <span>Server Terpilih: {server.country} ({server.host})</span>
+    <div className={`py-8 px-4 sm:px-6 lg:px-8 max-w-3xl mx-auto transition-colors ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>
+      
+      {/* Top Banner */}
+      <div className="flex justify-center mb-4 pt-4">
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#2a1b54] border border-[#3e2b7a] text-purple-200 text-xs font-semibold">
+          <Star className="w-3.5 h-3.5 fill-purple-400 text-purple-400" />
+          <span>Free Ssh Tunnel Server {server.country}</span>
         </div>
-        <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
-          Create SSH Tunnel Account
-        </h1>
-        <p className="text-xs sm:text-sm text-purple-200/80 max-w-md mx-auto mt-2">
-          Masukkan username & password untuk mengenerate konfigurasi SSH Tunnel instan.
-        </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Left Column: Server Technical Specs */}
-        <div className="lg:col-span-5 space-y-4">
-          <div className="p-5 rounded-3xl bg-[#140e32] border border-purple-500/20 shadow-xl space-y-3">
-            <h3 className="font-bold text-sm text-white flex items-center gap-2">
-              <Radio className="w-4 h-4 text-purple-400" />
-              <span>Detail Port & Protokol</span>
-            </h3>
+      <h1 className="text-3xl sm:text-4xl font-bold text-center mb-4 text-white">
+        Create Ssh Tunnel Account <br/> {server.country} {server.countryCode === 'SG' ? 'SG1' : 'ID1'} SSH
+      </h1>
+      
+      <p className="text-center text-[15px] leading-relaxed text-slate-300 max-w-2xl mx-auto mb-10">
+        Get instant access to a secure and unrestricted internet experience with our high-performance Ssh Tunnel server located in {server.country}.
+      </p>
 
-            <div className="space-y-2 text-xs">
-              <div className="p-2.5 rounded-xl bg-purple-950/40 border border-purple-500/15 flex justify-between">
-                <span className="text-slate-400">Server Host</span>
-                <span className="font-mono text-purple-300 font-medium">{server.host}</span>
-              </div>
+      {/* Info Cards Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+        <div className="bg-[#15112e] border border-[#2a234f] rounded-2xl p-5 flex flex-col items-center justify-center text-center">
+           <div className="w-10 h-10 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mb-3">
+             <Clock className="w-5 h-5 text-emerald-400" />
+           </div>
+           <span className="text-xl font-bold text-white mb-1">3</span>
+           <span className="text-xs text-slate-400 font-medium">Days Active</span>
+        </div>
+        <div className="bg-[#15112e] border border-[#2a234f] rounded-2xl p-5 flex flex-col items-center justify-center text-center">
+           <div className="w-10 h-10 rounded-full bg-blue-500/10 border border-blue-500/20 flex items-center justify-center mb-3">
+             <Server className="w-5 h-5 text-blue-400" />
+           </div>
+           <span className="text-[15px] font-bold text-white mb-1">{server.host}</span>
+           <span className="text-xs text-slate-400 font-medium">Ultahost, Inc.</span>
+        </div>
+        <div className="bg-[#15112e] border border-[#2a234f] rounded-2xl p-5 flex flex-col items-center justify-center text-center">
+           <div className="w-10 h-10 rounded-full bg-purple-500/10 border border-purple-500/20 flex items-center justify-center mb-3">
+             <MapPin className="w-5 h-5 text-purple-400" />
+           </div>
+           <span className="text-[15px] font-bold text-white mb-1">{server.country}</span>
+           <span className="text-xs text-slate-400 font-medium">Server Location</span>
+        </div>
+        <div className="bg-[#15112e] border border-[#2a234f] rounded-2xl p-5 flex flex-col items-center justify-center text-center">
+           <div className="w-10 h-10 rounded-full bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center mb-3">
+             <ShieldCheck className="w-5 h-5 text-indigo-400" />
+           </div>
+           <span className="text-[15px] font-bold text-white mb-1">{server.countryCode === 'SG' ? 'SG1 SSH' : 'ID1 SSH'}</span>
+           <span className="text-xs text-slate-400 font-medium">Server Name</span>
+        </div>
+      </div>
 
-              <div className="p-2.5 rounded-xl bg-purple-950/40 border border-purple-500/15 flex justify-between">
-                <span className="text-slate-400">SSL / TLS Port</span>
-                <span className="font-mono text-emerald-400 font-bold">443</span>
-              </div>
-
-              <div className="p-2.5 rounded-xl bg-purple-950/40 border border-purple-500/15 flex justify-between">
-                <span className="text-slate-400">Dropbear Port</span>
-                <span className="font-mono text-white font-medium">888, 777, 443</span>
-              </div>
-
-              <div className="p-2.5 rounded-xl bg-purple-950/40 border border-purple-500/15 flex justify-between">
-                <span className="text-slate-400">WebSocket CDN Port</span>
-                <span className="font-mono text-white font-medium">80, 8880</span>
-              </div>
-
-              <div className="p-2.5 rounded-xl bg-purple-950/40 border border-purple-500/15 flex justify-between">
-                <span className="text-slate-400">SSH UDP Custom</span>
-                <span className="font-mono text-pink-400 font-bold">1 - 65535</span>
-              </div>
-            </div>
-
-            {/* WebSocket Payload ready to copy */}
-            <div className="mt-4 pt-3 border-t border-purple-500/20">
-              <div className="flex items-center justify-between mb-1.5">
-                <span className="text-[11px] font-semibold text-slate-300">WebSocket Payload</span>
-                <button
-                  type="button"
-                  onClick={() => handleCopy(`GET / HTTP/1.1[crlf]Host: ${server.host}[crlf]Upgrade: websocket[crlf]Connection: Upgrade[crlf][crlf]`, 'ws-payload')}
-                  className="text-[10px] text-purple-400 hover:text-purple-200 flex items-center gap-1 cursor-pointer"
-                >
-                  {copiedKey === 'ws-payload' ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
-                  <span>{copiedKey === 'ws-payload' ? 'Copied' : 'Copy'}</span>
-                </button>
-              </div>
-              <div className="p-2.5 rounded-xl bg-[#0e0a25] border border-purple-500/20 font-mono text-[10px] text-slate-300 break-all select-all">
-                GET / HTTP/1.1[crlf]Host: {server.host}[crlf]Upgrade: websocket[crlf]Connection: Upgrade[crlf][crlf]
-              </div>
-            </div>
+      {/* Form Card */}
+      <div className="bg-[#1e1a38] rounded-3xl border border-[#30285a] p-6 sm:p-8 mb-12 shadow-xl">
+        <div className="flex items-start gap-4 mb-8">
+          <div className="w-12 h-12 rounded-xl bg-indigo-500/20 flex items-center justify-center flex-shrink-0">
+             <Star className="w-6 h-6 fill-indigo-400 text-indigo-400" />
+          </div>
+          <div className="flex-1">
+             <h2 className="text-xl font-bold text-white mb-1">Account Creation</h2>
+             <p className="text-xs text-slate-400">Get your free Ssh Tunnel account in seconds</p>
           </div>
         </div>
 
-        {/* Right Column: Form Create / Result Display */}
-        <div className="lg:col-span-7">
-          {!createdAccount ? (
-            <div className="p-6 rounded-3xl bg-[#140e32] border border-purple-500/25 shadow-2xl">
-              <h3 className="font-bold text-base text-white mb-4 flex items-center gap-2">
-                <Layers className="w-4 h-4 text-purple-400" />
-                <span>Form Pembuatan Akun</span>
-              </h3>
-
-              {errorMessage && (
-                <div className="p-3 mb-4 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs flex items-center justify-between">
-                  <span>{errorMessage}</span>
-                  {selectedPlan !== 'free' && (
-                    <button
-                      onClick={onOpenTopup}
-                      className="ml-2 font-bold underline cursor-pointer"
-                    >
-                      Top Up Sekarang
-                    </button>
-                  )}
-                </div>
+        {errorMessage && (
+          <div className="mb-6 p-4 rounded-xl bg-rose-500/10 border border-rose-500/30 flex items-start gap-3">
+            <AlertTriangle className="w-5 h-5 flex-shrink-0 mt-0.5 text-rose-400" />
+            <div className="flex-1">
+              <p className="text-rose-400 text-sm">{errorMessage}</p>
+              {errorMessage.includes('Saldo') && (
+                <button
+                  type="button"
+                  onClick={onOpenTopup}
+                  className="mt-3 px-4 py-2 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 text-xs font-bold transition-colors"
+                >
+                  Top Up Saldo Sekarang
+                </button>
               )}
-
-              <form onSubmit={handleSubmit} className="space-y-4">
-                {/* Username */}
-                <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-                    Username Akun
-                  </label>
-                  <div className="relative">
-                    <UserIcon className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
-                    <input
-                      type="text"
-                      required
-                      value={username}
-                      onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9]/g, ''))}
-                      placeholder="contoh: user01"
-                      className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-purple-950/40 border border-purple-500/30 text-white placeholder-slate-500 focus:outline-none focus:border-purple-400 text-sm"
-                    />
-                  </div>
-                  <span className="text-[10px] text-slate-400 mt-1 block">Hanya huruf kecil dan angka</span>
-                </div>
-
-                {/* Password */}
-                <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-                    Password Akun
-                  </label>
-                  <div className="relative">
-                    <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
-                    <input
-                      type="text"
-                      required
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      placeholder="contoh: pass123"
-                      className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-purple-950/40 border border-purple-500/30 text-white placeholder-slate-500 focus:outline-none focus:border-purple-400 text-sm"
-                    />
-                  </div>
-                </div>
-
-                {/* Plan Selection */}
-                <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-2">
-                    Pilihan Paket Aktif
-                  </label>
-                  <div className="grid grid-cols-3 gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setSelectedPlan('free')}
-                      className={`p-3 rounded-2xl border text-left transition-all cursor-pointer ${
-                        selectedPlan === 'free'
-                          ? 'bg-purple-600/30 border-purple-400 text-white shadow-md'
-                          : 'bg-purple-950/30 border-purple-500/20 text-slate-300'
-                      }`}
-                    >
-                      <span className="text-[10px] text-emerald-400 font-bold block">GRATIS TRIAL</span>
-                      <span className="text-xs font-bold text-white block">3 Hari</span>
-                      <span className="text-[10px] text-slate-400">Rp 0</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => setSelectedPlan('vip7')}
-                      className={`p-3 rounded-2xl border text-left transition-all cursor-pointer ${
-                        selectedPlan === 'vip7'
-                          ? 'bg-purple-600/30 border-purple-400 text-white shadow-md'
-                          : 'bg-purple-950/30 border-purple-500/20 text-slate-300'
-                      }`}
-                    >
-                      <span className="text-[10px] text-purple-300 font-bold block">VIP EXTEND</span>
-                      <span className="text-xs font-bold text-white block">7 Hari</span>
-                      <span className="text-[10px] text-slate-400">Rp 5.000</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => setSelectedPlan('vip30')}
-                      className={`p-3 rounded-2xl border text-left transition-all cursor-pointer ${
-                        selectedPlan === 'vip30'
-                          ? 'bg-purple-600/30 border-purple-400 text-white shadow-md'
-                          : 'bg-purple-950/30 border-purple-500/20 text-slate-300'
-                      }`}
-                    >
-                      <span className="text-[10px] text-amber-300 font-bold block">VIP BULANAN</span>
-                      <span className="text-xs font-bold text-white block">30 Hari</span>
-                      <span className="text-[10px] text-slate-400">Rp 15.000</span>
-                    </button>
-                  </div>
-                </div>
-
-                {/* Submit Action Button */}
-                <div className="pt-3">
-                  <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="w-full py-3.5 rounded-2xl font-bold text-sm text-white bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 shadow-xl shadow-purple-600/30 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
-                  >
-                    <Sparkles className="w-4 h-4" />
-                    <span>{isSubmitting ? 'Generating SSH Account...' : 'Create SSH Tunnel Account'}</span>
-                  </button>
-                </div>
-              </form>
-            </div>
-          ) : (
-            /* Created Result Card */
-            <div className="p-6 rounded-3xl bg-[#140e32] border border-emerald-500/40 shadow-2xl space-y-4">
-              <div className="flex items-center justify-between pb-3 border-b border-purple-500/20">
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-5 h-5 text-emerald-400" />
-                  <h3 className="font-bold text-sm sm:text-base text-white">
-                    Akun Berhasil Dibuat!
-                  </h3>
-                </div>
-                <span className="text-xs font-bold text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20">
-                  {createdAccount.activeDays} Hari Aktif
-                </span>
-              </div>
-
-              {/* Account Quick Specs */}
-              <div className="grid grid-cols-2 gap-2 text-xs">
-                <div className="p-2.5 rounded-xl bg-purple-950/40 border border-purple-500/20">
-                  <span className="text-slate-400 block text-[11px]">Username</span>
-                  <span className="font-mono font-bold text-white text-sm">{createdAccount.username}</span>
-                </div>
-                <div className="p-2.5 rounded-xl bg-purple-950/40 border border-purple-500/20">
-                  <span className="text-slate-400 block text-[11px]">Password</span>
-                  <span className="font-mono font-bold text-white text-sm">{createdAccount.password}</span>
-                </div>
-                <div className="p-2.5 rounded-xl bg-purple-950/40 border border-purple-500/20">
-                  <span className="text-slate-400 block text-[11px]">Host / Domain</span>
-                  <span className="font-mono text-purple-300 truncate block">{createdAccount.server.host}</span>
-                </div>
-                <div className="p-2.5 rounded-xl bg-purple-950/40 border border-purple-500/20">
-                  <span className="text-slate-400 block text-[11px]">Expired Date</span>
-                  <span className="font-medium text-emerald-400">{createdAccount.expiryDate}</span>
-                </div>
-              </div>
-
-              {/* Full copyable account block */}
-              <div className="pt-2 space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-slate-300">Format Akun Lengkap:</span>
-                  <button
-                    onClick={() => handleCopy(getExportText(), 'full-acc')}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-white bg-purple-600 hover:bg-purple-500 shadow-md transition-all cursor-pointer"
-                  >
-                    {copiedKey === 'full-acc' ? <Check className="w-3.5 h-3.5 text-emerald-300" /> : <Copy className="w-3.5 h-3.5" />}
-                    <span>{copiedKey === 'full-acc' ? 'Tersalin!' : 'Copy Akun'}</span>
-                  </button>
-                </div>
-                <textarea
-                  readOnly
-                  rows={7}
-                  value={getExportText()}
-                  className="w-full p-3 rounded-2xl bg-[#0d0921] border border-purple-500/30 text-slate-200 font-mono text-[11px] outline-none"
-                />
-              </div>
-
-              <div className="pt-2 flex gap-3">
+              {errorMessage.includes('Login atau Daftar') && (
                 <button
-                  onClick={() => setCreatedAccount(null)}
-                  className="flex-1 py-3 rounded-xl font-bold text-xs text-white bg-purple-950 hover:bg-purple-900 border border-purple-500/30 cursor-pointer"
+                  type="button"
+                  onClick={onOpenLogin}
+                  className="mt-3 px-4 py-2 rounded-lg bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 text-xs font-bold transition-colors"
                 >
-                  Buat Akun Lain
+                  Login / Daftar Sekarang
                 </button>
-                <button
-                  onClick={onBack}
-                  className="py-3 px-4 rounded-xl font-bold text-xs text-purple-300 hover:text-white bg-purple-900/30 cursor-pointer"
-                >
-                  Ganti Server
-                </button>
-              </div>
+              )}
             </div>
-          )}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+           {/* Username */}
+           <div>
+             <label className="block text-[13px] font-medium text-slate-300 mb-2">Username</label>
+             <div className="relative">
+               <input
+                 type="text"
+                 required
+                 value={username}
+                 onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9]/g, ''))}
+                 placeholder="Username123"
+                 className="w-full pl-4 pr-11 py-3.5 rounded-xl bg-[#15112e] border border-[#2a234f] text-white placeholder-slate-500 focus:outline-none focus:border-indigo-400 text-sm transition-colors"
+               />
+               <UserIcon className="w-5 h-5 text-slate-500 absolute right-4 top-3.5" />
+             </div>
+             <p className="mt-2 text-[11px] text-slate-500">Enter letters and numbers (5-12 characters)</p>
+           </div>
+
+           {/* Password */}
+           <div>
+             <label className="block text-[13px] font-medium text-slate-300 mb-2">Password</label>
+             <div className="relative">
+               <input
+                 type="password"
+                 required
+                 value={password}
+                 onChange={(e) => setPassword(e.target.value)}
+                 placeholder="Password"
+                 className="w-full pl-4 pr-11 py-3.5 rounded-xl bg-[#15112e] border border-[#2a234f] text-white placeholder-slate-500 focus:outline-none focus:border-indigo-400 text-sm transition-colors"
+               />
+               <Lock className="w-4 h-4 text-slate-500 absolute right-4 top-4" />
+             </div>
+             <p className="mt-2 text-[11px] text-slate-500">Minimum 5 characters for security</p>
+           </div>
+
+           {/* Billing Tier */}
+           <div className="pt-2">
+             <label className="block text-[13px] font-medium text-slate-300 mb-3">Billing Tier</label>
+             
+             {/* Free Tier Option */}
+             <div 
+                onClick={() => setSelectedPlan('free')}
+                className={`relative flex items-center justify-between p-4 rounded-xl cursor-pointer transition-all mb-3 border ${
+                  selectedPlan === 'free' 
+                    ? 'bg-[#2a1b54] border-indigo-500' 
+                    : 'bg-[#15112e] border-[#2a234f] hover:border-[#3e2b7a]'
+                }`}
+             >
+                <div>
+                   <h4 className="font-bold text-white text-sm">Free</h4>
+                   <p className="text-[11px] text-slate-400 mt-0.5">Limited access</p>
+                </div>
+                <div className="font-bold text-white">Rp 0</div>
+             </div>
+
+             {/* 3 Days Premium Option */}
+             <div 
+                onClick={() => setSelectedPlan('vip3')}
+                className={`relative flex items-center justify-between p-4 rounded-xl cursor-pointer transition-all mb-3 border ${
+                  selectedPlan === 'vip3' 
+                    ? 'bg-[#2a1b54] border-indigo-500' 
+                    : 'bg-[#15112e] border-[#2a234f] hover:border-[#3e2b7a]'
+                }`}
+             >
+                <div>
+                   <h4 className="font-bold text-white text-sm">3 Days Premium</h4>
+                   <p className="text-[11px] text-slate-400 mt-0.5">Short term access</p>
+                </div>
+                <div className="flex flex-col items-end gap-1">
+                   <div className="flex items-center gap-2">
+                     <span className="text-[10px] text-slate-500 line-through">Rp 1.500</span>
+                     <span className="bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded text-[10px] font-bold">-50%</span>
+                   </div>
+                   <div className="font-bold text-emerald-400">Rp 750</div>
+                </div>
+             </div>
+
+             {/* 7 Days Premium Option */}
+             <div 
+                onClick={() => setSelectedPlan('vip7')}
+                className={`relative flex items-center justify-between p-4 rounded-xl cursor-pointer transition-all mb-3 border ${
+                  selectedPlan === 'vip7' 
+                    ? 'bg-[#2a1b54] border-indigo-500' 
+                    : 'bg-[#15112e] border-[#2a234f] hover:border-[#3e2b7a]'
+                }`}
+             >
+                <div>
+                   <h4 className="font-bold text-white text-sm">7 Days Premium</h4>
+                   <p className="text-[11px] text-slate-400 mt-0.5">Best for weekly</p>
+                </div>
+                <div className="flex flex-col items-end gap-1">
+                   <div className="flex items-center gap-2">
+                     <span className="text-[10px] text-slate-500 line-through">Rp 3.300</span>
+                     <span className="bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded text-[10px] font-bold">-50%</span>
+                   </div>
+                   <div className="font-bold text-emerald-400">Rp 1.650</div>
+                </div>
+             </div>
+
+             {/* 30 Days Premium Option */}
+             <div 
+                onClick={() => setSelectedPlan('vip30')}
+                className={`relative flex items-center justify-between p-4 rounded-xl cursor-pointer transition-all border ${
+                  selectedPlan === 'vip30' 
+                    ? 'bg-[#2a1b54] border-indigo-500' 
+                    : 'bg-[#15112e] border-[#2a234f] hover:border-[#3e2b7a]'
+                }`}
+             >
+                <div>
+                   <h4 className="font-bold text-white text-sm">30 Days Premium</h4>
+                   <p className="text-[11px] text-slate-400 mt-0.5">Full month access</p>
+                </div>
+                <div className="flex flex-col items-end gap-1">
+                   <div className="flex items-center gap-2">
+                     <span className="text-[10px] text-slate-500 line-through">Rp 12.500</span>
+                     <span className="bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded text-[10px] font-bold">-50%</span>
+                   </div>
+                   <div className="font-bold text-emerald-400">Rp 6.250</div>
+                </div>
+             </div>
+           </div>
+
+           <button
+             type="submit"
+             disabled={isSubmitting || !username || !password}
+             className="w-full mt-4 py-4 rounded-xl font-bold text-[15px] text-white bg-[#5527d6] hover:bg-[#6839eb] shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+           >
+             {isSubmitting ? 'Creating...' : 'Create Ssh Tunnel Account'}
+           </button>
+        </form>
+      </div>
+
+      {/* Premium Features Info */}
+      <div className="flex justify-center mb-6">
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs font-semibold">
+          <Star className="w-3.5 h-3.5 fill-rose-400 text-rose-400" />
+          <span>Premium Features</span>
         </div>
       </div>
+
+      <h2 className="text-2xl sm:text-3xl font-bold text-center text-white mb-3">Unlock Premium Features</h2>
+      <p className="text-center text-[15px] text-slate-300 mb-10 max-w-xl mx-auto leading-relaxed">
+        Get the most out of your Ssh Tunnel experience with our premium subscription plans. <span className="text-purple-400 font-medium">Upgrade today</span> and enjoy unlimited access to all features.
+      </p>
+
+      {/* 6 Grid Features */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-16">
+        <div className="bg-[#15112e] border border-[#2a234f] rounded-2xl p-6">
+           <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center mb-4">
+             <Zap className="w-5 h-5 text-emerald-400" />
+           </div>
+           <h3 className="font-bold text-white mb-2 text-[15px]">Lightning Fast Speed</h3>
+           <p className="text-xs text-slate-400 leading-relaxed">Access our premium servers with optimized routing and unlimited bandwidth for the fastest possible connection speeds.</p>
+        </div>
+        <div className="bg-[#15112e] border border-[#2a234f] rounded-2xl p-6">
+           <div className="w-10 h-10 rounded-xl bg-blue-500/20 flex items-center justify-center mb-4">
+             <Lock className="w-5 h-5 text-blue-400" />
+           </div>
+           <h3 className="font-bold text-white mb-2 text-[15px]">Advanced Security</h3>
+           <p className="text-xs text-slate-400 leading-relaxed">Military-grade encryption with advanced obfuscation techniques to bypass even the most sophisticated network restrictions.</p>
+        </div>
+        <div className="bg-[#15112e] border border-[#2a234f] rounded-2xl p-6">
+           <div className="w-10 h-10 rounded-xl bg-pink-500/20 flex items-center justify-center mb-4">
+             <CheckCircle2 className="w-5 h-5 text-pink-400" />
+           </div>
+           <h3 className="font-bold text-white mb-2 text-[15px]">Priority Support</h3>
+           <p className="text-xs text-slate-400 leading-relaxed">24/7 premium customer support with dedicated account managers and instant response times for all your needs.</p>
+        </div>
+        <div className="bg-[#15112e] border border-[#2a234f] rounded-2xl p-6">
+           <div className="w-10 h-10 rounded-xl bg-indigo-500/20 flex items-center justify-center mb-4">
+             <ShieldCheck className="w-5 h-5 text-indigo-400" />
+           </div>
+           <h3 className="font-bold text-white mb-2 text-[15px]">Multi Platform</h3>
+           <p className="text-xs text-slate-400 leading-relaxed">Support on Windows, Android, iOS, macOS, OpenWRT, Linux — all platforms supported with native apps.</p>
+        </div>
+        <div className="bg-[#15112e] border border-[#2a234f] rounded-2xl p-6">
+           <div className="w-10 h-10 rounded-xl bg-teal-500/20 flex items-center justify-center mb-4">
+             <Globe2 className="w-5 h-5 text-teal-400" />
+           </div>
+           <h3 className="font-bold text-white mb-2 text-[15px]">Global Servers</h3>
+           <p className="text-xs text-slate-400 leading-relaxed">Access to 50+ premium servers worldwide with automatic server selection for optimal performance.</p>
+        </div>
+        <div className="bg-[#15112e] border border-[#2a234f] rounded-2xl p-6">
+           <div className="w-10 h-10 rounded-xl bg-orange-500/20 flex items-center justify-center mb-4">
+             <BarChart3 className="w-5 h-5 text-orange-400" />
+           </div>
+           <h3 className="font-bold text-white mb-2 text-[15px]">Usage Analytics</h3>
+           <p className="text-xs text-slate-400 leading-relaxed">Detailed usage statistics, connection logs, and performance analytics to monitor your VPN usage patterns.</p>
+        </div>
+      </div>
+
     </div>
   );
 };

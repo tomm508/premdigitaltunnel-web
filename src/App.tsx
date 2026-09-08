@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
+import { AnimatePresence, motion } from 'motion/react';
 import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
 import { PickTunneling } from './components/PickTunneling';
@@ -15,24 +17,38 @@ import { AuthModal } from './components/AuthModal';
 import { TopupModal } from './components/TopupModal';
 import { SshServerList } from './components/SshServerList';
 import { SshCreateAccount } from './components/SshCreateAccount';
-import { ProtocolType, GeneratedAccount, PlatformStat, ActiveView, TunnelServer } from './types';
+import { ProtocolType, GeneratedAccount, PlatformStat, TunnelServer } from './types';
 import { INITIAL_STATS, SERVERS_LIST } from './data/mockData';
-import { CheckCircle2 } from 'lucide-react';
+import { CheckCircle2, Loader2 } from 'lucide-react';
 import { auth, onSnapshot, doc, db, signOut } from './lib/firebase';
 import { User, onAuthStateChanged } from 'firebase/auth';
 
 export default function App() {
   const [isDark, setIsDark] = useState<boolean>(true);
-  const [currentView, setCurrentView] = useState<ActiveView>('home');
   const [selectedProtocol, setSelectedProtocol] = useState<ProtocolType>('ssh');
-  const [selectedServer, setSelectedServer] = useState<TunnelServer>(SERVERS_LIST[0]);
+  const [selectedServer, setSelectedServer] = useState<TunnelServer | null>(null);
   const [isAccountModalOpen, setIsAccountModalOpen] = useState<boolean>(false);
+  const [recentlyCreatedAccount, setRecentlyCreatedAccount] = useState<GeneratedAccount | null>(null);
   const [isToolsModalOpen, setIsToolsModalOpen] = useState<boolean>(false);
   const [selectedToolId, setSelectedToolId] = useState<string | null>(null);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
   const [isTopupModalOpen, setIsTopupModalOpen] = useState<boolean>(false);
   const [stats, setStats] = useState<PlatformStat>(INITIAL_STATS);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [isPageLoading, setIsPageLoading] = useState<boolean>(false);
+  
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Scroll to top and show loader on route change
+  useEffect(() => {
+    setIsPageLoading(true);
+    window.scrollTo(0, 0);
+    const timer = setTimeout(() => {
+      setIsPageLoading(false);
+    }, 400); // 400ms loading effect
+    return () => clearTimeout(timer);
+  }, [location.pathname]);
 
   // Firebase User & Balance state
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -83,9 +99,7 @@ export default function App() {
 
   const handleOpenProtocol = (proto: ProtocolType) => {
     if (proto === 'ssh') {
-      // Direct to multi-step SSH flow matching the video
-      setCurrentView('ssh-servers');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      navigate('/ssh-tunnel');
     } else {
       setSelectedProtocol(proto);
       setIsAccountModalOpen(true);
@@ -94,8 +108,7 @@ export default function App() {
 
   const handleSelectServerForAccount = (server: TunnelServer) => {
     setSelectedServer(server);
-    setCurrentView('ssh-create');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    navigate('/ssh-tunnel/create');
   };
 
   const handleOpenTool = (toolId: string) => {
@@ -115,6 +128,11 @@ export default function App() {
     }));
 
     showToast(`Akun SSH ${acc.server.country} berhasil digenerate!`);
+    
+    // Auto-open modal to view details after creation
+    setSelectedProtocol(acc.protocol);
+    setRecentlyCreatedAccount(acc);
+    setIsAccountModalOpen(true);
   };
 
   const handleSuccessDeposit = (amount: number) => {
@@ -129,16 +147,11 @@ export default function App() {
   };
 
   const scrollToSection = (sectionId: string) => {
-    if (currentView !== 'home') {
-      setCurrentView('home');
-      setTimeout(() => {
-        const el = document.getElementById(sectionId);
-        if (el) el.scrollIntoView({ behavior: 'smooth' });
-      }, 100);
-    } else {
+    navigate('/');
+    setTimeout(() => {
       const el = document.getElementById(sectionId);
       if (el) el.scrollIntoView({ behavior: 'smooth' });
-    }
+    }, 100);
   };
 
   return (
@@ -166,80 +179,117 @@ export default function App() {
           onOpenTool={handleOpenTool}
           onOpenAuth={() => setIsAuthModalOpen(true)}
           onOpenTopup={() => setIsTopupModalOpen(true)}
-          onScrollToSection={scrollToSection}
           currentUser={currentUser}
           userBalance={userBalance}
         />
 
         {/* Main Content Area */}
-        <main className="flex-1">
-          {currentView === 'home' && (
-            <>
-              {/* Hero Section */}
-              <Hero
-                isDark={isDark}
-                onGetStarted={() => handleOpenProtocol('ssh')}
-                onExploreProtocols={() => scrollToSection('services')}
-              />
+        <main className="flex-1 overflow-hidden">
+          <AnimatePresence mode="wait">
+            <Routes location={location} key={location.pathname}>
+              <Route path="/" element={
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.3, ease: "easeOut" }}
+                >
+                  {/* Hero Section */}
+                  <Hero
+                    isDark={isDark}
+                    onGetStarted={() => handleOpenProtocol('ssh')}
+                    onExploreProtocols={() => {
+                      const el = document.getElementById('services');
+                      if (el) el.scrollIntoView({ behavior: 'smooth' });
+                    }}
+                  />
 
-              {/* Pick Your Tunneling Overview */}
-              <PickTunneling
-                isDark={isDark}
-                onSelectProtocol={handleOpenProtocol}
-              />
+                  {/* Pick Your Tunneling Overview */}
+                  <PickTunneling
+                    isDark={isDark}
+                    onSelectProtocol={handleOpenProtocol}
+                  />
 
-              {/* Choose Tunneling Service (Protocol Cards) */}
-              <ServiceList
-                isDark={isDark}
-                onChooseService={handleOpenProtocol}
-              />
+                  {/* Choose Tunneling Service (Protocol Cards) */}
+                  <ServiceList
+                    isDark={isDark}
+                    onChooseService={handleOpenProtocol}
+                  />
 
-              {/* Premium Features Grid */}
-              <Features isDark={isDark} />
+                  {/* Premium Features Grid */}
+                  <Features isDark={isDark} />
 
-              {/* Speed, Stability, and Setup Technical Guide */}
-              <SpeedGuide isDark={isDark} />
+                  {/* Speed, Stability, and Setup Technical Guide */}
+                  <SpeedGuide isDark={isDark} />
 
-              {/* Frequently Asked Questions Accordion */}
-              <Faq isDark={isDark} />
+                  {/* Frequently Asked Questions Accordion */}
+                  <Faq isDark={isDark} />
 
-              {/* Start Free Tunneling Call to Action Banner */}
-              <CtaBanner
-                isDark={isDark}
-                onStartFree={() => handleOpenProtocol('ssh')}
-              />
+                  {/* Start Free Tunneling Call to Action Banner */}
+                  <CtaBanner
+                    isDark={isDark}
+                    onStartFree={() => handleOpenProtocol('ssh')}
+                  />
 
-              {/* Platform Statistics & Today's Service Breakdown */}
-              <Statistics stats={stats} isDark={isDark} />
-            </>
-          )}
-
-          {currentView === 'ssh-servers' && (
-            <SshServerList
-              isDark={isDark}
-              onSelectServer={handleSelectServerForAccount}
-              onBack={() => {
-                setCurrentView('home');
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-              }}
-            />
-          )}
-
-          {currentView === 'ssh-create' && (
-            <SshCreateAccount
-              server={selectedServer}
-              isDark={isDark}
-              currentUser={currentUser}
-              userBalance={userBalance}
-              onBack={() => {
-                setCurrentView('ssh-servers');
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-              }}
-              onAccountCreated={handleAccountCreated}
-              onOpenTopup={() => setIsTopupModalOpen(true)}
-            />
-          )}
+                  {/* Platform Statistics & Today's Service Breakdown */}
+                  <Statistics stats={stats} isDark={isDark} />
+                </motion.div>
+              } />
+              <Route path="/ssh-tunnel" element={
+                <motion.div
+                  initial={{ opacity: 0, x: 50 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -50 }}
+                  transition={{ duration: 0.3, ease: "easeOut" }}
+                >
+                  <SshServerList
+                    isDark={isDark}
+                    onSelectServer={handleSelectServerForAccount}
+                    onBack={() => {
+                      navigate('/');
+                    }}
+                  />
+                </motion.div>
+              } />
+              <Route path="/ssh-tunnel/create" element={
+                <motion.div
+                  initial={{ opacity: 0, x: 50 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -50 }}
+                  transition={{ duration: 0.3, ease: "easeOut" }}
+                >
+                  <SshCreateAccount
+                    server={selectedServer}
+                    isDark={isDark}
+                    currentUser={currentUser}
+                    userBalance={userBalance}
+                    onBack={() => {
+                      navigate('/ssh-tunnel');
+                    }}
+                    onAccountCreated={handleAccountCreated}
+                    onOpenTopup={() => setIsTopupModalOpen(true)}
+                    onOpenLogin={() => setIsAuthModalOpen(true)}
+                  />
+                </motion.div>
+              } />
+            </Routes>
+          </AnimatePresence>
         </main>
+
+        {/* Full Page Route Loading Overlay */}
+        <AnimatePresence>
+          {isPageLoading && (
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#0e0a22]/80 backdrop-blur-sm"
+            >
+              <Loader2 className="w-10 h-10 text-purple-500 animate-spin mb-4" />
+              <p className="text-sm font-medium text-purple-200">Loading...</p>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Footer */}
         <Footer
@@ -253,8 +303,12 @@ export default function App() {
       <AccountModal
         protocol={selectedProtocol}
         isOpen={isAccountModalOpen}
-        onClose={() => setIsAccountModalOpen(false)}
+        onClose={() => {
+          setIsAccountModalOpen(false);
+          setRecentlyCreatedAccount(null);
+        }}
         onAccountCreated={handleAccountCreated}
+        initialAccount={recentlyCreatedAccount}
       />
 
       {/* Tools Modal (My IP, Ping, DNS, Subdomain, AI Chat) */}
