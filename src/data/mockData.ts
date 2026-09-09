@@ -113,7 +113,26 @@ export const SERVERS_LIST: TunnelServer[] = [
     totalSlots: 100,
     usedSlots: 5,
     supportedProtocols: ['ssh', 'vmess', 'vless', 'trojan', 'openvpn', 'wireguard'],
-    isVip: false
+    isVip: false,
+    limitCreated: 100,
+    leftCreated: 95
+  },
+  {
+    id: 'my-vps-02',
+    country: 'Indonesia',
+    countryCode: 'ID',
+    flag: '🇮🇩',
+    city: 'Jakarta Cloud (My VPS)',
+    host: 'id1.domainanda.com',
+    ip: '103.yyy.yyy.yyy',
+    load: 25,
+    ping: 15,
+    totalSlots: 100,
+    usedSlots: 12,
+    supportedProtocols: ['ssh', 'vmess', 'vless', 'trojan'],
+    isVip: false,
+    limitCreated: 100,
+    leftCreated: 88
   }
 ];
 

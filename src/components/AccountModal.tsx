@@ -28,6 +28,7 @@ interface AccountModalProps {
   onClose: () => void;
   onAccountCreated: (acc: GeneratedAccount) => void;
   initialAccount?: GeneratedAccount | null;
+  initialServer?: TunnelServer | null;
 }
 
 export const AccountModal: React.FC<AccountModalProps> = ({
@@ -35,9 +36,10 @@ export const AccountModal: React.FC<AccountModalProps> = ({
   isOpen,
   onClose,
   onAccountCreated,
-  initialAccount
+  initialAccount,
+  initialServer
 }) => {
-  const [selectedServer, setSelectedServer] = useState<TunnelServer>(SERVERS_LIST[0]);
+  const [selectedServer, setSelectedServer] = useState<TunnelServer>(initialServer || SERVERS_LIST[0]);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('123456');
   const [sni, setSni] = useState('sg1.premdigital.web.id');
@@ -53,6 +55,12 @@ export const AccountModal: React.FC<AccountModalProps> = ({
   // Auto-fill random username
   useEffect(() => {
     if (isOpen) {
+      if (initialServer) {
+        setSelectedServer(initialServer);
+      } else {
+        setSelectedServer(SERVERS_LIST[0]);
+      }
+      
       if (initialAccount) {
         setGeneratedAccount(initialAccount);
         setActiveResultTab('info');

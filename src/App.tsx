@@ -17,6 +17,7 @@ import { AuthModal } from './components/AuthModal';
 import { TopupModal } from './components/TopupModal';
 import { SshServerList } from './components/SshServerList';
 import { SshCreateAccount } from './components/SshCreateAccount';
+import { FreeTunneling } from './components/FreeTunneling';
 import { ProtocolType, GeneratedAccount, PlatformStat, TunnelServer } from './types';
 import { INITIAL_STATS, SERVERS_LIST } from './data/mockData';
 import { CheckCircle2, Loader2 } from 'lucide-react';
@@ -267,11 +268,8 @@ export default function App() {
                   {/* Hero Section */}
                   <Hero
                     isDark={isDark}
-                    onGetStarted={() => handleOpenProtocol('ssh')}
-                    onExploreProtocols={() => {
-                      const el = document.getElementById('services');
-                      if (el) el.scrollIntoView({ behavior: 'smooth' });
-                    }}
+                    onGetStarted={() => navigate('/free')}
+                    onExploreProtocols={() => navigate('/free')}
                   />
 
                   {/* Pick Your Tunneling Overview */}
@@ -297,13 +295,38 @@ export default function App() {
                   {/* Start Free Tunneling Call to Action Banner */}
                   <CtaBanner
                     isDark={isDark}
-                    onStartFree={() => handleOpenProtocol('ssh')}
+                    onStartFree={() => navigate('/free')}
                   />
 
                   {/* Platform Statistics & Today's Service Breakdown */}
                   <Statistics stats={stats} isDark={isDark} />
                 </motion.div>
               } />
+              
+              <Route path="/free" element={
+                <motion.div
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <FreeTunneling
+                    isDark={isDark}
+                    onBack={() => navigate('/')}
+                    onSelectServer={(protocol, server) => {
+                      if (protocol === 'ssh') {
+                        setSelectedServer(server);
+                        navigate('/ssh-tunnel/create');
+                      } else {
+                        setSelectedServer(server);
+                        setSelectedProtocol(protocol);
+                        setIsAccountModalOpen(true);
+                      }
+                    }}
+                  />
+                </motion.div>
+              } />
+              
               <Route path="/ssh-tunnel" element={
                 <motion.div
                   initial={{ opacity: 0, x: 50 }}
@@ -378,6 +401,7 @@ export default function App() {
         }}
         onAccountCreated={handleAccountCreated}
         initialAccount={recentlyCreatedAccount}
+        initialServer={selectedServer}
       />
 
       {/* Tools Modal (My IP, Ping, DNS, Subdomain, AI Chat) */}
