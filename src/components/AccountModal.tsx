@@ -152,12 +152,6 @@ export const AccountModal: React.FC<AccountModalProps> = ({
       } else if (protocol === 'ssh') {
         configString = `ssh://${username}:${password}@${selectedServer.host}:22`;
         payloadString = `GET / HTTP/1.1[crlf]Host: ${cleanSni}[crlf]Upgrade: websocket[crlf]Connection: Upgrade[crlf]User-Agent: [ua][crlf][crlf]`;
-      } else if (protocol === 'openvpn') {
-        rawConfig = `client\ndev tun\nproto tcp\nremote ${selectedServer.host} 443\nresolv-retry infinite\nnobind\npersist-key\npersist-tun\nremote-cert-tls server\nauth-user-pass\ncipher AES-256-GCM\nauth SHA256\nverb 3\n<ca>\n-----BEGIN CERTIFICATE-----\nMIIBojCCAUqgAwIBAgIUW...PremDigital...TUNNEL...CA...-----END CERTIFICATE-----\n</ca>`;
-        configString = rawConfig;
-      } else if (protocol === 'wireguard') {
-        rawConfig = `[Interface]\nPrivateKey = aGVs...dummy_wg_priv_key=\nAddress = 10.66.66.50/32\nDNS = 1.1.1.1, 8.8.8.8\n\n[Peer]\nPublicKey = dWdw...PremDigital_Tunnel_Pub=\nEndpoint = ${selectedServer.host}:51820\nAllowedIPs = 0.0.0.0/0\nPersistentKeepalive = 25`;
-        configString = rawConfig;
       }
 
       const account: GeneratedAccount = {
@@ -194,14 +188,6 @@ export const AccountModal: React.FC<AccountModalProps> = ({
     if (!generatedAccount) return;
     let filename = `PremDigital-${generatedAccount.protocol}-${generatedAccount.username}.txt`;
     let content = generatedAccount.configString || '';
-
-    if (protocol === 'openvpn') {
-      filename = `PremDigital-${generatedAccount.server.countryCode}-${generatedAccount.username}.ovpn`;
-      content = generatedAccount.rawConfig || '';
-    } else if (protocol === 'wireguard') {
-      filename = `PremDigital-${generatedAccount.server.countryCode}-${generatedAccount.username}.conf`;
-      content = generatedAccount.rawConfig || '';
-    }
 
     const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);

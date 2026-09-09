@@ -1,4 +1,4 @@
-export type ProtocolType = 'ssh' | 'vmess' | 'vless' | 'trojan' | 'openvpn' | 'wireguard';
+export type ProtocolType = 'ssh' | 'vmess' | 'vless' | 'trojan';
 
 export type ActiveView = 'home' | 'ssh-servers' | 'ssh-create';
 
@@ -64,11 +64,9 @@ export interface PlatformStat {
   onlineUsers: number;
   breakdown: {
     ssh: number;
-    openvpn: number;
     trojan: number;
     vmess: number;
     vless: number;
-    wireguard: number;
   };
 }
 

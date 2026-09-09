@@ -159,18 +159,6 @@ export const Statistics: React.FC<StatisticsProps> = ({ stats, isDark }) => {
               <div className={`text-xs font-semibold ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>SSH</div>
             </div>
 
-            {/* OpenVPN */}
-            <div className={`p-4 rounded-2xl text-center border ${
-              isDark 
-                ? 'bg-[#1c1645] border-purple-500/20' 
-                : 'bg-purple-50/50 border-purple-100'
-            }`}>
-              <div className="text-2xl sm:text-3xl font-black text-emerald-500 mb-1">
-                {stats.breakdown.openvpn}
-              </div>
-              <div className={`text-xs font-semibold ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>OpenVPN</div>
-            </div>
-
             {/* Trojan VPN */}
             <div className={`p-4 rounded-2xl text-center border ${
               isDark 
@@ -205,18 +193,6 @@ export const Statistics: React.FC<StatisticsProps> = ({ stats, isDark }) => {
                 {stats.breakdown.vless}
               </div>
               <div className={`text-xs font-semibold ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>Vless</div>
-            </div>
-
-            {/* WireGuard */}
-            <div className={`p-4 rounded-2xl text-center border ${
-              isDark 
-                ? 'bg-[#1c1645] border-purple-500/20' 
-                : 'bg-purple-50/50 border-purple-100'
-            }`}>
-              <div className="text-2xl sm:text-3xl font-black text-teal-500 mb-1">
-                {stats.breakdown.wireguard}
-              </div>
-              <div className={`text-xs font-semibold ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>WireGuard</div>
             </div>
           </div>
         </div>

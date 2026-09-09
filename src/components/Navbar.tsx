@@ -56,8 +56,6 @@ export const Navbar: React.FC<NavbarProps> = ({
     { id: 'vmess', label: 'V2Ray Vmess', icon: <Zap className="w-4 h-4 text-emerald-400" /> },
     { id: 'vless', label: 'Xray Vless', icon: <Shield className="w-4 h-4 text-purple-400" /> },
     { id: 'trojan', label: 'Trojan VPN', icon: <Lock className="w-4 h-4 text-red-400" /> },
-    { id: 'openvpn', label: 'OpenVPN', icon: <Key className="w-4 h-4 text-cyan-400" /> },
-    { id: 'wireguard', label: 'Wireguard', icon: <Activity className="w-4 h-4 text-teal-400" /> },
   ];
 
   const toolsList = [

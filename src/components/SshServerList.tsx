@@ -60,7 +60,7 @@ export const SshServerList: React.FC<SshServerListProps> = ({
           ping: 24,
           totalSlots: 100,
           usedSlots: Math.floor(Math.random() * 50), // Dynamic slots from VPS
-          supportedProtocols: ['ssh', 'vmess', 'vless', 'trojan', 'openvpn', 'wireguard'],
+          supportedProtocols: ['ssh', 'vmess', 'vless', 'trojan'],
           isVip: false
         }
       ];

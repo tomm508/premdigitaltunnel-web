@@ -64,38 +64,6 @@ export const PROTOCOL_SERVICES: ProtocolService[] = [
       'TLS 1.3 powered privacy',
       'Unblockable Port 443 HTTPS mimicry'
     ]
-  },
-  {
-    id: 'openvpn',
-    name: 'Create OpenVPN',
-    badge: 'OpenVPN',
-    tagline: 'Classic compatibility or modern speed — your choice.',
-    description: 'Industry standard security with custom certificate authentication, TCP 443 and UDP 1194 options, and multi-OS config import.',
-    iconName: 'Key',
-    color: 'from-cyan-500 to-blue-600',
-    freeTrialDays: 7,
-    features: [
-      '7 days free trial + renew options',
-      '3 days 7 days or 30 days renewals',
-      'Config profiles ready to import (.ovpn)',
-      'TCP 443 & UDP 1194 high throughput'
-    ]
-  },
-  {
-    id: 'wireguard',
-    name: 'Create Wireguard VPN',
-    badge: 'Wireguard',
-    tagline: 'Classic compatibility or modern speed — your choice.',
-    description: 'State-of-the-art cryptographic tunnel using ChaCha20 and Curve25519. Instant handshake, seamless roaming, and zero latency.',
-    iconName: 'Activity',
-    color: 'from-teal-400 to-emerald-500',
-    freeTrialDays: 7,
-    features: [
-      '7 days free trial + renew options',
-      '3 days 7 days or 30 days renewals',
-      'Config profiles ready to import (.conf)',
-      'Ultra low latency for mobile and gaming'
-    ]
   }
 ];
 
@@ -112,7 +80,7 @@ export const SERVERS_LIST: TunnelServer[] = [
     ping: 24,
     totalSlots: 100,
     usedSlots: 5,
-    supportedProtocols: ['ssh', 'vmess', 'vless', 'trojan', 'openvpn', 'wireguard'],
+    supportedProtocols: ['ssh', 'vmess', 'vless', 'trojan'],
     isVip: false,
     limitCreated: 100,
     leftCreated: 95
@@ -139,7 +107,7 @@ export const SERVERS_LIST: TunnelServer[] = [
 export const FAQ_ITEMS: FaqItem[] = [
   {
     question: 'How do I create a free VPN SSH Tunneling account?',
-    answer: 'Simply navigate to the "Choose Tunneling Service" section, select your preferred protocol (SSH, VMess, VLESS, Trojan, OpenVPN, or WireGuard), choose your server location (such as Singapore or Indonesia), enter your desired username and optional bug host/SNI, and click "Generate Account". Your account credentials, config links, and QR code will be created immediately.'
+    answer: 'Simply navigate to the "Choose Tunneling Service" section, select your preferred protocol (SSH, VMess, VLESS, or Trojan), choose your server location (such as Singapore or Indonesia), enter your desired username and optional bug host/SNI, and click "Generate Account". Your account credentials, config links, and QR code will be created immediately.'
   },
   {
     question: 'Do you keep logs of my activity?',
@@ -159,7 +127,7 @@ export const FAQ_ITEMS: FaqItem[] = [
   },
   {
     question: 'Can I use these configurations on Android, iPhone, and PC?',
-    answer: 'Yes! Our generated accounts can be imported into popular tunneling apps across all platforms: v2rayNG, V2Box, Sing-box, NapsternetV, NetMod Syna, HTTP Injector, Clash / Clash Verge, OpenVPN Connect, and the official WireGuard app.'
+    answer: 'Yes! Our generated accounts can be imported into popular tunneling apps across all platforms: v2rayNG, V2Box, Sing-box, NapsternetV, NetMod Syna, HTTP Injector, and Clash / Clash Verge.'
   }
 ];
 
@@ -170,10 +138,8 @@ export const INITIAL_STATS = {
   onlineUsers: 2170,
   breakdown: {
     ssh: 18,
-    openvpn: 2,
     trojan: 1,
     vmess: 2,
-    vless: 1,
-    wireguard: 0
+    vless: 1
   }
 };

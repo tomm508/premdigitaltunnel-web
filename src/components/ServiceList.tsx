@@ -28,10 +28,6 @@ export const ServiceList: React.FC<ServiceListProps> = ({ isDark, onChooseServic
         return <Shield className="w-8 h-8 text-white" />;
       case 'trojan':
         return <Lock className="w-8 h-8 text-white" />;
-      case 'openvpn':
-        return <Key className="w-8 h-8 text-white" />;
-      case 'wireguard':
-        return <Activity className="w-8 h-8 text-white" />;
     }
   };
 
@@ -45,10 +41,6 @@ export const ServiceList: React.FC<ServiceListProps> = ({ isDark, onChooseServic
         return 'bg-gradient-to-tr from-purple-600 to-pink-500';
       case 'trojan':
         return 'bg-gradient-to-tr from-red-600 to-orange-500';
-      case 'openvpn':
-        return 'bg-gradient-to-tr from-cyan-600 to-blue-500';
-      case 'wireguard':
-        return 'bg-gradient-to-tr from-teal-500 to-emerald-400';
     }
   };
 
@@ -62,10 +54,6 @@ export const ServiceList: React.FC<ServiceListProps> = ({ isDark, onChooseServic
         return 'from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500';
       case 'trojan':
         return 'from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500';
-      case 'openvpn':
-        return 'from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500';
-      case 'wireguard':
-        return 'from-teal-600 to-emerald-600 hover:from-teal-500 hover:to-emerald-500';
     }
   };
 
