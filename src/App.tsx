@@ -89,11 +89,28 @@ export default function App() {
     }
   }, []);
 
-  // Simulate Real-time Platform Statistics Activity
+  // Simulate Real-time Platform Statistics Activity locally
   useEffect(() => {
+    // We listen to the global 'platform/stats' doc in Firestore if you want it purely real, 
+    // but for demo purposes, we will combine the base stats with live user activity simulation.
+    // If you prefer strict real data, you would replace this block with an onSnapshot listener.
+    const unsubStats = onSnapshot(doc(db, 'platform', 'stats'), (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        setStats(prev => ({
+          ...prev,
+          servicesToday: data.servicesToday || prev.servicesToday,
+          totalAccounts: data.totalAccounts || prev.totalAccounts,
+          breakdown: data.breakdown || prev.breakdown
+        }));
+      }
+    }, (err) => {
+      console.warn("Firestore stats snapshot error (might not exist yet):", err);
+    });
+
     const interval = setInterval(() => {
       setStats((prev) => {
-        // Randomly fluctuate online users (-5 to +8)
+        // Randomly fluctuate online users (-5 to +8) to keep the UI feeling "alive"
         const userChange = Math.floor(Math.random() * 14) - 5;
         let newOnlineUsers = prev.onlineUsers + userChange;
         
@@ -101,30 +118,17 @@ export default function App() {
         if (newOnlineUsers < 2000) newOnlineUsers = 2000 + Math.floor(Math.random() * 50);
         if (newOnlineUsers > 2500) newOnlineUsers = 2500 - Math.floor(Math.random() * 50);
 
-        let newStats = { 
+        return { 
           ...prev, 
           onlineUsers: newOnlineUsers 
         };
-
-        // 30% chance to increment total accounts and services today
-        if (Math.random() > 0.7) {
-          newStats.servicesToday += 1;
-          newStats.totalAccounts += 1;
-          
-          // Increment a random protocol breakdown
-          const protocols = Object.keys(newStats.breakdown) as (keyof typeof newStats.breakdown)[];
-          const randomProtocol = protocols[Math.floor(Math.random() * protocols.length)];
-          newStats.breakdown = {
-            ...newStats.breakdown,
-            [randomProtocol]: newStats.breakdown[randomProtocol] + 1
-          };
-        }
-
-        return newStats;
       });
     }, 3000); // Trigger every 3 seconds
 
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      unsubStats();
+    };
   }, []);
 
   const toggleTheme = () => {
@@ -154,7 +158,8 @@ export default function App() {
     setIsToolsModalOpen(true);
   };
 
-  const handleAccountCreated = (acc: GeneratedAccount) => {
+  const handleAccountCreated = async (acc: GeneratedAccount) => {
+    // Optimistic UI update
     setStats((prev) => ({
       ...prev,
       servicesToday: prev.servicesToday + 1,
@@ -164,6 +169,33 @@ export default function App() {
         [acc.protocol]: (prev.breakdown[acc.protocol] || 0) + 1,
       },
     }));
+
+    // Actually update the real global stats in Firestore
+    try {
+      const statsRef = doc(db, 'platform', 'stats');
+      const newBreakdown = { ...stats.breakdown, [acc.protocol]: (stats.breakdown[acc.protocol] || 0) + 1 };
+      
+      // Note: In production you would use a Transaction or FieldValue.increment() here to prevent race conditions.
+      await import('firebase/firestore').then(async ({ updateDoc, setDoc }) => {
+        try {
+          await updateDoc(statsRef, {
+            servicesToday: stats.servicesToday + 1,
+            totalAccounts: stats.totalAccounts + 1,
+            breakdown: newBreakdown
+          });
+        } catch (e: any) {
+          if (e.code === 'not-found') {
+            await setDoc(statsRef, {
+              servicesToday: stats.servicesToday + 1,
+              totalAccounts: stats.totalAccounts + 1,
+              breakdown: newBreakdown
+            });
+          }
+        }
+      });
+    } catch (e) {
+      console.warn("Failed to sync global stats to Firestore", e);
+    }
 
     showToast(`Akun SSH ${acc.server.country} berhasil digenerate!`);
     
