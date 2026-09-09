@@ -1,13 +1,11 @@
 import React from 'react';
-import { Shield, Zap, Lock, Globe, Settings, ArrowUpRight } from 'lucide-react';
-import { ProtocolType } from '../types';
+import { Shield, Zap, Lock, Globe, Settings } from 'lucide-react';
 
 interface PickTunnelingProps {
   isDark: boolean;
-  onSelectProtocol: (protocol: ProtocolType) => void;
 }
 
-export const PickTunneling: React.FC<PickTunnelingProps> = ({ isDark, onSelectProtocol }) => {
+export const PickTunneling: React.FC<PickTunnelingProps> = ({ isDark }) => {
   return (
     <section id="pick-tunneling" className="py-12 md:py-16 relative">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -40,27 +38,23 @@ export const PickTunneling: React.FC<PickTunnelingProps> = ({ isDark, onSelectPr
           {/* Card 1: VPN Tunnel */}
           <div 
             id="protocol-card-vpn"
-            onClick={() => onSelectProtocol('vmess')}
-            className={`group p-5 sm:p-6 rounded-2xl transition-all cursor-pointer relative overflow-hidden shadow-lg ${
+            className={`p-5 sm:p-6 rounded-2xl relative overflow-hidden shadow-lg ${
               isDark 
-                ? 'bg-[#171239] border border-purple-500/20 hover:border-purple-400/50 hover:bg-[#1f184b]' 
-                : 'bg-white border border-purple-200 hover:border-purple-400 hover:bg-purple-50/40 shadow-purple-900/5'
+                ? 'bg-[#171239] border border-purple-500/20' 
+                : 'bg-white border border-purple-200 shadow-purple-900/5'
             }`}
           >
             <div className="flex items-start gap-4">
-              <div className="w-12 h-12 rounded-xl bg-blue-500/20 border border-blue-400/30 flex items-center justify-center text-blue-400 shrink-0 group-hover:scale-105 transition-transform">
+              <div className="w-12 h-12 rounded-xl bg-blue-500/20 border border-blue-400/30 flex items-center justify-center text-blue-400 shrink-0">
                 <Zap className="w-6 h-6" />
               </div>
               <div className="flex-1">
                 <div className="flex items-center justify-between mb-1">
-                  <h3 className={`text-lg sm:text-xl font-bold transition-colors ${
-                    isDark ? 'text-white group-hover:text-purple-300' : 'text-slate-900 group-hover:text-purple-700'
+                  <h3 className={`text-lg sm:text-xl font-bold ${
+                    isDark ? 'text-white' : 'text-slate-900'
                   }`}>
                     VPN Tunnel
                   </h3>
-                  <ArrowUpRight className={`w-4 h-4 transition-all ${
-                    isDark ? 'text-slate-400 group-hover:text-purple-300' : 'text-slate-400 group-hover:text-purple-700'
-                  } group-hover:translate-x-0.5 group-hover:-translate-y-0.5`} />
                 </div>
                 <p className={`text-sm mb-2 leading-relaxed transition-colors ${
                   isDark ? 'text-slate-300' : 'text-slate-600'
@@ -81,27 +75,23 @@ export const PickTunneling: React.FC<PickTunnelingProps> = ({ isDark, onSelectPr
           {/* Card 2: SSH Tunnel */}
           <div 
             id="protocol-card-ssh"
-            onClick={() => onSelectProtocol('ssh')}
-            className={`group p-5 sm:p-6 rounded-2xl transition-all cursor-pointer relative overflow-hidden shadow-lg ${
+            className={`p-5 sm:p-6 rounded-2xl relative overflow-hidden shadow-lg ${
               isDark 
-                ? 'bg-[#171239] border border-purple-500/20 hover:border-purple-400/50 hover:bg-[#1f184b]' 
-                : 'bg-white border border-purple-200 hover:border-purple-400 hover:bg-purple-50/40 shadow-purple-900/5'
+                ? 'bg-[#171239] border border-purple-500/20' 
+                : 'bg-white border border-purple-200 shadow-purple-900/5'
             }`}
           >
             <div className="flex items-start gap-4">
-              <div className="w-12 h-12 rounded-xl bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center text-emerald-400 shrink-0 group-hover:scale-105 transition-transform">
+              <div className="w-12 h-12 rounded-xl bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center text-emerald-400 shrink-0">
                 <Lock className="w-6 h-6" />
               </div>
               <div className="flex-1">
                 <div className="flex items-center justify-between mb-1">
-                  <h3 className={`text-lg sm:text-xl font-bold transition-colors ${
-                    isDark ? 'text-white group-hover:text-purple-300' : 'text-slate-900 group-hover:text-purple-700'
+                  <h3 className={`text-lg sm:text-xl font-bold ${
+                    isDark ? 'text-white' : 'text-slate-900'
                   }`}>
                     SSH Tunnel
                   </h3>
-                  <ArrowUpRight className={`w-4 h-4 transition-all ${
-                    isDark ? 'text-slate-400 group-hover:text-purple-300' : 'text-slate-400 group-hover:text-purple-700'
-                  } group-hover:translate-x-0.5 group-hover:-translate-y-0.5`} />
                 </div>
                 <p className={`text-sm mb-2 leading-relaxed transition-colors ${
                   isDark ? 'text-slate-300' : 'text-slate-600'
@@ -122,27 +112,23 @@ export const PickTunneling: React.FC<PickTunnelingProps> = ({ isDark, onSelectPr
           {/* Card 3: Global Tunnel */}
           <div 
             id="protocol-card-global"
-            onClick={() => onSelectProtocol('wireguard')}
-            className={`group p-5 sm:p-6 rounded-2xl transition-all cursor-pointer relative overflow-hidden shadow-lg ${
+            className={`p-5 sm:p-6 rounded-2xl relative overflow-hidden shadow-lg ${
               isDark 
-                ? 'bg-[#171239] border border-purple-500/20 hover:border-purple-400/50 hover:bg-[#1f184b]' 
-                : 'bg-white border border-purple-200 hover:border-purple-400 hover:bg-purple-50/40 shadow-purple-900/5'
+                ? 'bg-[#171239] border border-purple-500/20' 
+                : 'bg-white border border-purple-200 shadow-purple-900/5'
             }`}
           >
             <div className="flex items-start gap-4">
-              <div className="w-12 h-12 rounded-xl bg-purple-500/20 border border-purple-400/30 flex items-center justify-center text-purple-400 shrink-0 group-hover:scale-105 transition-transform">
+              <div className="w-12 h-12 rounded-xl bg-purple-500/20 border border-purple-400/30 flex items-center justify-center text-purple-400 shrink-0">
                 <Globe className="w-6 h-6" />
               </div>
               <div className="flex-1">
                 <div className="flex items-center justify-between mb-1">
-                  <h3 className={`text-lg sm:text-xl font-bold transition-colors ${
-                    isDark ? 'text-white group-hover:text-purple-300' : 'text-slate-900 group-hover:text-purple-700'
+                  <h3 className={`text-lg sm:text-xl font-bold ${
+                    isDark ? 'text-white' : 'text-slate-900'
                   }`}>
                     Global Tunnel
                   </h3>
-                  <ArrowUpRight className={`w-4 h-4 transition-all ${
-                    isDark ? 'text-slate-400 group-hover:text-purple-300' : 'text-slate-400 group-hover:text-purple-700'
-                  } group-hover:translate-x-0.5 group-hover:-translate-y-0.5`} />
                 </div>
                 <p className={`text-sm mb-2 leading-relaxed transition-colors ${
                   isDark ? 'text-slate-300' : 'text-slate-600'
@@ -163,27 +149,23 @@ export const PickTunneling: React.FC<PickTunnelingProps> = ({ isDark, onSelectPr
           {/* Card 4: Config Tunnel */}
           <div 
             id="protocol-card-config"
-            onClick={() => onSelectProtocol('vless')}
-            className={`group p-5 sm:p-6 rounded-2xl transition-all cursor-pointer relative overflow-hidden shadow-lg ${
+            className={`p-5 sm:p-6 rounded-2xl relative overflow-hidden shadow-lg ${
               isDark 
-                ? 'bg-[#171239] border border-purple-500/20 hover:border-purple-400/50 hover:bg-[#1f184b]' 
-                : 'bg-white border border-purple-200 hover:border-purple-400 hover:bg-purple-50/40 shadow-purple-900/5'
+                ? 'bg-[#171239] border border-purple-500/20' 
+                : 'bg-white border border-purple-200 shadow-purple-900/5'
             }`}
           >
             <div className="flex items-start gap-4">
-              <div className="w-12 h-12 rounded-xl bg-pink-500/20 border border-pink-400/30 flex items-center justify-center text-pink-400 shrink-0 group-hover:scale-105 transition-transform">
+              <div className="w-12 h-12 rounded-xl bg-pink-500/20 border border-pink-400/30 flex items-center justify-center text-pink-400 shrink-0">
                 <Settings className="w-6 h-6" />
               </div>
               <div className="flex-1">
                 <div className="flex items-center justify-between mb-1">
-                  <h3 className={`text-lg sm:text-xl font-bold transition-colors ${
-                    isDark ? 'text-white group-hover:text-purple-300' : 'text-slate-900 group-hover:text-purple-700'
+                  <h3 className={`text-lg sm:text-xl font-bold ${
+                    isDark ? 'text-white' : 'text-slate-900'
                   }`}>
                     Config Tunnel
                   </h3>
-                  <ArrowUpRight className={`w-4 h-4 transition-all ${
-                    isDark ? 'text-slate-400 group-hover:text-purple-300' : 'text-slate-400 group-hover:text-purple-700'
-                  } group-hover:translate-x-0.5 group-hover:-translate-y-0.5`} />
                 </div>
                 <p className={`text-sm mb-2 leading-relaxed transition-colors ${
                   isDark ? 'text-slate-300' : 'text-slate-600'

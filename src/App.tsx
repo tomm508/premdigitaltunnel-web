@@ -207,7 +207,6 @@ export default function App() {
                   {/* Pick Your Tunneling Overview */}
                   <PickTunneling
                     isDark={isDark}
-                    onSelectProtocol={handleOpenProtocol}
                   />
 
                   {/* Choose Tunneling Service (Protocol Cards) */}
