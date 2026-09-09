@@ -21,6 +21,7 @@ import {
 import { TunnelServer, GeneratedAccount } from '../types';
 import { User } from 'firebase/auth';
 import { db, collection, addDoc, doc, updateDoc } from '../lib/firebase';
+import { Turnstile } from '@marsidev/react-turnstile';
 
 interface SshCreateAccountProps {
   server: TunnelServer | null;
@@ -47,6 +48,7 @@ export const SshCreateAccount: React.FC<SshCreateAccountProps> = ({
   const [password, setPassword] = useState('');
   const [selectedPlan, setSelectedPlan] = useState<'free' | 'vip3' | 'vip7' | 'vip30'>('free');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const planPrices = {
@@ -368,12 +370,32 @@ export const SshCreateAccount: React.FC<SshCreateAccountProps> = ({
              </div>
            </div>
 
+           {/* Cloudflare Turnstile */}
+           <div className="mt-6 flex justify-center w-full">
+             <Turnstile
+               siteKey="1x00000000000000000000AA"
+               onSuccess={(token) => {
+                 setIsVerifying(false);
+               }}
+               onError={() => {
+                 setErrorMessage('Verifikasi Cloudflare gagal. Silakan coba lagi.');
+                 setIsVerifying(true);
+               }}
+               onExpire={() => {
+                 setIsVerifying(true);
+               }}
+               options={{
+                 theme: isDark ? 'dark' : 'light',
+               }}
+             />
+           </div>
+
            <button
              type="submit"
-             disabled={isSubmitting || !username || !password}
-             className="w-full mt-4 py-4 rounded-xl font-bold text-[15px] text-white bg-[#5527d6] hover:bg-[#6839eb] shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+             disabled={isSubmitting || !username || !password || isVerifying}
+             className="w-full mt-4 py-4 rounded-xl font-bold text-[15px] text-white bg-blue-600 hover:bg-blue-500 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
            >
-             {isSubmitting ? 'Creating...' : 'Create Ssh Tunnel Account'}
+             {isSubmitting ? 'Creating...' : 'Create SSH'}
            </button>
         </form>
       </div>

@@ -8,10 +8,10 @@ import {
   ChevronRight,
   Zap,
   ShieldCheck,
-  Star
+  Star,
+  RefreshCw
 } from 'lucide-react';
 import { TunnelServer } from '../types';
-import { SERVERS_LIST } from '../data/mockData';
 
 interface SshServerListProps {
   isDark: boolean;
@@ -25,11 +25,58 @@ export const SshServerList: React.FC<SshServerListProps> = ({
   onBack
 }) => {
   const [activeFilter, setActiveFilter] = useState<'all' | 'ID' | 'SG'>('all');
+  const [servers, setServers] = useState<TunnelServer[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [timeLeft, setTimeLeft] = useState<{ hours: number; minutes: number; seconds: number }>({
     hours: 8,
     minutes: 48,
     seconds: 42
   });
+
+  // Fetch servers from VPS API
+  const fetchServers = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      // In a real scenario, this would be an actual API call to your VPS
+      // e.g. const response = await fetch('http://your-vps-ip/api/servers', { headers: { 'Authorization': 'Bearer YOUR_API_SECRET' }});
+      // const data = await response.json();
+      
+      // Simulating API call delay for now
+      await new Promise(resolve => setTimeout(resolve, 800));
+      
+      // Simulating response from your VPS API
+      const apiResponse: TunnelServer[] = [
+        {
+          id: 'vps-api-01',
+          country: 'Singapore',
+          countryCode: 'SG',
+          flag: '🇸🇬',
+          city: 'My Personal VPS (Auto-Fetched)',
+          host: 'sg1.domain-anda.com',
+          ip: '103.xxx.xxx.xxx',
+          load: Math.floor(Math.random() * 30), // Dynamic load from VPS
+          ping: 24,
+          totalSlots: 100,
+          usedSlots: Math.floor(Math.random() * 50), // Dynamic slots from VPS
+          supportedProtocols: ['ssh', 'vmess', 'vless', 'trojan', 'openvpn', 'wireguard'],
+          isVip: false
+        }
+      ];
+      
+      setServers(apiResponse);
+    } catch (err) {
+      setError('Gagal mengambil data dari server VPS Anda. Pastikan API Secret valid.');
+      console.error('API Fetch error:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchServers();
+  }, []);
 
   // Calculate countdown to next 12:00 reset
   useEffect(() => {
@@ -187,20 +234,41 @@ export const SshServerList: React.FC<SshServerListProps> = ({
 
       {/* Servers List */}
       <div className="space-y-6">
-        {filteredServers.map((server) => {
-          const limitCreated = server.limitCreated ?? 20;
-          const leftCreated = server.leftCreated ?? 20;
-          const freeDays = server.freeActiveDays ?? 3;
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center py-20">
+            <RefreshCw className="w-8 h-8 text-purple-400 animate-spin mb-4" />
+            <p className="text-slate-400">Menghubungkan ke VPS API...</p>
+          </div>
+        ) : error ? (
+          <div className="bg-rose-500/10 border border-rose-500/30 rounded-2xl p-8 text-center">
+            <AlertTriangle className="w-10 h-10 text-rose-400 mx-auto mb-4" />
+            <p className="text-rose-300 font-medium">{error}</p>
+            <button 
+              onClick={fetchServers}
+              className="mt-4 px-6 py-2 bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 rounded-lg text-sm font-bold transition-colors"
+            >
+              Coba Lagi
+            </button>
+          </div>
+        ) : filteredServers.length === 0 ? (
+          <div className="text-center py-10 text-slate-400 bg-[#15112e] rounded-3xl border border-[#2a234f]">
+            Tidak ada server yang tersedia saat ini.
+          </div>
+        ) : (
+          filteredServers.map((server) => {
+            const limitCreated = server.limitCreated ?? 20;
+            const leftCreated = server.leftCreated ?? 20;
+            const freeDays = server.freeActiveDays ?? 3;
 
-          return (
-            <div key={server.id} className="bg-[#15112e] border border-[#2a234f] rounded-3xl p-6 md:p-8">
-               <div className="flex justify-between items-start mb-6">
-                 <div>
-                    <div className="inline-block px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-400 text-[11px] font-bold tracking-wider mb-3">
-                      {server.countryCode === 'SG' ? 'SG1 SSH' : 'ID1 SSH'}
-                    </div>
-                    <h3 className="text-2xl font-bold text-white mb-2">Ssh Tunnel {server.country}</h3>
-                 </div>
+            return (
+              <div key={server.id} className="bg-[#15112e] border border-[#2a234f] rounded-3xl p-6 md:p-8">
+                 <div className="flex justify-between items-start mb-6">
+                   <div>
+                      <div className="inline-block px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-400 text-[11px] font-bold tracking-wider mb-3">
+                        {server.countryCode} SSH
+                      </div>
+                      <h3 className="text-2xl font-bold text-white mb-2">Ssh Tunnel {server.country}</h3>
+                   </div>
                  <div className="text-5xl drop-shadow-lg shadow-sm overflow-hidden rounded-md border border-slate-700/50">
                     {server.flag}
                  </div>
@@ -279,14 +347,15 @@ export const SshServerList: React.FC<SshServerListProps> = ({
                {/* Select Server Button */}
                <button
                   onClick={() => onSelectServer(server)}
-                  className="w-full py-4 rounded-xl font-bold text-sm text-white bg-[#5527d6] hover:bg-[#6839eb] shadow-lg flex items-center justify-center gap-2 transition-colors mt-2"
+                  className="w-full py-4 rounded-xl font-bold text-sm text-white bg-blue-600 hover:bg-blue-500 shadow-lg flex items-center justify-center gap-2 transition-colors mt-2"
                >
                   <span>Select Server</span>
                   <ChevronRight className="w-4 h-4" />
                </button>
             </div>
           );
-        })}
+        })
+      )}
       </div>
     </div>
   );
