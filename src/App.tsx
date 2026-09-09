@@ -89,6 +89,44 @@ export default function App() {
     }
   }, []);
 
+  // Simulate Real-time Platform Statistics Activity
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setStats((prev) => {
+        // Randomly fluctuate online users (-5 to +8)
+        const userChange = Math.floor(Math.random() * 14) - 5;
+        let newOnlineUsers = prev.onlineUsers + userChange;
+        
+        // Prevent going too low or absurdly high
+        if (newOnlineUsers < 2000) newOnlineUsers = 2000 + Math.floor(Math.random() * 50);
+        if (newOnlineUsers > 2500) newOnlineUsers = 2500 - Math.floor(Math.random() * 50);
+
+        let newStats = { 
+          ...prev, 
+          onlineUsers: newOnlineUsers 
+        };
+
+        // 30% chance to increment total accounts and services today
+        if (Math.random() > 0.7) {
+          newStats.servicesToday += 1;
+          newStats.totalAccounts += 1;
+          
+          // Increment a random protocol breakdown
+          const protocols = Object.keys(newStats.breakdown) as (keyof typeof newStats.breakdown)[];
+          const randomProtocol = protocols[Math.floor(Math.random() * protocols.length)];
+          newStats.breakdown = {
+            ...newStats.breakdown,
+            [randomProtocol]: newStats.breakdown[randomProtocol] + 1
+          };
+        }
+
+        return newStats;
+      });
+    }, 3000); // Trigger every 3 seconds
+
+    return () => clearInterval(interval);
+  }, []);
+
   const toggleTheme = () => {
     setIsDark((prev) => {
       const next = !prev;
@@ -186,7 +224,7 @@ export default function App() {
         {/* Main Content Area */}
         <main className="flex-1 overflow-hidden">
           <AnimatePresence mode="wait">
-            <Routes location={location} key={location.pathname}>
+            <Routes location={location}>
               <Route path="/" element={
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}

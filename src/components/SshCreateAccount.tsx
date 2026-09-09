@@ -132,13 +132,12 @@ export const SshCreateAccount: React.FC<SshCreateAccountProps> = ({
         ports: {
           sslTls: 443,
           dropbear: 888,
-          wsStunnel: 443,
-          wsDropbear: 443,
-          wsOpenVpn: 2086,
-          squid: 3128,
-          udpgw: '7100-7900'
+          openSsh: 22,
+          wsCdn: 80,
+          udpCustom: '1-65535'
         },
-        payload
+        payloadString: payload,
+        createdAt: new Date().toISOString()
       };
 
       if (currentUser) {

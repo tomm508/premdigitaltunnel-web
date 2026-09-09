@@ -98,7 +98,7 @@ export const SshServerList: React.FC<SshServerListProps> = ({
     return () => clearInterval(timer);
   }, []);
 
-  const sshServers = SERVERS_LIST.filter(s => s.supportedProtocols.includes('ssh'));
+  const sshServers = servers.filter(s => s.supportedProtocols.includes('ssh'));
   const filteredServers = activeFilter === 'all' 
     ? sshServers 
     : sshServers.filter(s => s.countryCode === activeFilter);
