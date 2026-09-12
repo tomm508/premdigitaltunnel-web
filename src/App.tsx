@@ -398,21 +398,6 @@ export default function App() {
           </AnimatePresence>
         </main>
 
-        {/* Full Page Route Loading Overlay */}
-        <AnimatePresence>
-          {isPageLoading && (
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#0e0a22]/80 backdrop-blur-sm"
-            >
-              <Loader2 className="w-10 h-10 text-purple-500 animate-spin mb-4" />
-              <p className="text-sm font-medium text-purple-200">Loading...</p>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
         {/* Footer */}
         <Footer
           isDark={isDark}
