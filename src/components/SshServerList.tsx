@@ -155,7 +155,7 @@ export const SshServerList: React.FC<SshServerListProps> = ({
 
         <div className="flex flex-col sm:flex-row items-center justify-between bg-[#15112e] rounded-2xl border border-[#2a234f] px-5 py-4 mb-6">
            <div className="text-[13px] text-slate-300 mb-2 sm:mb-0">
-             <span className="text-purple-400 font-medium">Reset Time:</span> 12:00 PM & 12:00 AM (GMT+7)
+             <span className="text-purple-400 font-medium">Reset Time:</span> Setiap Hari, Pukul 12:00 PM & 12:00 AM (GMT+7)
            </div>
            <div className="flex items-center gap-3">
              <span className="text-[13px] text-slate-400 font-medium">Countdown:</span>
