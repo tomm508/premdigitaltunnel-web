@@ -33,6 +33,7 @@ interface NavbarProps {
   onOpenAuth: () => void;
   onOpenTopup?: () => void;
   currentUser?: User | null;
+  userRole?: 'member' | 'admin';
   userBalance?: number;
 }
 
@@ -44,6 +45,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenAuth,
   onOpenTopup,
   currentUser,
+  userRole = 'member',
   userBalance = 0
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -201,6 +203,18 @@ export const Navbar: React.FC<NavbarProps> = ({
             {/* Auth / Balance Button */}
             {currentUser ? (
               <div className="flex items-center gap-2">
+                
+                {userRole === 'admin' && (
+                  <button
+                    onClick={() => navigate('/admin')}
+                    className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 transition-all cursor-pointer"
+                    title="Admin Panel"
+                  >
+                    <Shield className="w-3.5 h-3.5" />
+                    <span>Admin</span>
+                  </button>
+                )}
+
                 <button
                   id="header-balance-chip"
                   onClick={onOpenTopup}
@@ -356,6 +370,19 @@ export const Navbar: React.FC<NavbarProps> = ({
             </div>
 
             
+            
+              {userRole === 'admin' && (
+                <button
+                  onClick={() => {
+                    navigate('/admin');
+                    setMobileMenuOpen(false);
+                  }}
+                  className="w-full py-2.5 px-4 rounded-xl text-sm font-bold bg-rose-500/10 border border-rose-500/20 text-rose-400 text-center mb-2"
+                >
+                  Admin Panel
+                </button>
+              )}
+
             {/* Mobile Login Button */}
             <div className="pt-2">
               {currentUser ? (

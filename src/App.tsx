@@ -19,6 +19,7 @@ import { SshServerList } from './components/SshServerList';
 import { SshCreateAccount } from './components/SshCreateAccount';
 import { FreeTunneling } from './components/FreeTunneling';
 import { Dashboard } from './components/Dashboard';
+import { AdminPanel } from './components/AdminPanel';
 import { ProtocolType, GeneratedAccount, PlatformStat, TunnelServer } from './types';
 import { INITIAL_STATS, SERVERS_LIST } from './data/mockData';
 import { CheckCircle2, Loader2 } from 'lucide-react';
@@ -55,6 +56,7 @@ export default function App() {
   // Firebase User & Balance state
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [userBalance, setUserBalance] = useState<number>(0);
+  const [userRole, setUserRole] = useState<'member' | 'admin'>('member');
 
   // Auth Listener
   useEffect(() => {
@@ -75,6 +77,7 @@ export default function App() {
       if (docSnap.exists()) {
         const data = docSnap.data();
         setUserBalance(data.balance ?? 0);
+        setUserRole(currentUser.email === 'agustiantomi80@gmail.com' ? 'admin' : (data.role ?? 'member'));
       }
     }, (err) => {
       console.warn("Firestore snapshot error:", err);
@@ -241,6 +244,7 @@ export default function App() {
           onOpenAuth={() => setIsAuthModalOpen(true)}
           onOpenTopup={() => setIsTopupModalOpen(true)}
           currentUser={currentUser}
+          userRole={userRole}
           userBalance={userBalance}
         />
 
@@ -371,6 +375,21 @@ export default function App() {
                       signOut(auth);
                       navigate('/');
                     }}
+                  />
+                </motion.div>
+              } />
+
+            
+              <Route path="/admin" element={
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 1.05 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <AdminPanel
+                    isDark={isDark}
+                    userRole={userRole}
                   />
                 </motion.div>
               } />
