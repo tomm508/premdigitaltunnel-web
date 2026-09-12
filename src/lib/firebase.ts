@@ -20,9 +20,7 @@ export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
 
 // Explicitly use the firestore database ID from configuration with long polling fallback for restricted networks
-export const db = initializeFirestore(app, {
-  experimentalAutoDetectLongPolling: true,
-}, firebaseConfig.firestoreDatabaseId);
+export const db = initializeFirestore(app, {});
 
 export { 
   signInWithPopup, 
