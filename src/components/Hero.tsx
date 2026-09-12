@@ -20,7 +20,7 @@ export const Hero: React.FC<HeroProps> = ({ isDark, onGetStarted, onExploreProto
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
         {/* Status Pill */}
-        <div className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs sm:text-sm font-medium mb-8 backdrop-blur-md transition-colors ${
+        <div className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs sm:text-sm font-medium mb-8  transition-colors ${
           isDark 
             ? 'bg-purple-950/60 border border-purple-500/30 text-purple-200 shadow-inner' 
             : 'bg-purple-100 border border-purple-300 text-purple-800 shadow-sm'

@@ -111,7 +111,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ isDark, currentUser, userB
               </div>
               <button 
                 onClick={onOpenTopup}
-                className="w-full py-3 rounded-xl bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white text-sm font-bold transition-all flex items-center justify-center gap-2"
+                className="w-full py-3 rounded-xl bg-white/20 hover:bg-white/30  text-white text-sm font-bold transition-all flex items-center justify-center gap-2"
               >
                 <Wallet className="w-4 h-4" />
                 Top Up Balance
@@ -125,7 +125,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ isDark, currentUser, userB
               <div className="text-2xl font-bold text-white mb-1">History</div>
               <p className="text-purple-200 text-xs">View all transactions</p>
             </div>
-            <button className="w-full mt-4 py-3 rounded-xl bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white text-sm font-bold transition-all flex items-center justify-center gap-2">
+            <button className="w-full mt-4 py-3 rounded-xl bg-white/20 hover:bg-white/30  text-white text-sm font-bold transition-all flex items-center justify-center gap-2">
               <List className="w-4 h-4" />
               View Transactions
             </button>

@@ -102,7 +102,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center p-3 sm:p-4 bg-[#0a0f1c]/95 backdrop-blur-md overflow-y-auto py-10">
+    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center p-3 sm:p-4 bg-[#0a0f1c]/95  overflow-y-auto py-10">
       {/* Background Ornaments */}
       <div className="absolute top-0 inset-x-0 h-64 bg-gradient-to-b from-indigo-500/10 to-transparent pointer-events-none"></div>
       

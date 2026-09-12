@@ -88,7 +88,7 @@ export const ServiceList: React.FC<ServiceListProps> = ({ isDark, onChooseServic
             <div
               key={service.id}
               id={`service-card-${service.id}`}
-              className={`p-6 rounded-3xl transition-all shadow-xl backdrop-blur-sm ${
+              className={`p-6 rounded-3xl transition-all shadow-xl  ${
                 isDark 
                   ? 'bg-[#171239]/90 border border-purple-500/20 hover:border-purple-400/40 hover:bg-[#1f194c]' 
                   : 'bg-white border border-purple-200 hover:border-purple-400 hover:bg-purple-50/30 shadow-purple-900/5'

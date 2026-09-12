@@ -201,7 +201,7 @@ export const AccountModal: React.FC<AccountModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80  overflow-y-auto">
       <div 
         id="account-modal-container"
         className="relative w-full max-w-2xl my-6 bg-[#161138] border border-purple-500/30 rounded-3xl shadow-2xl text-white overflow-hidden"

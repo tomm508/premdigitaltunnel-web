@@ -72,9 +72,9 @@ export const Navbar: React.FC<NavbarProps> = ({
   ];
 
   return (
-    <header className={`sticky top-0 z-40 w-full transition-colors duration-200 border-b backdrop-blur-md ${
+    <header className={`sticky top-0 z-40 w-full transition-colors duration-200 border-b ${
       isDark 
-        ? 'bg-[#0f0c22]/90 border-purple-900/30 text-white' 
+        ? 'bg-[#0f0c22]/95 border-purple-900/30 text-white' 
         : 'bg-white/95 border-purple-200/80 text-slate-900 shadow-sm'
     }`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

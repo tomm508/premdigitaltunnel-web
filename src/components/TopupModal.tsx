@@ -93,7 +93,7 @@ export const TopupModal: React.FC<TopupModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 ">
       <div className="relative w-full max-w-md bg-[#161138] border border-purple-500/30 rounded-3xl shadow-2xl text-white overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-purple-500/20 bg-[#120d30]">
