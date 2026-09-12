@@ -90,46 +90,38 @@ export default function App() {
     }
   }, []);
 
-  // Simulate Real-time Platform Statistics Activity locally
+  // Real-time Platform Statistics Activity
   useEffect(() => {
-    // We listen to the global 'platform/stats' doc in Firestore if you want it purely real, 
-    // but for demo purposes, we will combine the base stats with live user activity simulation.
-    // If you prefer strict real data, you would replace this block with an onSnapshot listener.
+    const initStats = async () => {
+      try {
+        const { getDoc, setDoc, doc } = await import('firebase/firestore');
+        const statsRef = doc(db, 'platform', 'stats');
+        const docSnap = await getDoc(statsRef);
+        if (!docSnap.exists()) {
+          await setDoc(statsRef, INITIAL_STATS);
+        }
+      } catch (e) {
+        console.warn("Failed to init stats", e);
+      }
+    };
+    initStats();
+
     const unsubStats = onSnapshot(doc(db, 'platform', 'stats'), (docSnap) => {
       if (docSnap.exists()) {
         const data = docSnap.data();
-        setStats(prev => ({
-          ...prev,
-          servicesToday: data.servicesToday || prev.servicesToday,
-          totalAccounts: data.totalAccounts || prev.totalAccounts,
-          breakdown: data.breakdown || prev.breakdown
-        }));
+        setStats({
+          activeServers: data.activeServers || INITIAL_STATS.activeServers,
+          servicesToday: data.servicesToday || INITIAL_STATS.servicesToday,
+          totalAccounts: data.totalAccounts || INITIAL_STATS.totalAccounts,
+          onlineUsers: data.onlineUsers || INITIAL_STATS.onlineUsers,
+          breakdown: data.breakdown || INITIAL_STATS.breakdown
+        });
       }
     }, (err) => {
       console.warn("Firestore stats snapshot error (might not exist yet):", err);
     });
 
-    const interval = setInterval(() => {
-      setStats((prev) => {
-        // Randomly fluctuate online users (-5 to +8) to keep the UI feeling "alive"
-        const userChange = Math.floor(Math.random() * 14) - 5;
-        let newOnlineUsers = prev.onlineUsers + userChange;
-        
-        // Prevent going too low or absurdly high
-        if (newOnlineUsers < 2000) newOnlineUsers = 2000 + Math.floor(Math.random() * 50);
-        if (newOnlineUsers > 2500) newOnlineUsers = 2500 - Math.floor(Math.random() * 50);
-
-        return { 
-          ...prev, 
-          onlineUsers: newOnlineUsers 
-        };
-      });
-    }, 3000); // Trigger every 3 seconds
-
-    return () => {
-      clearInterval(interval);
-      unsubStats();
-    };
+    return () => unsubStats();
   }, []);
 
   const toggleTheme = () => {

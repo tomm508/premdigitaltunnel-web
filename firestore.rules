@@ -7,6 +7,14 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    match /platform/{docId} {
+      allow read, write: if true;
+    }
+
+    match /statistics/{statsId} {
+      allow read, write: if true;
+    }
+
     function isSignedIn() {
       return request.auth != null;
     }

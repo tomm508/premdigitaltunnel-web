@@ -128,18 +128,7 @@ export const Hero: React.FC<HeroProps> = ({ isDark, onGetStarted, onExploreProto
           </div>
         </div>
 
-        {/* Action Button */}
-        <div className="flex items-center justify-center">
-          <button
-            id="hero-get-started-btn"
-            onClick={onGetStarted}
-            className="w-full sm:w-auto px-8 py-4 rounded-2xl font-bold text-sm sm:text-base text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 shadow-xl shadow-purple-600/30 hover:shadow-purple-600/50 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2"
-          >
-            <Sparkles className="w-5 h-5" />
-            <span>Get Started Free</span>
-            <ArrowRight className="w-5 h-5" />
-          </button>
-        </div>
+        {/* Action Button Removed as requested */}
       </div>
     </section>
   );
