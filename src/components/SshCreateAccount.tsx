@@ -47,16 +47,7 @@ export const SshCreateAccount: React.FC<SshCreateAccountProps> = ({
   const [password, setPassword] = useState('');
   const [selectedPlan, setSelectedPlan] = useState<'free' | 'vip3' | 'vip7' | 'vip30'>('free');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isVerifying, setIsVerifying] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-
-  useEffect(() => {
-    // Simulate Cloudflare turnstile verification delay for the mockup
-    const timer = setTimeout(() => {
-      setIsVerifying(false);
-    }, 1500 + Math.random() * 1500); // 1.5s - 3.0s
-    return () => clearTimeout(timer);
-  }, []);
 
   const planPrices = {
     free: 0,
@@ -376,40 +367,10 @@ export const SshCreateAccount: React.FC<SshCreateAccountProps> = ({
              </div>
            </div>
 
-           {/* Cloudflare Turnstile Mockup for Preview Environment */}
-           <div className="bg-[#222222] border border-[#333] rounded-sm p-4 mt-6 flex items-center justify-between h-[74px] overflow-hidden shadow-sm">
-             <div className="flex items-center gap-3">
-               {isVerifying ? (
-                 <div className="w-6 h-6 border-4 border-slate-700 border-t-emerald-500 rounded-full animate-spin flex-shrink-0"></div>
-               ) : (
-                 <div className="w-6 h-6 bg-emerald-500 rounded-full flex items-center justify-center flex-shrink-0 shadow-sm">
-                   <Check className="w-3.5 h-3.5 text-white" strokeWidth={3} />
-                 </div>
-               )}
-               <span className="text-[13px] text-slate-300 font-medium">
-                 {isVerifying ? 'Melakukan verifikasi...' : 'Verifikasi berhasil'}
-               </span>
-             </div>
-             
-             <div className="flex flex-col items-end justify-center pl-4 border-l border-[#333] opacity-80 h-full">
-               <div className="flex flex-col items-center">
-                 <div className="flex items-center text-[#f38020] font-bold text-xs gap-1 tracking-tight">
-                   <svg viewBox="0 0 100 100" className="w-5 h-5 fill-current">
-                     <path d="M72.2 44.5c-1.3-11.8-11.3-21-23.4-21-9.9 0-18.4 6-22.1 14.8-1.5-.4-3.1-.6-4.7-.6-8.8 0-16 7.2-16 16 0 8.7 6.9 15.8 15.6 16h49.6c8.3 0 15-6.7 15-15 0-8.2-6.5-14.8-14-15.2z" />
-                   </svg>
-                   CLOUDFLARE
-                 </div>
-                 <div className="text-[9px] text-slate-500 mt-0.5 whitespace-nowrap">
-                   <a href="#" className="hover:underline">Privasi</a> · <a href="#" className="hover:underline">Bantuan</a>
-                 </div>
-               </div>
-             </div>
-           </div>
-
            <button
              type="submit"
-             disabled={isSubmitting || !username || !password || isVerifying}
-             className="w-full mt-4 py-4 rounded-xl font-bold text-[15px] text-white bg-blue-600 hover:bg-blue-500 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+             disabled={isSubmitting || !username || !password}
+             className="w-full mt-6 py-4 rounded-xl font-bold text-[15px] text-white bg-blue-600 hover:bg-blue-500 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
            >
              {isSubmitting ? 'Creating...' : 'Create SSH'}
            </button>
