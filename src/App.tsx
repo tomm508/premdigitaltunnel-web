@@ -21,7 +21,6 @@ import { FreeTunneling } from './components/FreeTunneling';
 import { Dashboard } from './components/Dashboard';
 import { AdminPanel } from './components/AdminPanel';
 import { ServerStatusPage } from './pages/ServerStatusPage';
-import { NetworkToolsCard } from './components/NetworkToolsCard';
 import { ProtocolType, GeneratedAccount, PlatformStat, TunnelServer } from './types';
 import { INITIAL_STATS, SERVERS_LIST } from './data/mockData';
 import { CheckCircle2, Loader2 } from 'lucide-react';
@@ -299,12 +298,6 @@ export default function App() {
                     isDark={isDark}
                     onGetStarted={() => navigate('/free')}
                     onExploreProtocols={() => navigate('/free')}
-                  />
-
-                  {/* Network & Tunneling Tools Quick Telemetry Card */}
-                  <NetworkToolsCard
-                    isDark={isDark}
-                    onOpenTool={handleOpenTool}
                   />
 
                   {/* Pick Your Tunneling Overview */}

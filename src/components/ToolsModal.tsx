@@ -512,9 +512,9 @@ export const ToolsModal: React.FC<ToolsModalProps> = ({ toolId, isOpen, onClose 
             <div className="space-y-3">
               <div className="flex items-center justify-between mb-1">
                 <h4 className="font-bold text-white text-sm">Server Fleet Telemetry</h4>
-                <span className="text-xs text-emerald-400 font-semibold flex items-center gap-1">
+                <span className="text-xs text-emerald-400 font-semibold flex items-center gap-1.5">
                   <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                  All {activeServerList.length > 2 ? activeServerList.length : 19} Nodes Online
+                  Online
                 </span>
               </div>
 
