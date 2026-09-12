@@ -603,7 +603,7 @@ export const AccountModal: React.FC<AccountModalProps> = ({
                       className="w-full py-2.5 px-4 rounded-xl bg-[#1f194c] hover:bg-[#282062] border border-purple-500/30 text-xs font-bold text-white flex items-center justify-center gap-2 transition-colors"
                     >
                       <Download className="w-4 h-4 text-purple-300" />
-                      <span>Download Config File (.ovpn / .conf / .txt)</span>
+                      <span>Download Config File (.txt)</span>
                     </button>
                   </div>
                 </div>

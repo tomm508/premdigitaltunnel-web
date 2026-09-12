@@ -115,7 +115,7 @@ export const FAQ_ITEMS: FaqItem[] = [
   },
   {
     question: 'Which protocol is best for gaming and low latency?',
-    answer: 'For competitive gaming (e.g. Mobile Legends, Free Fire, PUBG, Valorant), WireGuard and SSH UDP Custom offer the lowest latency and least protocol packet overhead. For bypassing firewalls with moderate latency, SSH WebSocket or VMess via Cloudflare CDN is recommended.'
+    answer: 'For competitive gaming (e.g. Mobile Legends, Free Fire, PUBG, Valorant), SSH UDP Custom offers the lowest latency and least protocol packet overhead. For bypassing firewalls with moderate latency, SSH WebSocket or VMess via Cloudflare CDN is recommended.'
   },
   {
     question: 'What is Bug Host / SNI (Server Name Indication)?',

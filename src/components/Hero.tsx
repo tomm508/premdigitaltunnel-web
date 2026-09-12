@@ -46,7 +46,7 @@ export const Hero: React.FC<HeroProps> = ({ isDark, onGetStarted, onExploreProto
         <p className={`text-sm sm:text-base md:text-lg max-w-2xl mx-auto leading-relaxed mb-10 transition-colors ${
           isDark ? 'text-slate-300' : 'text-slate-600'
         }`}>
-          Create VPN and SSH tunneling accounts in seconds. <strong className={isDark ? 'text-purple-300 font-semibold' : 'text-purple-700 font-semibold'}>SSH Tunnel WebSocket, OpenVPN, V2Ray Vmess, Xray Vless, Trojan VPN, Wireguard</strong> with global servers and zero logs policy.
+          Create VPN and SSH tunneling accounts in seconds. <strong className={isDark ? 'text-purple-300 font-semibold' : 'text-purple-700 font-semibold'}>SSH Tunnel WebSocket, V2Ray Vmess, Xray Vless, Trojan VPN</strong> with global servers and zero logs policy.
         </p>
 
         {/* 4 Feature Cards (2x2 Grid) */}

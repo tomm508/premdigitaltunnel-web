@@ -6,14 +6,14 @@ interface SpeedGuideProps {
 }
 
 export const SpeedGuide: React.FC<SpeedGuideProps> = ({ isDark }) => {
-  const [activeTab, setActiveTab] = useState<'vpn' | 'ssh' | 'v2ray' | 'trojan'>('vpn');
+  const [activeTab, setActiveTab] = useState<'ssh' | 'v2ray' | 'trojan'>('ssh');
 
   const keywords = [
-    'free openvpn', 'free wireguard', 'openvpn tcp 443', 'udp vpn speed', 
-    'wireguard mobile battery', 'mtu settings', 'low latency vpn', 
-    'router vpn', 'config download', 'privacy dns', 'openvpn cipher suites', 
-    'wireguard roaming', 'vpn performance comparison', 'mobile vpn optimization', 
-    'gaming vpn setup', 'streaming vpn configuration'
+    'free ssh', 'free vmess', 'vless trojan', 'ssh udp speed', 
+    'trojan port 443', 'mtu settings', 'low latency ssh', 
+    'router ssh', 'config download', 'privacy dns', 'v2ray reality', 
+    'vmess roaming', 'tunnel performance comparison', 'mobile ssh optimization', 
+    'gaming ssh setup', 'streaming vmess configuration'
   ];
 
   return (
@@ -53,7 +53,6 @@ export const SpeedGuide: React.FC<SpeedGuideProps> = ({ isDark }) => {
             isDark ? 'border-purple-500/20' : 'border-purple-100'
           }`}>
             {[
-              { id: 'vpn', label: 'OpenVPN & WireGuard' },
               { id: 'ssh', label: 'SSH & WebSocket' },
               { id: 'v2ray', label: 'V2Ray & Xray' },
               { id: 'trojan', label: 'Trojan Protocol' },
@@ -79,20 +78,6 @@ export const SpeedGuide: React.FC<SpeedGuideProps> = ({ isDark }) => {
           <div className={`space-y-4 text-xs sm:text-sm leading-relaxed transition-colors ${
             isDark ? 'text-slate-300' : 'text-slate-600'
           }`}>
-            {activeTab === 'vpn' && (
-              <div className="space-y-4">
-                <p>
-                  <strong className={isDark ? 'text-purple-300' : 'text-purple-700 font-semibold'}>OpenVPN and WireGuard</strong> are the two most popular standards for encrypted tunneling today, and PremDigital TUNNEL offers both as <strong className="text-emerald-500 font-semibold">FREE VPN</strong> options with ready-to-import profiles. <strong className={isDark ? 'text-white font-medium' : 'text-slate-900 font-medium'}>OpenVPN</strong> wins on compatibility: there are clients for Windows, Android, iOS, macOS, Linux, routers, and NAS boxes. When a network is fussy or runs through proxies, <strong className={isDark ? 'text-white font-medium' : 'text-slate-900 font-medium'}>OpenVPN TCP 443</strong> looks like regular HTTPS and usually gets through.
-                </p>
-                <p>
-                  When the line is clean and you want throughput, <strong className={isDark ? 'text-white font-medium' : 'text-slate-900 font-medium'}>OpenVPN UDP</strong> generally performs better than TCP. <strong className={isDark ? 'text-purple-300 font-semibold' : 'text-purple-700 font-semibold'}>WireGuard</strong>, meanwhile, is built around modern cryptography and a lean codebase. Handshakes are fast, roaming between Wi-Fi and cellular is snappy, CPU overhead is low, and battery drain on mobile is typically less than legacy protocols. Many users report that WireGuard feels "instant" when launching games or streaming 4K content.
-                </p>
-                <p>
-                  For the best experience, choose a region close to you. Latency drops dramatically when the exit node is geographically nearby. If a route degrades during peak hours, try a neighboring country or city; internet paths are dynamic and capacity shifts constantly.
-                </p>
-              </div>
-            )}
-
             {activeTab === 'ssh' && (
               <div className="space-y-4">
                 <h4 className={`text-base font-bold flex items-center gap-2 ${

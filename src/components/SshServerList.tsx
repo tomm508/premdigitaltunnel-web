@@ -121,7 +121,7 @@ export const SshServerList: React.FC<SshServerListProps> = ({
       </h1>
       
       <p className="text-center text-[15px] leading-relaxed text-slate-300 max-w-3xl mx-auto mb-6">
-        JagoVPN provides fast, free SSH servers with AIO SSH tunneling (SSH WebSocket, OpenVPN, Stunnel SSH UDP ZIVPN). 
+        JagoVPN provides fast, free SSH servers with AIO SSH tunneling (SSH WebSocket, Stunnel SSH UDP ZIVPN). 
         Create a free SSH account (7 Days/ 30 Days/ 60 Days), use ports 80/443 on restricted Wi-Fi, and enjoy low-latency tunneling with a strict no-logs policy.
       </p>
 

@@ -59,7 +59,7 @@ export const PickTunneling: React.FC<PickTunnelingProps> = ({ isDark }) => {
                 <p className={`text-sm mb-2 leading-relaxed transition-colors ${
                   isDark ? 'text-slate-300' : 'text-slate-600'
                 }`}>
-                  OpenVPN, WireGuard, Vmess, Vless, Trojan VPN with the best performance and guaranteed privacy for you.
+                  Vmess, Vless, Trojan VPN with the best performance and guaranteed privacy for you.
                 </p>
                 <div className={`inline-block text-xs font-medium px-2.5 py-1 rounded-md border ${
                   isDark 

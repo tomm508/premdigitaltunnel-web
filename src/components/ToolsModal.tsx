@@ -157,7 +157,7 @@ export const ToolsModal: React.FC<ToolsModalProps> = ({ toolId, isOpen, onClose 
       } else if (q.includes('ssh') || q.includes('payload') || q.includes('ws')) {
         reply = 'Format HTTP WebSocket Payload untuk SSH:\n\nGET / HTTP/1.1[crlf]Host: [host_bug][crlf]Upgrade: websocket[crlf]Connection: Upgrade[crlf]User-Agent: [ua][crlf][crlf]\n\nGanti [host_bug] dengan bug host yang Anda gunakan!';
       } else if (q.includes('game') || q.includes('ping') || q.includes('lag')) {
-        reply = 'Untuk gaming online (Mobile Legends, FF, PUBG), kami sangat merekomendasikan server Singapore 🇸🇬 atau Indonesia 🇮🇩 dengan protokol WireGuard atau SSH UDP Custom untuk ping terendah (10-30ms) dan anti-disconnect.';
+        reply = 'Untuk gaming online (Mobile Legends, FF, PUBG), kami sangat merekomendasikan server Singapore 🇸🇬 atau Indonesia 🇮🇩 dengan protokol SSH UDP Custom untuk ping terendah (10-30ms) dan anti-disconnect.';
       } else {
         reply = `Terima kasih! Layanan PremDigital TUNNEL menyediakan server gratis 100% dengan proteksi SSL/TLS dan CDN Cloudflare. Anda bisa langsung generate akun di tab Services. Ada hal teknis lain yang ingin ditanyakan?`;
       }

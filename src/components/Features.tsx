@@ -27,7 +27,7 @@ export const Features: React.FC<FeaturesProps> = ({ isDark }) => {
       id: 'dpi-firewall',
       icon: <Flame className="w-5 h-5 text-amber-500" />,
       title: 'DPI & Firewall Ready',
-      description: 'SSH Tunnel, OpenVPN, WireGuard, Trojan VPN, Vmess, Vless, WebSocket, SSL, and gRPC options help you slip through corporate firewalls and ISP throttling.',
+      description: 'SSH Tunnel, Trojan VPN, Vmess, Vless, WebSocket, SSL, and gRPC options help you slip through corporate firewalls and ISP throttling.',
       color: 'bg-amber-500/10 border-amber-500/20'
     },
     {
