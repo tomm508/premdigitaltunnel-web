@@ -1,7 +1,7 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
 import { 
-  getFirestore, 
+  initializeFirestore, 
   doc, 
   getDoc, 
   setDoc, 
@@ -10,8 +10,7 @@ import {
   addDoc, 
   onSnapshot,
   query,
-  orderBy,
-  getDocFromServer
+  orderBy
 } from 'firebase/firestore';
 import { firebaseConfig } from './firebaseConfig';
 
@@ -20,20 +19,10 @@ const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
 
-// Explicitly use the firestore database ID from configuration
-export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
-
-// Test connection on boot
-export async function testFirestoreConnection() {
-  try {
-    await getDocFromServer(doc(db, 'test', 'connection'));
-  } catch (error) {
-    if (error instanceof Error) {
-      console.warn("Firestore connection warning:", error.message);
-    }
-  }
-}
-testFirestoreConnection();
+// Explicitly use the firestore database ID from configuration with long polling fallback for restricted networks
+export const db = initializeFirestore(app, {
+  experimentalForceLongPolling: true,
+}, firebaseConfig.firestoreDatabaseId);
 
 export { 
   signInWithPopup, 

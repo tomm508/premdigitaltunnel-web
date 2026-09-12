@@ -21,7 +21,7 @@ import { FreeTunneling } from './components/FreeTunneling';
 import { ProtocolType, GeneratedAccount, PlatformStat, TunnelServer } from './types';
 import { INITIAL_STATS, SERVERS_LIST } from './data/mockData';
 import { CheckCircle2, Loader2 } from 'lucide-react';
-import { auth, onSnapshot, doc, db, signOut } from './lib/firebase';
+import { auth, onSnapshot, doc, db, signOut, getDoc, setDoc, updateDoc } from './lib/firebase';
 import { User, onAuthStateChanged } from 'firebase/auth';
 
 export default function App() {
@@ -94,7 +94,6 @@ export default function App() {
   useEffect(() => {
     const initStats = async () => {
       try {
-        const { getDoc, setDoc, doc } = await import('firebase/firestore');
         const statsRef = doc(db, 'platform', 'stats');
         const docSnap = await getDoc(statsRef);
         if (!docSnap.exists()) {
@@ -169,23 +168,21 @@ export default function App() {
       const newBreakdown = { ...stats.breakdown, [acc.protocol]: (stats.breakdown[acc.protocol] || 0) + 1 };
       
       // Note: In production you would use a Transaction or FieldValue.increment() here to prevent race conditions.
-      await import('firebase/firestore').then(async ({ updateDoc, setDoc }) => {
-        try {
-          await updateDoc(statsRef, {
+      try {
+        await updateDoc(statsRef, {
+          servicesToday: stats.servicesToday + 1,
+          totalAccounts: stats.totalAccounts + 1,
+          breakdown: newBreakdown
+        });
+      } catch (e: any) {
+        if (e.code === 'not-found') {
+          await setDoc(statsRef, {
             servicesToday: stats.servicesToday + 1,
             totalAccounts: stats.totalAccounts + 1,
             breakdown: newBreakdown
           });
-        } catch (e: any) {
-          if (e.code === 'not-found') {
-            await setDoc(statsRef, {
-              servicesToday: stats.servicesToday + 1,
-              totalAccounts: stats.totalAccounts + 1,
-              breakdown: newBreakdown
-            });
-          }
         }
-      });
+      }
     } catch (e) {
       console.warn("Failed to sync global stats to Firestore", e);
     }
