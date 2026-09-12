@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { X, LogIn, Shield, Check, Lock, Mail, User as UserIcon } from 'lucide-react';
-import { auth, googleProvider, signInWithPopup, db, doc, getDoc, setDoc } from '../lib/firebase';
+import { auth, googleProvider, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, db, doc, getDoc, setDoc } from '../lib/firebase';
 import { User } from 'firebase/auth';
 import { LogoMark } from './Logo';
 
@@ -24,8 +24,40 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const [isLogin, setIsLogin] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
 
   if (!isOpen) return null;
+
+  const handleEmailAuth = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsProcessing(true);
+    setErrorMsg('');
+    try {
+      if (isLogin) {
+        await signInWithEmailAndPassword(auth, email, password);
+        onClose();
+      } else {
+        const result = await createUserWithEmailAndPassword(auth, email, password);
+        const user = result.user;
+        const userRef = doc(db, 'users', user.uid);
+        await setDoc(userRef, {
+          uid: user.uid,
+          email: user.email || '',
+          displayName: 'Member',
+          balance: 0,
+          role: 'member',
+          createdAt: new Date().toISOString()
+        });
+        onClose();
+      }
+    } catch (err: any) {
+      console.error(err);
+      setErrorMsg(err.message || (isLogin ? 'Gagal login.' : 'Gagal mendaftar.'));
+    } finally {
+      setIsProcessing(false);
+    }
+  };
 
   const handleGoogleSignIn = async () => {
     setIsProcessing(true);
@@ -58,15 +90,20 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col items-center justify-center p-3 sm:p-4 bg-[#0a0f1c]/95 backdrop-blur-md overflow-y-auto py-10">
+      {/* Background Ornaments */}
+      <div className="absolute top-0 inset-x-0 h-64 bg-gradient-to-b from-indigo-500/10 to-transparent pointer-events-none"></div>
       
-      {/* Header Logo & Text (Outside Card) */}
       {!currentUser && (
-        <div className="flex flex-col items-center justify-center mb-8 text-center animate-fade-in-up">
-          <div className="mb-5 relative">
+        <div className="mb-6 flex flex-col items-center text-center">
+          <div className="w-16 h-16 rounded-2xl bg-indigo-500/20 flex items-center justify-center mb-4 border border-indigo-500/30">
              <LogoMark size={64} isDark={true} className="shadow-lg shadow-indigo-500/30" />
           </div>
-          <h2 className="text-3xl font-bold text-white mb-2 tracking-tight">Welcome back</h2>
-          <p className="text-slate-400 text-sm">Sign in to your account to continue</p>
+          <h2 className="text-3xl font-bold text-white mb-2 tracking-tight">
+            {isLogin ? 'Welcome back' : 'Create Account'}
+          </h2>
+          <p className="text-slate-400 text-sm">
+            {isLogin ? 'Sign in to your account to continue' : 'Sign up to get started'}
+          </p>
         </div>
       )}
 
@@ -122,7 +159,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   <span className="font-mono text-slate-300 bg-slate-800/50 px-2 py-1 rounded">{currentUser.uid.slice(0, 12)}</span>
                 </div>
               </div>
-
+              
               <div className="pt-4 flex gap-3">
                 <button
                   onClick={() => {
@@ -144,7 +181,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 </div>
               )}
 
-              <form onSubmit={(e) => { e.preventDefault(); handleGoogleSignIn(); }} className="space-y-5">
+              <form onSubmit={handleEmailAuth} className="space-y-5">
                 {/* Email */}
                 <div>
                   <label className="block text-[13px] font-medium text-slate-300 mb-2">
@@ -155,6 +192,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     <input
                       type="email"
                       required
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
                       placeholder="Enter your email"
                       className="w-full pl-11 pr-4 py-3 rounded-xl bg-[#232a42] border border-indigo-500/40 focus:border-indigo-400 text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-indigo-400/50 text-sm transition-all shadow-inner"
                     />
@@ -171,33 +210,38 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     <input
                       type="password"
                       required
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
                       placeholder="Enter your password"
                       className="w-full pl-11 pr-4 py-3 rounded-xl bg-[#232a42] border border-slate-600/50 focus:border-slate-500 text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500/50 text-sm transition-all shadow-inner"
                     />
                   </div>
                 </div>
 
-                {/* Remember Me & Forgot Password */}
-                <div className="flex items-center justify-between pt-1">
-                  <label className="flex items-center gap-2 cursor-pointer group">
-                    <div className="w-4 h-4 rounded bg-[#232a42] border border-slate-600 group-hover:border-indigo-400 flex items-center justify-center">
-                       {/* Unchecked state by default visually */}
-                    </div>
-                    <span className="text-xs text-slate-400 group-hover:text-slate-300 transition-colors">Remember me</span>
-                  </label>
-                  <a href="#" className="text-xs text-indigo-400 hover:text-indigo-300 transition-colors">
-                    Forgot password?
-                  </a>
-                </div>
+                {/* Remember Me & Forgot Password (Only on Login) */}
+                {isLogin && (
+                  <div className="flex items-center justify-between pt-1">
+                    <label className="flex items-center gap-2 cursor-pointer group">
+                      <div className="w-4 h-4 rounded bg-[#232a42] border border-slate-600 group-hover:border-indigo-400 flex items-center justify-center">
+                         {/* Unchecked state by default visually */}
+                      </div>
+                      <span className="text-xs text-slate-400 group-hover:text-slate-300 transition-colors">Remember me</span>
+                    </label>
+                    <a href="#" className="text-xs text-indigo-400 hover:text-indigo-300 transition-colors">
+                      Forgot password?
+                    </a>
+                  </div>
+                )}
 
                 {/* Sign In Button */}
                 <div className="pt-2">
                   <button
                     type="submit"
-                    className="w-full py-3.5 rounded-xl font-bold text-sm text-white bg-[#8b3dff] hover:bg-[#7e36e8] shadow-lg shadow-[#8b3dff]/20 flex items-center justify-center gap-2 cursor-pointer transition-colors"
+                    disabled={isProcessing}
+                    className="w-full py-3.5 rounded-xl font-bold text-sm text-white bg-[#8b3dff] hover:bg-[#7e36e8] shadow-lg shadow-[#8b3dff]/20 flex items-center justify-center gap-2 cursor-pointer transition-colors disabled:opacity-60"
                   >
                     <Lock className="w-4 h-4 opacity-70" />
-                    <span>Sign in</span>
+                    <span>{isProcessing ? 'Processing...' : (isLogin ? 'Sign in' : 'Sign up')}</span>
                   </button>
                 </div>
               </form>
@@ -225,13 +269,18 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 <span>{isProcessing ? 'Connecting...' : 'Sign in with Google'}</span>
               </button>
 
-              {/* Sign Up Link */}
+              {/* Sign Up / Sign In Toggle Link */}
               <div className="text-center pt-2">
-                <p className="text-xs text-slate-400">
-                  Don't have an account? <a href="#" className="text-indigo-400 font-medium hover:text-indigo-300">Sign up</a>
-                </p>
+                {isLogin ? (
+                  <p className="text-xs text-slate-400">
+                    Don't have an account? <button type="button" onClick={() => { setIsLogin(false); setErrorMsg(''); }} className="text-indigo-400 font-medium hover:text-indigo-300">Sign up</button>
+                  </p>
+                ) : (
+                  <p className="text-xs text-slate-400">
+                    Already have an account? <button type="button" onClick={() => { setIsLogin(true); setErrorMsg(''); }} className="text-indigo-400 font-medium hover:text-indigo-300">Sign in</button>
+                  </p>
+                )}
               </div>
-
             </div>
           )}
         </div>
@@ -239,4 +288,3 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     </div>
   );
 };
-
