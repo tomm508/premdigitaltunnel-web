@@ -17,6 +17,8 @@ import {
   Zap
 } from 'lucide-react';
 import { SERVERS_LIST } from '../data/mockData';
+import { db, collection, onSnapshot } from '../lib/firebase';
+import { VpsNode } from '../types';
 
 interface ToolsModalProps {
   toolId: string | null;
@@ -63,6 +65,65 @@ export const ToolsModal: React.FC<ToolsModalProps> = ({ toolId, isOpen, onClose 
   const [userInput, setUserInput] = useState('');
   const [aiTyping, setAiTyping] = useState(false);
 
+  // Dynamic VPS Nodes State
+  const [vpsNodes, setVpsNodes] = useState<VpsNode[]>([]);
+
+  // Real-time listener for VPS Nodes from Firestore
+  useEffect(() => {
+    const unsub = onSnapshot(collection(db, 'vps_nodes'), (snap) => {
+      if (!snap.empty) {
+        const nodes: VpsNode[] = [];
+        const now = Date.now();
+        snap.forEach((d) => {
+          const data = d.data();
+          const lastHb = data.lastHeartbeat ? new Date(data.lastHeartbeat).getTime() : 0;
+          const isOnline = (now - lastHb) < 15 * 60 * 1000 || data.status === 'Online';
+          nodes.push({
+            id: d.id,
+            name: data.name || d.id,
+            ip: data.ip || '103.xxx.xxx.xxx',
+            city: data.city || 'Cloud VPS',
+            country: data.country || 'Global',
+            countryCode: data.countryCode || 'SG',
+            onlineUsers: Number(data.onlineUsers || 0),
+            cpuLoad: Number(data.cpuLoad || 10),
+            ramUsage: Number(data.ramUsage || 25),
+            status: isOnline ? 'Online' : 'Down',
+            lastHeartbeat: data.lastHeartbeat || new Date().toISOString()
+          });
+        });
+        setVpsNodes(nodes);
+      }
+    }, (err) => {
+      console.warn("ToolsModal vps_nodes error:", err);
+    });
+
+    return () => unsub();
+  }, []);
+
+  // Compute active server list from vpsNodes if available, else fallback to SERVERS_LIST
+  const activeServerList = vpsNodes.length > 0 
+    ? vpsNodes.map(n => ({
+        id: n.id,
+        flag: n.countryCode === 'ID' ? '🇮🇩' : '🇸🇬',
+        country: n.countryCode === 'ID' ? 'Indonesia' : 'Singapore',
+        city: n.city || (n.countryCode === 'ID' ? 'Jakarta Cloud (My VPS)' : 'Server Pribadi (My VPS)'),
+        host: `${n.name.toLowerCase().replace(/\s+/g, '')}.premdigital.web.id`,
+        ping: n.countryCode === 'ID' ? 15 : 24,
+        load: n.cpuLoad || 15,
+        status: n.status
+      }))
+    : SERVERS_LIST.map(s => ({
+        id: s.id,
+        flag: s.flag,
+        country: s.country,
+        city: s.city,
+        host: s.host,
+        ping: s.ping,
+        load: s.load,
+        status: 'Online' as const
+      }));
+
   useEffect(() => {
     if (toolId) {
       setActiveTab(toolId);
@@ -94,7 +155,7 @@ export const ToolsModal: React.FC<ToolsModalProps> = ({ toolId, isOpen, onClose 
   const runPingTest = () => {
     setPinging(true);
     const results: { [key: string]: number } = {};
-    SERVERS_LIST.forEach((srv) => {
+    activeServerList.forEach((srv) => {
       // add minor realistic fluctuation
       results[srv.id] = Math.max(5, srv.ping + Math.floor(Math.random() * 8) - 4);
     });
@@ -308,7 +369,7 @@ export const ToolsModal: React.FC<ToolsModalProps> = ({ toolId, isOpen, onClose 
               </div>
 
               <div className="space-y-2.5">
-                {SERVERS_LIST.map((srv) => {
+                {activeServerList.map((srv) => {
                   const ping = pingResults[srv.id] || srv.ping;
                   return (
                     <div key={srv.id} className="p-3 rounded-xl bg-[#120d2c] border border-purple-500/20 flex items-center justify-between">
@@ -453,12 +514,12 @@ export const ToolsModal: React.FC<ToolsModalProps> = ({ toolId, isOpen, onClose 
                 <h4 className="font-bold text-white text-sm">Server Fleet Telemetry</h4>
                 <span className="text-xs text-emerald-400 font-semibold flex items-center gap-1">
                   <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                  All 19 Nodes Online
+                  All {activeServerList.length > 2 ? activeServerList.length : 19} Nodes Online
                 </span>
               </div>
 
               <div className="space-y-2.5 max-h-72 overflow-y-auto pr-1">
-                {SERVERS_LIST.map((srv) => (
+                {activeServerList.map((srv) => (
                   <div key={srv.id} className="p-3 rounded-2xl bg-[#120d2c] border border-purple-500/20 text-xs">
                     <div className="flex justify-between items-center mb-1.5">
                       <div className="flex items-center gap-2 font-bold text-white">

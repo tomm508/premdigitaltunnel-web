@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { db, doc, collection, onSnapshot, setDoc, updateDoc } from '../lib/firebase';
 import { Settings, Users, Server, Clock, Save, ShieldAlert, CheckCircle2, BarChart2, Terminal, Copy, Check, RefreshCw, Cpu, HardDrive, Globe, Radio } from 'lucide-react';
 import { SERVERS_LIST, INITIAL_STATS } from '../data/mockData';
+import { firebaseConfig } from '../lib/firebaseConfig';
 import { VpsNode } from '../types';
 
 interface AdminPanelProps {
@@ -229,8 +230,9 @@ TIMESTAMP=\$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 echo "[PremDigital] Node: \$NODE_ID (\$SERVER_IP) -> Online Users: \$TOTAL_ONLINE, CPU: \$CPU_LOAD%, RAM: \$RAM_USED%"
 
 # 4. Kirim langsung ke Firebase Firestore collection 'vps_nodes' via REST API
-PROJECT_ID="ai-studio-premdigitaltunne-563571df-29ee-44be-a591-c6690b4a41c4"
-REST_URL="https://firestore.googleapis.com/v1/projects/\${PROJECT_ID}/databases/(default)/documents/vps_nodes/\${NODE_ID}?updateMask.fieldPaths=onlineUsers&updateMask.fieldPaths=cpuLoad&updateMask.fieldPaths=ramUsage&updateMask.fieldPaths=lastHeartbeat&updateMask.fieldPaths=status&updateMask.fieldPaths=ip&updateMask.fieldPaths=name&updateMask.fieldPaths=city&updateMask.fieldPaths=countryCode&updateMask.fieldPaths=sshOnline&updateMask.fieldPaths=xrayOnline"
+PROJECT_ID="${firebaseConfig.projectId}"
+API_KEY="${firebaseConfig.apiKey}"
+REST_URL="https://firestore.googleapis.com/v1/projects/\${PROJECT_ID}/databases/(default)/documents/vps_nodes/\${NODE_ID}?key=\${API_KEY}&updateMask.fieldPaths=onlineUsers&updateMask.fieldPaths=cpuLoad&updateMask.fieldPaths=ramUsage&updateMask.fieldPaths=lastHeartbeat&updateMask.fieldPaths=status&updateMask.fieldPaths=ip&updateMask.fieldPaths=name&updateMask.fieldPaths=city&updateMask.fieldPaths=countryCode&updateMask.fieldPaths=sshOnline&updateMask.fieldPaths=xrayOnline"
 
 JSON_PAYLOAD=\$(cat <<EOF
 {

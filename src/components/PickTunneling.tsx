@@ -1,11 +1,14 @@
 import React from 'react';
-import { Shield, Zap, Lock, Globe, Settings } from 'lucide-react';
+import { Shield, Zap, Lock, Globe, Settings, ArrowRight } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 interface PickTunnelingProps {
   isDark: boolean;
 }
 
 export const PickTunneling: React.FC<PickTunnelingProps> = ({ isDark }) => {
+  const navigate = useNavigate();
+
   return (
     <section id="pick-tunneling" className="py-12 md:py-16 relative">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -38,10 +41,11 @@ export const PickTunneling: React.FC<PickTunnelingProps> = ({ isDark }) => {
           {/* Card 1: VPN Tunnel */}
           <div 
             id="protocol-card-vpn"
-            className={`p-5 sm:p-6 rounded-2xl relative overflow-hidden shadow-lg ${
+            onClick={() => navigate('/free')}
+            className={`p-5 sm:p-6 rounded-2xl relative overflow-hidden shadow-lg cursor-pointer transition-all duration-300 hover:scale-[1.01] ${
               isDark 
-                ? 'bg-[#171239] border border-purple-500/20' 
-                : 'bg-white border border-purple-200 shadow-purple-900/5'
+                ? 'bg-[#171239] border border-purple-500/20 hover:border-purple-400/50 hover:bg-[#1f194c]' 
+                : 'bg-white border border-purple-200 shadow-purple-900/5 hover:border-purple-400 hover:shadow-md'
             }`}
           >
             <div className="flex items-start gap-4">
@@ -55,6 +59,10 @@ export const PickTunneling: React.FC<PickTunnelingProps> = ({ isDark }) => {
                   }`}>
                     VPN Tunnel
                   </h3>
+                  <span className="text-xs text-purple-400 flex items-center gap-1 font-semibold">
+                    <span>Explore VPN</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </span>
                 </div>
                 <p className={`text-sm mb-2 leading-relaxed transition-colors ${
                   isDark ? 'text-slate-300' : 'text-slate-600'
@@ -75,10 +83,11 @@ export const PickTunneling: React.FC<PickTunnelingProps> = ({ isDark }) => {
           {/* Card 2: SSH Tunnel */}
           <div 
             id="protocol-card-ssh"
-            className={`p-5 sm:p-6 rounded-2xl relative overflow-hidden shadow-lg ${
+            onClick={() => navigate('/ssh-tunnel')}
+            className={`p-5 sm:p-6 rounded-2xl relative overflow-hidden shadow-lg cursor-pointer transition-all duration-300 hover:scale-[1.01] ${
               isDark 
-                ? 'bg-[#171239] border border-purple-500/20' 
-                : 'bg-white border border-purple-200 shadow-purple-900/5'
+                ? 'bg-[#171239] border border-purple-500/20 hover:border-purple-400/50 hover:bg-[#1f194c]' 
+                : 'bg-white border border-purple-200 shadow-purple-900/5 hover:border-purple-400 hover:shadow-md'
             }`}
           >
             <div className="flex items-start gap-4">
@@ -92,6 +101,10 @@ export const PickTunneling: React.FC<PickTunnelingProps> = ({ isDark }) => {
                   }`}>
                     SSH Tunnel
                   </h3>
+                  <span className="text-xs text-emerald-400 flex items-center gap-1 font-semibold">
+                    <span>Pilih Server SSH</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </span>
                 </div>
                 <p className={`text-sm mb-2 leading-relaxed transition-colors ${
                   isDark ? 'text-slate-300' : 'text-slate-600'
@@ -112,10 +125,11 @@ export const PickTunneling: React.FC<PickTunnelingProps> = ({ isDark }) => {
           {/* Card 3: Global Tunnel */}
           <div 
             id="protocol-card-global"
-            className={`p-5 sm:p-6 rounded-2xl relative overflow-hidden shadow-lg ${
+            onClick={() => navigate('/server-status')}
+            className={`p-5 sm:p-6 rounded-2xl relative overflow-hidden shadow-lg cursor-pointer transition-all duration-300 hover:scale-[1.01] ${
               isDark 
-                ? 'bg-[#171239] border border-purple-500/20' 
-                : 'bg-white border border-purple-200 shadow-purple-900/5'
+                ? 'bg-[#171239] border border-purple-500/20 hover:border-purple-400/50 hover:bg-[#1f194c]' 
+                : 'bg-white border border-purple-200 shadow-purple-900/5 hover:border-purple-400 hover:shadow-md'
             }`}
           >
             <div className="flex items-start gap-4">
@@ -129,6 +143,10 @@ export const PickTunneling: React.FC<PickTunnelingProps> = ({ isDark }) => {
                   }`}>
                     Global Tunnel
                   </h3>
+                  <span className="text-xs text-purple-400 flex items-center gap-1 font-semibold">
+                    <span>Server Status</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </span>
                 </div>
                 <p className={`text-sm mb-2 leading-relaxed transition-colors ${
                   isDark ? 'text-slate-300' : 'text-slate-600'
@@ -149,10 +167,11 @@ export const PickTunneling: React.FC<PickTunnelingProps> = ({ isDark }) => {
           {/* Card 4: Config Tunnel */}
           <div 
             id="protocol-card-config"
-            className={`p-5 sm:p-6 rounded-2xl relative overflow-hidden shadow-lg ${
+            onClick={() => navigate('/free')}
+            className={`p-5 sm:p-6 rounded-2xl relative overflow-hidden shadow-lg cursor-pointer transition-all duration-300 hover:scale-[1.01] ${
               isDark 
-                ? 'bg-[#171239] border border-purple-500/20' 
-                : 'bg-white border border-purple-200 shadow-purple-900/5'
+                ? 'bg-[#171239] border border-purple-500/20 hover:border-purple-400/50 hover:bg-[#1f194c]' 
+                : 'bg-white border border-purple-200 shadow-purple-900/5 hover:border-purple-400 hover:shadow-md'
             }`}
           >
             <div className="flex items-start gap-4">
@@ -166,6 +185,10 @@ export const PickTunneling: React.FC<PickTunnelingProps> = ({ isDark }) => {
                   }`}>
                     Config Tunnel
                   </h3>
+                  <span className="text-xs text-pink-400 flex items-center gap-1 font-semibold">
+                    <span>Instant Config</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </span>
                 </div>
                 <p className={`text-sm mb-2 leading-relaxed transition-colors ${
                   isDark ? 'text-slate-300' : 'text-slate-600'
