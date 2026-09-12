@@ -224,16 +224,6 @@ export default function App() {
         ? 'bg-[#0e0a22] text-slate-100' 
         : 'bg-[#f4f3fa] text-slate-800'
     }`}>
-      {/* Background Ambience Gradient (GPU safe radial gradients) */}
-      <div 
-        className="fixed inset-0 pointer-events-none z-0"
-        style={{
-          background: isDark
-            ? 'radial-gradient(ellipse 80% 50% at 50% -10%, rgba(126, 34, 206, 0.18), transparent 70%), radial-gradient(ellipse 60% 40% at 90% 75%, rgba(67, 24, 154, 0.12), transparent 70%)'
-            : 'radial-gradient(ellipse 80% 50% at 50% -10%, rgba(168, 85, 247, 0.10), transparent 70%), radial-gradient(ellipse 60% 40% at 90% 75%, rgba(192, 132, 252, 0.08), transparent 70%)'
-        }}
-      />
-
       <div className="relative z-10 flex flex-col min-h-screen">
         {/* Navigation Bar */}
         <Navbar

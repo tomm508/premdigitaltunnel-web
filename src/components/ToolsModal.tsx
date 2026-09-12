@@ -488,7 +488,7 @@ export const ToolsModal: React.FC<ToolsModalProps> = ({ toolId, isOpen, onClose 
                 {aiTyping && (
                   <div className="flex justify-start">
                     <div className="p-3 rounded-2xl bg-[#120d2c] border border-purple-500/20 text-xs text-purple-300 flex items-center gap-2">
-                      <Bot className="w-4 h-4 animate-bounce" />
+                      <Bot className="w-4 h-4 " />
                       <span>PremDigital AI is typing...</span>
                     </div>
                   </div>
