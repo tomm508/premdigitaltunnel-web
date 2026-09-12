@@ -74,3 +74,19 @@ export interface FaqItem {
   question: string;
   answer: string;
 }
+
+export interface VpsNode {
+  id: string;
+  name: string;
+  ip: string;
+  city?: string;
+  country?: string;
+  countryCode?: string;
+  onlineUsers: number;
+  cpuLoad: number;
+  ramUsage: number;
+  status: 'Online' | 'Down';
+  lastHeartbeat: string;
+  sshOnline?: number;
+  xrayOnline?: number;
+}

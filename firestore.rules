@@ -15,6 +15,14 @@ service cloud.firestore {
       allow read, write: if true;
     }
 
+    match /server_status/{statusId} {
+      allow read, write: if true;
+    }
+
+    match /vps_nodes/{nodeId} {
+      allow read, write: if true;
+    }
+
     function isSignedIn() {
       return request.auth != null;
     }

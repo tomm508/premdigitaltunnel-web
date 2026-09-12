@@ -169,7 +169,14 @@ export const Navbar: React.FC<NavbarProps> = ({
                   <button
                     key={tool.id}
                     id={`nav-tool-${tool.id}`}
-                    onClick={() => onOpenTool(tool.id)}
+                    onClick={() => {
+                      if (tool.id === 'server-status') {
+                        navigate('/server-status');
+                      } else {
+                        onOpenTool(tool.id);
+                      }
+                      setToolsOpen(false);
+                    }}
                     className={`w-full flex items-center gap-2.5 px-3 py-2 text-sm rounded-lg text-left transition-colors ${
                       isDark 
                         ? 'text-slate-300 hover:text-white hover:bg-purple-600/30' 
@@ -351,7 +358,11 @@ export const Navbar: React.FC<NavbarProps> = ({
                       key={tool.id}
                       id={`mobile-tool-${tool.id}`}
                       onClick={() => {
-                        onOpenTool(tool.id);
+                        if (tool.id === 'server-status') {
+                          navigate('/server-status');
+                        } else {
+                          onOpenTool(tool.id);
+                        }
                         setMobileMenuOpen(false);
                       }}
                       className={`w-full flex items-center gap-2.5 px-3 py-2 text-sm rounded-lg text-left ${

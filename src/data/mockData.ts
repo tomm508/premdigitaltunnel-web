@@ -132,14 +132,14 @@ export const FAQ_ITEMS: FaqItem[] = [
 ];
 
 export const INITIAL_STATS = {
-  activeServers: 19,
-  servicesToday: 24,
-  totalAccounts: 47466,
-  onlineUsers: 2170,
+  activeServers: 2,
+  servicesToday: 0,
+  totalAccounts: 0,
+  onlineUsers: 0,
   breakdown: {
-    ssh: 18,
-    trojan: 1,
-    vmess: 2,
-    vless: 1
+    ssh: 0,
+    trojan: 0,
+    vmess: 0,
+    vless: 0
   }
 };

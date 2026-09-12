@@ -20,10 +20,11 @@ import { SshCreateAccount } from './components/SshCreateAccount';
 import { FreeTunneling } from './components/FreeTunneling';
 import { Dashboard } from './components/Dashboard';
 import { AdminPanel } from './components/AdminPanel';
+import { ServerStatusPage } from './pages/ServerStatusPage';
 import { ProtocolType, GeneratedAccount, PlatformStat, TunnelServer } from './types';
 import { INITIAL_STATS, SERVERS_LIST } from './data/mockData';
 import { CheckCircle2, Loader2 } from 'lucide-react';
-import { auth, onSnapshot, doc, db, signOut, getDoc, setDoc, updateDoc } from './lib/firebase';
+import { auth, onSnapshot, doc, db, signOut, getDoc, setDoc, updateDoc, collection } from './lib/firebase';
 import { User, onAuthStateChanged } from 'firebase/auth';
 
 export default function App() {
@@ -102,6 +103,12 @@ export default function App() {
         const docSnap = await getDoc(statsRef);
         if (!docSnap.exists()) {
           await setDoc(statsRef, INITIAL_STATS);
+        } else {
+          const d = docSnap.data();
+          // If Firestore still holds the initial old 47466 / 19 mock data, clean it up to match reality
+          if (d.activeServers === 19 && d.totalAccounts === 47466) {
+            await setDoc(statsRef, INITIAL_STATS);
+          }
         }
       } catch (e) {
         console.warn("Failed to init stats", e);
@@ -109,22 +116,59 @@ export default function App() {
     };
     initStats();
 
+    let liveNodesActiveCount: number | null = null;
+    let liveNodesOnlineUsers: number | null = null;
+
+    // Listen to vps_nodes collection to automatically aggregate activeServers and onlineUsers across 1 or more VPS
+    const unsubNodes = onSnapshot(collection(db, 'vps_nodes'), (snap) => {
+      if (!snap.empty) {
+        const now = Date.now();
+        let onlineCount = 0;
+        let activeNodes = 0;
+
+        snap.forEach((doc) => {
+          const node = doc.data();
+          // If heartbeat was reported in the last 15 minutes (or marked online), consider active
+          const lastHbTime = node.lastHeartbeat ? new Date(node.lastHeartbeat).getTime() : 0;
+          const isRecentlyActive = (now - lastHbTime) < 15 * 60 * 1000 || node.status === 'Online';
+          if (isRecentlyActive) {
+            activeNodes += 1;
+            onlineCount += Number(node.onlineUsers || 0);
+          }
+        });
+
+        liveNodesActiveCount = activeNodes;
+        liveNodesOnlineUsers = onlineCount;
+
+        setStats((prev) => ({
+          ...prev,
+          activeServers: activeNodes,
+          onlineUsers: onlineCount
+        }));
+      }
+    }, (err) => {
+      console.warn("vps_nodes listen error:", err);
+    });
+
     const unsubStats = onSnapshot(doc(db, 'platform', 'stats'), (docSnap) => {
       if (docSnap.exists()) {
         const data = docSnap.data();
-        setStats({
-          activeServers: data.activeServers || INITIAL_STATS.activeServers,
-          servicesToday: data.servicesToday || INITIAL_STATS.servicesToday,
-          totalAccounts: data.totalAccounts || INITIAL_STATS.totalAccounts,
-          onlineUsers: data.onlineUsers || INITIAL_STATS.onlineUsers,
-          breakdown: data.breakdown || INITIAL_STATS.breakdown
-        });
+        setStats((prev) => ({
+          activeServers: liveNodesActiveCount !== null ? liveNodesActiveCount : (typeof data.activeServers === 'number' ? data.activeServers : prev.activeServers || SERVERS_LIST.length),
+          servicesToday: typeof data.servicesToday === 'number' ? data.servicesToday : prev.servicesToday,
+          totalAccounts: typeof data.totalAccounts === 'number' ? data.totalAccounts : prev.totalAccounts,
+          onlineUsers: liveNodesOnlineUsers !== null ? liveNodesOnlineUsers : (typeof data.onlineUsers === 'number' ? data.onlineUsers : prev.onlineUsers),
+          breakdown: data.breakdown || prev.breakdown
+        }));
       }
     }, (err) => {
       console.warn("Firestore stats snapshot error (might not exist yet):", err);
     });
 
-    return () => unsubStats();
+    return () => {
+      unsubStats();
+      unsubNodes();
+    };
   }, []);
 
   const toggleTheme = () => {
@@ -384,6 +428,7 @@ export default function App() {
                 </motion.div>
               } />
 
+              <Route path="/server-status" element={<ServerStatusPage />} />
             </Routes>
           </AnimatePresence>
         </main>
