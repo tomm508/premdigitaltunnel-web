@@ -63,7 +63,6 @@ export const Navbar: React.FC<NavbarProps> = ({
   const toolsList = [
     { id: 'my-ip', label: 'My Ip Location', icon: <Globe className="w-4 h-4 text-indigo-400" /> },
     { id: 'dns-check', label: 'DNS Checkers', icon: <Radio className="w-4 h-4 text-cyan-400" /> },
-    { id: 'free-domain', label: 'Free Domain (SNI)', icon: <Search className="w-4 h-4 text-emerald-400" /> },
     { id: 'ping-test', label: 'Ping Test', icon: <Activity className="w-4 h-4 text-amber-400" /> },
     { id: 'host-to-ip', label: 'Host to IP', icon: <Server className="w-4 h-4 text-blue-400" /> },
     { id: 'subdomain-finder', label: 'Subdomain Finder', icon: <Search className="w-4 h-4 text-purple-400" /> },

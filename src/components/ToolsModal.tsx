@@ -104,37 +104,61 @@ export const ToolsModal: React.FC<ToolsModalProps> = ({ toolId, isOpen, onClose 
     }, 800);
   };
 
-  const handleResolveHost = (e: React.FormEvent) => {
+  const handleResolveHost = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!lookupHost) return;
     setIsResolving(true);
-    setTimeout(() => {
-      const simulated = [
-        `172.217.194.${Math.floor(Math.random() * 200 + 10)}`,
-        `142.250.185.${Math.floor(Math.random() * 200 + 10)}`,
-        `104.16.85.${Math.floor(Math.random() * 200 + 10)}`,
-      ];
-      setResolvedIps(simulated);
+    try {
+      // Clean host
+      const host = lookupHost.replace(/^https?:\/\//, '').split('/')[0];
+      const res = await fetch(`https://dns.google/resolve?name=${encodeURIComponent(host)}&type=A`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.Answer && data.Answer.length > 0) {
+          const ips = data.Answer.filter((a: any) => a.type === 1).map((a: any) => a.data);
+          setResolvedIps(ips.length > 0 ? ips : ['No IP found.']);
+        } else {
+          setResolvedIps(['Host not found.']);
+        }
+      } else {
+        setResolvedIps(['Error resolving host.']);
+      }
+    } catch (e) {
+      setResolvedIps(['Connection error.']);
+    } finally {
       setIsResolving(false);
-    }, 600);
+    }
   };
 
-  const handleFindSubdomains = (e: React.FormEvent) => {
+  const handleFindSubdomains = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!subdomainDomain) return;
     setIsFindingSubdomains(true);
-    setTimeout(() => {
+    setFoundSubdomains([]);
+    try {
       const domain = subdomainDomain.replace(/^https?:\/\//, '').split('/')[0];
-      setFoundSubdomains([
-        `quiz.int.${domain}`,
-        `cdn.${domain}`,
-        `static.${domain}`,
-        `api.${domain}`,
-        `auth.${domain}`,
-        `stream.${domain}`
-      ]);
+      const res = await fetch(`https://api.hackertarget.com/hostsearch/?q=${encodeURIComponent(domain)}`);
+      if (res.ok) {
+        const text = await res.text();
+        const subs = new Set<string>();
+        if (text && !text.includes('error')) {
+          const lines = text.split('\n');
+          lines.forEach((l: string) => {
+            const parts = l.split(',');
+            if (parts.length > 0 && parts[0]) {
+              subs.add(parts[0].trim());
+            }
+          });
+        }
+        setFoundSubdomains(subs.size > 0 ? Array.from(subs).slice(0, 30) : ['No subdomains found.']);
+      } else {
+        setFoundSubdomains(['Error fetching subdomains.']);
+      }
+    } catch (e) {
+      setFoundSubdomains(['Connection error or timeout.']);
+    } finally {
       setIsFindingSubdomains(false);
-    }, 700);
+    }
   };
 
   const handleSendMessage = (e: React.FormEvent) => {
