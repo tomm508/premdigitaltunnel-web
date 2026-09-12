@@ -18,6 +18,7 @@ import { TopupModal } from './components/TopupModal';
 import { SshServerList } from './components/SshServerList';
 import { SshCreateAccount } from './components/SshCreateAccount';
 import { FreeTunneling } from './components/FreeTunneling';
+import { Dashboard } from './components/Dashboard';
 import { ProtocolType, GeneratedAccount, PlatformStat, TunnelServer } from './types';
 import { INITIAL_STATS, SERVERS_LIST } from './data/mockData';
 import { CheckCircle2, Loader2 } from 'lucide-react';
@@ -353,6 +354,27 @@ export default function App() {
                   />
                 </motion.div>
               } />
+            
+              <Route path="/dashboard" element={
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 1.05 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <Dashboard
+                    isDark={isDark}
+                    currentUser={currentUser}
+                    userBalance={userBalance}
+                    onOpenTopup={() => setIsTopupModalOpen(true)}
+                    onLogout={() => {
+                      signOut(auth);
+                      navigate('/');
+                    }}
+                  />
+                </motion.div>
+              } />
+
             </Routes>
           </AnimatePresence>
         </main>

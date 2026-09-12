@@ -213,7 +213,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
                 <button
                   id="header-user-profile-btn"
-                  onClick={onOpenAuth}
+                  onClick={() => navigate("/dashboard")}
                   className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold bg-purple-600/30 hover:bg-purple-600/50 text-purple-200 border border-purple-400/30 transition-all cursor-pointer"
                 >
                   <div className="w-6 h-6 rounded-full bg-purple-600 text-white flex items-center justify-center font-bold text-[11px] uppercase">
@@ -355,19 +355,34 @@ export const Navbar: React.FC<NavbarProps> = ({
               )}
             </div>
 
+            
             {/* Mobile Login Button */}
             <div className="pt-2">
-              <button
-                id="mobile-login-btn"
-                onClick={() => {
-                  onOpenAuth();
-                  setMobileMenuOpen(false);
-                }}
-                className="w-full py-2.5 px-4 rounded-xl text-sm font-bold bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg shadow-purple-600/30 text-center"
-              >
-                Login
-              </button>
+              {currentUser ? (
+                <button
+                  id="mobile-dashboard-btn"
+                  onClick={() => {
+                    navigate('/dashboard');
+                    setMobileMenuOpen(false);
+                  }}
+                  className="w-full py-2.5 px-4 rounded-xl text-sm font-bold bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg shadow-purple-600/30 text-center"
+                >
+                  Go to Dashboard
+                </button>
+              ) : (
+                <button
+                  id="mobile-login-btn"
+                  onClick={() => {
+                    onOpenAuth();
+                    setMobileMenuOpen(false);
+                  }}
+                  className="w-full py-2.5 px-4 rounded-xl text-sm font-bold bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg shadow-purple-600/30 text-center"
+                >
+                  Login Member
+                </button>
+              )}
             </div>
+
           </div>
         </div>
       )}
