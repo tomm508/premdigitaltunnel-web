@@ -475,27 +475,37 @@ echo "[PremDigital] Status berhasil dilaporkan ke Dashboard!"`;
 
                   <hr className="border-slate-700/50" />
 
-                  {/* Account Rules */}
+                  {/* Free Account Rules */}
                   <div className="space-y-4">
-                    <h3 className="text-sm font-bold text-emerald-400 uppercase tracking-wider">Account Limits & Policies</h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <h3 className="text-sm font-bold text-emerald-400 uppercase tracking-wider">Free Account Policies</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-xs text-slate-400 mb-1.5">Free Account Limit (Global)</label>
+                        <label className="block text-xs text-slate-400 mb-1.5">Free Account Limit (Total per server)</label>
                         <input type="number" value={freeLimit} onChange={(e) => setFreeLimit(Number(e.target.value))} className="w-full bg-[#13172a] border border-slate-600 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-indigo-500" />
                       </div>
                       <div>
-                        <label className="block text-xs text-slate-400 mb-1.5">Premium Account Limit (Global)</label>
-                        <input type="number" value={premiumLimit} onChange={(e) => setPremiumLimit(Number(e.target.value))} className="w-full bg-[#13172a] border border-slate-600 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-indigo-500" />
-                      </div>
-                      <div>
-                        <label className="block text-xs text-slate-400 mb-1.5">Reset Time (Schedule)</label>
+                        <label className="block text-xs text-slate-400 mb-1.5">Free Account Reset Time (Schedule)</label>
                         <div className="relative">
                           <Clock className="w-4 h-4 text-slate-400 absolute left-4 top-3" />
                           <input type="time" value={resetTime} onChange={(e) => setResetTime(e.target.value)} className="w-full bg-[#13172a] border border-slate-600 rounded-xl pl-11 pr-4 py-2.5 text-white focus:outline-none focus:border-indigo-500" />
                         </div>
                       </div>
                     </div>
-                    <p className="text-xs text-slate-500">The VPS bash script can read these settings via API to automatically schedule resets.</p>
+                    <p className="text-xs text-slate-500">The VPS bash script will read this schedule to automatically wipe ONLY Free Accounts.</p>
+                  </div>
+
+                  <hr className="border-slate-700/50" />
+
+                  {/* Premium Account Rules */}
+                  <div className="space-y-4">
+                    <h3 className="text-sm font-bold text-amber-400 uppercase tracking-wider">Premium Account Policies</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs text-slate-400 mb-1.5">Premium Account Limit (Total per server)</label>
+                        <input type="number" value={premiumLimit} onChange={(e) => setPremiumLimit(Number(e.target.value))} className="w-full bg-[#13172a] border border-slate-600 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-indigo-500" />
+                      </div>
+                    </div>
+                    <p className="text-xs text-slate-500">Premium accounts do NOT reset automatically. They are managed by expiration dates.</p>
                   </div>
 
                   <div className="pt-4 flex items-center justify-between">
