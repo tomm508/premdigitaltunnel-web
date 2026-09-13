@@ -22,6 +22,8 @@ import {
 import { ProtocolType, TunnelServer, GeneratedAccount } from '../types';
 import { SERVERS_LIST, PROTOCOL_SERVICES } from '../data/mockData';
 import { subscribeVpsNodes, UnifiedServerNode } from '../lib/serverSync';
+import { db, collection, addDoc } from '../lib/firebase';
+import { onSnapshot } from 'firebase/firestore';
 
 interface AccountModalProps {
   protocol: ProtocolType;
@@ -123,101 +125,120 @@ export const AccountModal: React.FC<AccountModalProps> = ({
     setTimeout(() => setCopiedKey(null), 2500);
   };
 
-  const handleGenerate = (e: React.FormEvent) => {
+  const handleGenerate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!username.trim()) return;
 
     setIsGenerating(true);
 
-    setTimeout(() => {
-      const expiry = new Date();
-      expiry.setDate(expiry.getDate() + expiryDays);
-      const expiryStr = expiry.toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-      });
+    const expiry = new Date();
+    expiry.setDate(expiry.getDate() + expiryDays);
+    const expiryStr = expiry.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
 
-      const uuid = 'c4d7e82a-' + Math.random().toString(36).substring(2, 6) + '-4a73-89b1-' + Math.random().toString(36).substring(2, 14);
-      const cleanSni = sni.trim() || selectedServer.host;
+    const uuid = 'c4d7e82a-' + Math.random().toString(36).substring(2, 6) + '-4a73-89b1-' + Math.random().toString(36).substring(2, 14);
+    const cleanSni = sni.trim() || selectedServer.host;
 
-      let configString = '';
-      let payloadString = '';
-      let rawConfig = '';
+    let configString = '';
+    let payloadString = '';
+    let rawConfig = '';
 
-      if (protocol === 'vmess') {
-        const vmessObj = {
-          v: '2',
-          ps: `PremDigital-${selectedServer.countryCode}-${username}`,
-          add: selectedServer.host,
-          port: '443',
-          id: uuid,
-          aid: '0',
-          scy: 'auto',
-          net: 'ws',
-          type: 'none',
-          host: cleanSni,
-          path: '/vmess',
-          tls: 'tls',
-          sni: cleanSni,
-        };
-        configString = 'vmess://' + btoa(JSON.stringify(vmessObj));
-      } else if (protocol === 'vless') {
-        configString = `vless://${uuid}@${selectedServer.host}:443?path=%2Fvless&security=tls&encryption=none&host=${cleanSni}&type=ws&sni=${cleanSni}#PremDigital-${selectedServer.countryCode}-${username}`;
-      } else if (protocol === 'trojan') {
-        configString = `trojan://${password}@${selectedServer.host}:443?security=tls&headerType=none&type=ws&sni=${cleanSni}&path=%2Ftrojan#PremDigital-${selectedServer.countryCode}-${username}`;
-      } else if (protocol === 'ssh') {
-        configString = `ssh://${username}:${password}@${selectedServer.host}:22`;
-        payloadString = `GET / HTTP/1.1[crlf]Host: ${cleanSni}[crlf]Upgrade: websocket[crlf]Connection: Upgrade[crlf]User-Agent: [ua][crlf][crlf]`;
-      }
+    if (protocol === 'vmess') {
+      const vmessObj = {
+        v: '2',
+        ps: `PremDigital-${selectedServer.countryCode}-${username}`,
+        add: selectedServer.host,
+        port: '443',
+        id: uuid,
+        aid: '0',
+        scy: 'auto',
+        net: 'ws',
+        type: 'none',
+        host: cleanSni,
+        path: '/vmess',
+        tls: 'tls',
+        sni: cleanSni,
+      };
+      configString = 'vmess://' + btoa(JSON.stringify(vmessObj));
+    } else if (protocol === 'vless') {
+      configString = `vless://${uuid}@${selectedServer.host}:443?path=%2Fvless&security=tls&encryption=none&host=${cleanSni}&type=ws&sni=${cleanSni}#PremDigital-${selectedServer.countryCode}-${username}`;
+    } else if (protocol === 'trojan') {
+      configString = `trojan://${password}@${selectedServer.host}:443?security=tls&headerType=none&type=ws&sni=${cleanSni}&path=%2Ftrojan#PremDigital-${selectedServer.countryCode}-${username}`;
+    } else if (protocol === 'ssh') {
+      configString = `ssh://${username}:${password}@${selectedServer.host}:22`;
+      payloadString = `GET / HTTP/1.1[crlf]Host: ${cleanSni}[crlf]Upgrade: websocket[crlf]Connection: Upgrade[crlf]User-Agent: [ua][crlf][crlf]`;
+    }
 
-      const account: GeneratedAccount = {
+    const account: GeneratedAccount = {
+      protocol,
+      server: selectedServer,
+      username: username.trim(),
+      password,
+      uuid,
+      expiryDate: expiryStr,
+      activeDays: expiryDays,
+      sni: cleanSni,
+      ports: {
+        sslTls: 443,
+        dropbear: 109,
+        openSsh: 22,
+        wsCdn: 80,
+        udpCustom: '1-65535',
+        v2rayPort: 443,
+        trojanPort: 443,
+      },
+      configString,
+      payloadString,
+      rawConfig,
+      createdAt: new Date().toISOString(),
+    };
+
+    // Add command to VPS queue for auto-creation
+    try {
+      const cmdRef = await addDoc(collection(db, 'vps_commands'), {
+        serverId: selectedServer.id,
+        action: 'CREATE_ACCOUNT',
         protocol,
-        server: selectedServer,
         username: username.trim(),
         password,
         uuid,
-        expiryDate: expiryStr,
         activeDays: expiryDays,
-        sni: cleanSni,
-        ports: {
-          sslTls: 443,
-          dropbear: 109,
-          openSsh: 22,
-          wsCdn: 80,
-          udpCustom: '1-65535',
-          v2rayPort: 443,
-          trojanPort: 443,
-        },
-        configString,
-        payloadString,
-        rawConfig,
-        createdAt: new Date().toISOString(),
-      };
+        status: 'pending',
+        createdAt: new Date().toISOString()
+      });
 
-      // Add command to VPS queue for auto-creation
-      try {
-        addDoc(collection(db, 'vps_commands'), {
-          serverId: selectedServer.id,
-          action: 'CREATE_ACCOUNT',
-          protocol,
-          username: username.trim(),
-          password,
-          uuid,
-          activeDays: expiryDays,
-          status: 'pending',
-          createdAt: new Date().toISOString()
-        });
-      } catch (cmdErr) {
-        console.warn("Gagal mengirim command ke VPS:", cmdErr);
-      }
+      // Listen for status change from the VPS daemon
+      const unsubscribe = onSnapshot(cmdRef, (snap) => {
+        const data = snap.data();
+        if (data && data.status === 'success') {
+          unsubscribe();
+          setGeneratedAccount(account);
+          onAccountCreated(account);
+          setIsGenerating(false);
+        } else if (data && data.status === 'error') {
+          unsubscribe();
+          setIsGenerating(false);
+          alert(data.message || 'VPS failed to create account.');
+        }
+      });
 
-      setGeneratedAccount(account);
-      onAccountCreated(account);
+      // Timeout fallback if VPS is offline (e.g. after 30 seconds)
+      setTimeout(() => {
+        unsubscribe();
+        setIsGenerating(false);
+        alert('Timeout: VPS daemon tidak merespon dalam 30 detik. Pastikan script auto-creator berjalan di VPS.');
+      }, 30000);
+
+    } catch (cmdErr) {
+      console.warn("Gagal mengirim command ke VPS:", cmdErr);
       setIsGenerating(false);
-    }, 750);
+      alert('Gagal menghubungi server database.');
+    }
   };
 
   const handleDownloadFile = () => {

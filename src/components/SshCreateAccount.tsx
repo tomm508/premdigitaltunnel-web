@@ -21,6 +21,7 @@ import {
 import { TunnelServer, GeneratedAccount } from '../types';
 import { User } from 'firebase/auth';
 import { db, collection, addDoc, doc, updateDoc } from '../lib/firebase';
+import { onSnapshot } from 'firebase/firestore';
 
 interface SshCreateAccountProps {
   server: TunnelServer | null;
@@ -146,7 +147,7 @@ export const SshCreateAccount: React.FC<SshCreateAccountProps> = ({
 
       // Add command to VPS queue for auto-creation
       try {
-        await addDoc(collection(db, 'vps_commands'), {
+        const cmdRef = await addDoc(collection(db, 'vps_commands'), {
           serverId: server.id,
           action: 'CREATE_ACCOUNT',
           protocol: 'ssh',
@@ -156,14 +157,33 @@ export const SshCreateAccount: React.FC<SshCreateAccountProps> = ({
           status: 'pending',
           createdAt: new Date().toISOString()
         });
+
+        // Listen for status change from the VPS daemon
+        const unsubscribe = onSnapshot(cmdRef, (snap) => {
+          const data = snap.data();
+          if (data && data.status === 'success') {
+            unsubscribe();
+            setIsSubmitting(false);
+            onAccountCreated(newAccount);
+          } else if (data && data.status === 'error') {
+            unsubscribe();
+            setIsSubmitting(false);
+            setErrorMessage(data.message || 'VPS failed to create account.');
+          }
+        });
+
+        // Timeout fallback if VPS is offline (e.g. after 30 seconds)
+        setTimeout(() => {
+          unsubscribe();
+          setIsSubmitting(false);
+          setErrorMessage('Timeout: VPS daemon tidak merespon dalam 30 detik. Pastikan script auto-creator berjalan di VPS.');
+        }, 30000);
+
       } catch (cmdErr) {
         console.warn("Gagal mengirim command ke VPS:", cmdErr);
-      }
-
-      setTimeout(() => {
         setIsSubmitting(false);
-        onAccountCreated(newAccount);
-      }, 1500);
+        setErrorMessage('Gagal menghubungi server database.');
+      }
 
     } catch (error: any) {
       setIsSubmitting(false);
