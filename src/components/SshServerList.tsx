@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { TunnelServer } from '../types';
 import { subscribeVpsNodes, UnifiedServerNode } from '../lib/serverSync';
+import { db, doc, onSnapshot } from '../lib/firebase';
 
 interface SshServerListProps {
   isDark: boolean;
@@ -29,6 +30,7 @@ export const SshServerList: React.FC<SshServerListProps> = ({
   const [servers, setServers] = useState<UnifiedServerNode[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [pricing, setPricing] = useState<{ssh: number, discount: number}>({ ssh: 12500, discount: 50 });
   const [timeLeft, setTimeLeft] = useState<{ hours: number; minutes: number; seconds: number }>({
     hours: 8,
     minutes: 48,
@@ -40,6 +42,20 @@ export const SshServerList: React.FC<SshServerListProps> = ({
     const unsub = subscribeVpsNodes((liveServers) => {
       setServers(liveServers);
       setIsLoading(false);
+    });
+    return () => unsub();
+  }, []);
+
+  // Subscribe to pricing settings
+  useEffect(() => {
+    const unsub = onSnapshot(doc(db, 'platform', 'settings'), (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        setPricing({
+          ssh: data.pricing?.ssh || 12500,
+          discount: data.pricing?.discount ?? 50
+        });
+      }
     });
     return () => unsub();
   }, []);
@@ -288,25 +304,25 @@ export const SshServerList: React.FC<SshServerListProps> = ({
                      <div className="flex justify-between items-center text-[13px]">
                         <span className="text-slate-300 font-medium">3 Days</span>
                         <div className="flex items-center gap-2">
-                           <span className="text-slate-500 line-through">Rp 1.500</span>
-                           <span className="text-emerald-400 font-bold">Rp 750</span>
-                           <span className="bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded text-[10px] font-bold">-50%</span>
+                           {pricing.discount > 0 && <span className="text-slate-500 line-through">Rp 1.500</span>}
+                           <span className="text-emerald-400 font-bold">Rp {(1500 * (1 - pricing.discount / 100)).toLocaleString('id-ID')}</span>
+                           {pricing.discount > 0 && <span className="bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded text-[10px] font-bold">-{pricing.discount}%</span>}
                         </div>
                      </div>
                      <div className="flex justify-between items-center text-[13px]">
                         <span className="text-slate-300 font-medium">7 Days</span>
                         <div className="flex items-center gap-2">
-                           <span className="text-slate-500 line-through">Rp 3.300</span>
-                           <span className="text-emerald-400 font-bold">Rp 1.650</span>
-                           <span className="bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded text-[10px] font-bold">-50%</span>
+                           {pricing.discount > 0 && <span className="text-slate-500 line-through">Rp 3.300</span>}
+                           <span className="text-emerald-400 font-bold">Rp {(3300 * (1 - pricing.discount / 100)).toLocaleString('id-ID')}</span>
+                           {pricing.discount > 0 && <span className="bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded text-[10px] font-bold">-{pricing.discount}%</span>}
                         </div>
                      </div>
                      <div className="flex justify-between items-center text-[13px]">
                         <span className="text-slate-300 font-medium">30 Days</span>
                         <div className="flex items-center gap-2">
-                           <span className="text-slate-500 line-through">Rp 12.500</span>
-                           <span className="text-emerald-400 font-bold">Rp 6.250</span>
-                           <span className="bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded text-[10px] font-bold">-50%</span>
+                           {pricing.discount > 0 && <span className="text-slate-500 line-through">Rp 12.500</span>}
+                           <span className="text-emerald-400 font-bold">Rp {(12500 * (1 - pricing.discount / 100)).toLocaleString('id-ID')}</span>
+                           {pricing.discount > 0 && <span className="bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded text-[10px] font-bold">-{pricing.discount}%</span>}
                         </div>
                      </div>
                   </div>

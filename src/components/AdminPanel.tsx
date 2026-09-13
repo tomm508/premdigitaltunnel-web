@@ -21,6 +21,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isDark, userRole }) => {
   const [priceVmess, setPriceVmess] = useState(2500);
   const [priceVless, setPriceVless] = useState(2500);
   const [priceTrojan, setPriceTrojan] = useState(2500);
+  const [premiumDiscount, setPremiumDiscount] = useState(50);
   const [freeLimit, setFreeLimit] = useState(50);
   const [premiumLimit, setPremiumLimit] = useState(500);
   const [resetTime, setResetTime] = useState('00:00');
@@ -60,6 +61,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isDark, userRole }) => {
         setPriceVmess(data.pricing?.vmess || 2500);
         setPriceVless(data.pricing?.vless || 2500);
         setPriceTrojan(data.pricing?.trojan || 2500);
+        setPremiumDiscount(data.pricing?.discount ?? 50);
         setFreeLimit(data.freeAccountLimit || 50);
         setPremiumLimit(data.premiumAccountLimit || 500);
         setResetTime(data.resetTime || '00:00');
@@ -128,6 +130,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isDark, userRole }) => {
           vmess: Number(priceVmess),
           vless: Number(priceVless),
           trojan: Number(priceTrojan),
+          discount: Number(premiumDiscount),
         },
         freeAccountLimit: Number(freeLimit),
         premiumAccountLimit: Number(premiumLimit),
@@ -469,6 +472,10 @@ echo "[PremDigital] Status berhasil dilaporkan ke Dashboard!"`;
                       <div>
                         <label className="block text-xs text-slate-400 mb-1.5">Trojan</label>
                         <input type="number" value={priceTrojan} onChange={(e) => setPriceTrojan(Number(e.target.value))} className="w-full bg-[#13172a] border border-slate-600 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-indigo-500" />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-slate-400 mb-1.5">Discount Percentage (%)</label>
+                        <input type="number" value={premiumDiscount} onChange={(e) => setPremiumDiscount(Number(e.target.value))} className="w-full bg-[#13172a] border border-slate-600 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-indigo-500" />
                       </div>
                     </div>
                   </div>

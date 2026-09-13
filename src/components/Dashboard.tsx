@@ -1,7 +1,8 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { User } from 'firebase/auth';
 import { Settings, Wallet, List, CheckCircle2, Shield, Globe, AlertTriangle, X, Tag } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { db, doc, onSnapshot } from '../lib/firebase';
 
 interface DashboardProps {
   isDark: boolean;
@@ -13,12 +14,23 @@ interface DashboardProps {
 
 export const Dashboard: React.FC<DashboardProps> = ({ isDark, currentUser, userBalance, onOpenTopup, onLogout }) => {
   const navigate = useNavigate();
+  const [discount, setDiscount] = useState<number>(0);
 
   useEffect(() => {
     if (!currentUser) {
       navigate('/');
     }
   }, [currentUser, navigate]);
+
+  useEffect(() => {
+    const unsub = onSnapshot(doc(db, 'platform', 'settings'), (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        setDiscount(data.pricing?.discount ?? 50);
+      }
+    });
+    return () => unsub();
+  }, []);
 
   if (!currentUser) return null;
 
@@ -62,23 +74,25 @@ export const Dashboard: React.FC<DashboardProps> = ({ isDark, currentUser, userB
             </div>
           </div>
 
-          <div className="relative bg-[#1e2335] border border-rose-500/20 rounded-2xl p-5 overflow-hidden">
-            <button className="absolute top-3 right-3 text-slate-500 hover:text-slate-300 transition-colors">
-              <X className="w-4 h-4" />
-            </button>
-            <div className="absolute top-0 right-10 bg-rose-500 text-white text-[10px] font-bold px-2 py-1 rounded-b-md">50% OFF</div>
-            <div className="flex gap-4 items-center">
-              <div className="w-10 h-10 rounded-xl bg-rose-500/20 flex items-center justify-center shrink-0">
-                <Tag className="w-5 h-5 text-rose-400" />
-              </div>
-              <div>
-                <h3 className="font-bold text-white text-sm mb-1">Promo Spesial</h3>
-                <p className="text-xs text-slate-400">
-                  Dapatkan <span className="text-rose-400 font-medium">diskon up to 50%</span> setiap tanggal kembar (11/11, 12/12, dll). Jangan lewatkan!
-                </p>
+          {discount > 0 && (
+            <div className="relative bg-[#1e2335] border border-rose-500/20 rounded-2xl p-5 overflow-hidden">
+              <button className="absolute top-3 right-3 text-slate-500 hover:text-slate-300 transition-colors">
+                <X className="w-4 h-4" />
+              </button>
+              <div className="absolute top-0 right-10 bg-rose-500 text-white text-[10px] font-bold px-2 py-1 rounded-b-md">{discount}% OFF</div>
+              <div className="flex gap-4 items-center">
+                <div className="w-10 h-10 rounded-xl bg-rose-500/20 flex items-center justify-center shrink-0">
+                  <Tag className="w-5 h-5 text-rose-400" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-white text-sm mb-1">Promo Spesial</h3>
+                  <p className="text-xs text-slate-400">
+                    Dapatkan <span className="text-rose-400 font-medium">diskon up to {discount}%</span> setiap tanggal kembar (11/11, 12/12, dll). Jangan lewatkan!
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Profile Card */}
