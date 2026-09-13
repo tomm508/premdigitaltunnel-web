@@ -22,6 +22,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isDark, userRole }) => {
   const [priceVless, setPriceVless] = useState(2500);
   const [priceTrojan, setPriceTrojan] = useState(2500);
   const [freeLimit, setFreeLimit] = useState(50);
+  const [premiumLimit, setPremiumLimit] = useState(500);
   const [resetTime, setResetTime] = useState('00:00');
   
   // Stats State
@@ -60,6 +61,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isDark, userRole }) => {
         setPriceVless(data.pricing?.vless || 2500);
         setPriceTrojan(data.pricing?.trojan || 2500);
         setFreeLimit(data.freeAccountLimit || 50);
+        setPremiumLimit(data.premiumAccountLimit || 500);
         setResetTime(data.resetTime || '00:00');
       }
     });
@@ -128,6 +130,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isDark, userRole }) => {
           trojan: Number(priceTrojan),
         },
         freeAccountLimit: Number(freeLimit),
+        premiumAccountLimit: Number(premiumLimit),
         resetTime: resetTime,
         updatedAt: new Date().toISOString()
       }, { merge: true });
@@ -472,16 +475,20 @@ echo "[PremDigital] Status berhasil dilaporkan ke Dashboard!"`;
 
                   <hr className="border-slate-700/50" />
 
-                  {/* Free Account Rules */}
+                  {/* Account Rules */}
                   <div className="space-y-4">
-                    <h3 className="text-sm font-bold text-emerald-400 uppercase tracking-wider">Free Account Policies</h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <h3 className="text-sm font-bold text-emerald-400 uppercase tracking-wider">Account Limits & Policies</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                       <div>
-                        <label className="block text-xs text-slate-400 mb-1.5">Daily Limit (Total Free Accounts)</label>
+                        <label className="block text-xs text-slate-400 mb-1.5">Free Account Limit (Global)</label>
                         <input type="number" value={freeLimit} onChange={(e) => setFreeLimit(Number(e.target.value))} className="w-full bg-[#13172a] border border-slate-600 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-indigo-500" />
                       </div>
                       <div>
-                        <label className="block text-xs text-slate-400 mb-1.5">Daily Reset Time (e.g. 00:00 / 03:00 / 3/24)</label>
+                        <label className="block text-xs text-slate-400 mb-1.5">Premium Account Limit (Global)</label>
+                        <input type="number" value={premiumLimit} onChange={(e) => setPremiumLimit(Number(e.target.value))} className="w-full bg-[#13172a] border border-slate-600 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-indigo-500" />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-slate-400 mb-1.5">Reset Time (Schedule)</label>
                         <div className="relative">
                           <Clock className="w-4 h-4 text-slate-400 absolute left-4 top-3" />
                           <input type="time" value={resetTime} onChange={(e) => setResetTime(e.target.value)} className="w-full bg-[#13172a] border border-slate-600 rounded-xl pl-11 pr-4 py-2.5 text-white focus:outline-none focus:border-indigo-500" />

@@ -44,19 +44,21 @@ export const SshServerList: React.FC<SshServerListProps> = ({
     return () => unsub();
   }, []);
 
-  // Calculate countdown to next 12:00 reset
+  // Calculate countdown to next 3-day reset
   useEffect(() => {
     const timer = setInterval(() => {
       const now = new Date();
-      const currentHour = now.getHours();
-      const nextResetHour = currentHour < 12 ? 12 : 24;
-      const target = new Date(now);
-      target.setHours(nextResetHour, 0, 0, 0);
+      // Using arbitrary epoch (e.g. Jan 1, 2024 00:00:00 UTC)
+      const epoch = 1704067200000;
+      const threeDaysMs = 3 * 24 * 60 * 60 * 1000;
       
-      const diffMs = target.getTime() - now.getTime();
-      const hours = Math.floor((diffMs / (1000 * 60 * 60)) % 24);
-      const minutes = Math.floor((diffMs / (1000 * 60)) % 60);
-      const seconds = Math.floor((diffMs / 1000) % 60);
+      const timeSinceEpoch = now.getTime() - epoch;
+      const msIntoCycle = timeSinceEpoch % threeDaysMs;
+      const msLeft = threeDaysMs - msIntoCycle;
+      
+      const hours = Math.floor(msLeft / (1000 * 60 * 60));
+      const minutes = Math.floor((msLeft / (1000 * 60)) % 60);
+      const seconds = Math.floor((msLeft / 1000) % 60);
 
       setTimeLeft({ hours, minutes, seconds });
     }, 1000);
@@ -121,7 +123,7 @@ export const SshServerList: React.FC<SshServerListProps> = ({
 
         <div className="flex flex-col sm:flex-row items-center justify-between bg-[#15112e] rounded-2xl border border-[#2a234f] px-5 py-4 mb-6">
            <div className="text-[13px] text-slate-300 mb-2 sm:mb-0">
-             <span className="text-purple-400 font-medium">Reset Time:</span> Setiap Hari, Pukul 12:00 PM & 12:00 AM (GMT+7)
+             <span className="text-purple-400 font-medium">Reset Time:</span> Setiap 3 Hari Sekali
            </div>
            <div className="flex items-center gap-3">
              <span className="text-[13px] text-slate-400 font-medium">Countdown:</span>
@@ -150,7 +152,7 @@ export const SshServerList: React.FC<SshServerListProps> = ({
                 <Clock className="w-4 h-4 text-indigo-400" />
               </div>
               <h3 className="font-bold text-white mb-2 text-[15px]">Smart Reset</h3>
-              <p className="text-[13px] text-slate-400 leading-relaxed">Account limits automatically reset every 12 hours for fair access to all users.</p>
+              <p className="text-[13px] text-slate-400 leading-relaxed">Account limits automatically reset every 3 days for fair access to all users.</p>
            </div>
            {/* Feature 3 */}
            <div className="bg-[#15112e] rounded-2xl border border-[#2a234f] p-5">
