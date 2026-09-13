@@ -481,7 +481,7 @@ echo "[PremDigital] Status berhasil dilaporkan ke Dashboard!"`;
                         <input type="number" value={freeLimit} onChange={(e) => setFreeLimit(Number(e.target.value))} className="w-full bg-[#13172a] border border-slate-600 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-indigo-500" />
                       </div>
                       <div>
-                        <label className="block text-xs text-slate-400 mb-1.5">Daily Reset Time (e.g. 00:00)</label>
+                        <label className="block text-xs text-slate-400 mb-1.5">Daily Reset Time (e.g. 00:00 / 03:00 / 3/24)</label>
                         <div className="relative">
                           <Clock className="w-4 h-4 text-slate-400 absolute left-4 top-3" />
                           <input type="time" value={resetTime} onChange={(e) => setResetTime(e.target.value)} className="w-full bg-[#13172a] border border-slate-600 rounded-xl pl-11 pr-4 py-2.5 text-white focus:outline-none focus:border-indigo-500" />

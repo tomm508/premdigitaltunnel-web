@@ -243,8 +243,8 @@ export const SshServerList: React.FC<SshServerListProps> = ({
                {/* 3 Metrics */}
                <div className="grid grid-cols-3 gap-3 mb-6">
                   <div className="bg-[#1e1a38] border border-[#30285a] rounded-2xl py-4 flex flex-col items-center justify-center">
-                     <span className="text-2xl font-bold text-white mb-1">{freeDays}</span>
-                     <span className="text-[11px] text-slate-400 font-medium text-center px-2">Free Active Days</span>
+                     <span className="text-xl font-bold text-white mb-1">24 Hours</span>
+                     <span className="text-[11px] text-slate-400 font-medium text-center px-2">Duration</span>
                   </div>
                   <div className="bg-[#1e1a38] border border-[#30285a] rounded-2xl py-4 flex flex-col items-center justify-center">
                      <span className={`text-2xl font-bold mb-1 ${server.status === 'Online' ? 'text-emerald-400' : 'text-slate-500'}`}>
@@ -313,17 +313,6 @@ export const SshServerList: React.FC<SshServerListProps> = ({
                   </div>
                </div>
 
-               {/* Device Limit Notice */}
-               <div className="flex gap-3 bg-[#3f1f16] border border-[#7d3b25] rounded-xl p-4 mb-5">
-                 <AlertTriangle className="w-5 h-5 text-orange-500 flex-shrink-0" />
-                 <div>
-                    <h4 className="text-[13px] font-bold text-white mb-1">Device Limit Notice</h4>
-                    <p className="text-[12px] text-orange-200 leading-relaxed">
-                       Maximum 2 device per account. Using multiple devices simultaneously will be detected as abuse and your account will be banned immediately.
-                    </p>
-                 </div>
-               </div>
-
                {/* Select Server Button */}
                <button
                   onClick={() => onSelectServer(server)}
@@ -342,7 +331,7 @@ export const SshServerList: React.FC<SshServerListProps> = ({
                   ) : (
                     <>
                       <AlertTriangle className="w-4 h-4 text-rose-400" />
-                      <span>Server Offline (Node Belum Aktif)</span>
+                      <span>Server Offline</span>
                     </>
                   )}
                </button>

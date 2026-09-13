@@ -9,9 +9,9 @@ export const PROTOCOL_SERVICES: ProtocolService[] = [
     description: 'High-speed SSH tunnel supporting SSL/TLS Stunnel, Dropbear, OpenSSH, WebSocket CDN, and UDP Custom for gaming & streaming.',
     iconName: 'Share2',
     color: 'from-blue-600 to-indigo-600',
-    freeTrialDays: 3,
+    freeTrialDays: 1,
     features: [
-      '3 days free trial + renew options',
+      '24 Hours free trial + renew options',
       '3 days 7 days or 30 days renewals',
       'Easy setup guides & global regions',
       'WebSocket, Dropbear & UDP Custom'
@@ -25,9 +25,9 @@ export const PROTOCOL_SERVICES: ProtocolService[] = [
     description: 'Robust VMess protocol with dynamic UUID security, Cloudflare CDN integration, TLS encryption, and anti-censorship routing.',
     iconName: 'Zap',
     color: 'from-emerald-500 to-teal-600',
-    freeTrialDays: 3,
+    freeTrialDays: 1,
     features: [
-      '3 days free trial + renew options',
+      '24 Hours free trial + renew options',
       '3 days 7 days or 30 days renewals',
       'WebSocket, gRPC, HTTP/2, QUIC',
       'Anti-DPI & Cloudflare CDN CDN ready'
@@ -41,9 +41,9 @@ export const PROTOCOL_SERVICES: ProtocolService[] = [
     description: 'Next-generation lightweight VLESS protocol without redundant encryption overhead, delivering ultra-fast throughput and low battery drain.',
     iconName: 'Shield',
     color: 'from-pink-500 to-purple-600',
-    freeTrialDays: 3,
+    freeTrialDays: 1,
     features: [
-      '3 days free trial + renew options',
+      '24 Hours free trial + renew options',
       '3 days 7 days or 30 days renewals',
       'WebSocket, gRPC, HTTP/2, QUIC',
       'XTLS & Reality support'
@@ -57,9 +57,9 @@ export const PROTOCOL_SERVICES: ProtocolService[] = [
     description: 'Bypasses the toughest firewalls by disguising tunneling traffic as standard HTTPS web browsing over Port 443 with TLS 1.3.',
     iconName: 'Lock',
     color: 'from-red-500 to-amber-600',
-    freeTrialDays: 3,
+    freeTrialDays: 1,
     features: [
-      '3 days free trial + renew options',
+      '24 Hours free trial + renew options',
       '3 days 7 days or 30 days renewals',
       'TLS 1.3 powered privacy',
       'Unblockable Port 443 HTTPS mimicry'
@@ -123,7 +123,7 @@ export const FAQ_ITEMS: FaqItem[] = [
   },
   {
     question: 'How do I renew my account when it expires?',
-    answer: 'Free accounts are valid for 3 to 7 days depending on the protocol. Once expired or within 24 hours of expiry, you can easily renew the account with the same username on our website, or generate a fresh account in just 2 clicks.'
+    answer: 'Free accounts are valid for 24 hours. Once expired or within a few hours of expiry, you can easily renew the account with the same username on our website, or generate a fresh account in just 2 clicks.'
   },
   {
     question: 'Can I use these configurations on Android, iPhone, and PC?',

@@ -79,7 +79,7 @@ export const FreeTunneling: React.FC<FreeTunnelingProps> = ({
             Start Free Tunneling
           </h1>
           <p className={`text-[15px] max-w-2xl mx-auto leading-relaxed ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
-            Create Free 3-Day SSH, Vmess, Vless, and Trojan accounts instantly. Our free servers are located in Singapore (SG) and Indonesia (ID) for optimal latency.
+            Create Free 24-Hours SSH, Vmess, Vless, and Trojan accounts instantly. Our free servers are located in Singapore (SG) and Indonesia (ID) for optimal latency.
           </p>
         </div>
 

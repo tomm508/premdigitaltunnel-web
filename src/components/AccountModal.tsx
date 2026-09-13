@@ -403,23 +403,23 @@ export const AccountModal: React.FC<AccountModalProps> = ({
                   </label>
                   <div className="grid grid-cols-3 gap-2">
                     {[
-                      { days: 3, label: '3 Days Free', desc: 'Standard' },
-                      { days: 7, label: '7 Days Free', desc: 'Popular' },
-                      { days: 30, label: '30 Days VIP', desc: 'VIP Special' },
+                      { days: 1, label: '24 Hours', desc: 'Free' },
+                      { days: 7, label: '7 Days', desc: 'Popular' },
+                      { days: 30, label: '30 Days', desc: 'VIP' },
                     ].map((opt) => (
                       <button
                         key={opt.days}
                         id={`expiry-btn-${opt.days}`}
                         type="button"
                         onClick={() => setExpiryDays(opt.days)}
-                        className={`p-2.5 rounded-xl border text-center transition-all ${
+                        className={`p-2 rounded-xl border text-center transition-all ${
                           expiryDays === opt.days
                             ? 'bg-purple-600/30 border-purple-400 text-white shadow-md'
                             : 'bg-[#1b1542] border-purple-900/30 text-slate-400 hover:bg-[#20194e]'
                         }`}
                       >
-                        <div className="text-xs font-bold">{opt.label}</div>
-                        <div className="text-[10px] text-purple-300/80">{opt.desc}</div>
+                        <div className="text-[11px] font-bold whitespace-nowrap">{opt.label}</div>
+                        <div className="text-[9px] text-purple-300/80">{opt.desc}</div>
                       </button>
                     ))}
                   </div>

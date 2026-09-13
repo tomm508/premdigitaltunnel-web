@@ -51,14 +51,12 @@ export const SshCreateAccount: React.FC<SshCreateAccountProps> = ({
 
   const planPrices = {
     free: 0,
-    vip3: 750,
     vip7: 1650,
     vip30: 6250
   };
 
   const planDays = {
-    free: 3,
-    vip3: 3,
+    free: 1,
     vip7: 7,
     vip30: 30
   };
@@ -198,8 +196,8 @@ export const SshCreateAccount: React.FC<SshCreateAccountProps> = ({
            <div className="w-10 h-10 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mb-3">
              <Clock className="w-5 h-5 text-emerald-400" />
            </div>
-           <span className="text-xl font-bold text-white mb-1">3</span>
-           <span className="text-xs text-slate-400 font-medium">Days Active</span>
+           <span className="text-xl font-bold text-white mb-1">24 Hours</span>
+           <span className="text-xs text-slate-400 font-medium">Duration</span>
         </div>
         <div className="bg-[#15112e] border border-[#2a234f] rounded-2xl p-5 flex flex-col items-center justify-center text-center">
            <div className="w-10 h-10 rounded-full bg-blue-500/10 border border-blue-500/20 flex items-center justify-center mb-3">
@@ -312,32 +310,10 @@ export const SshCreateAccount: React.FC<SshCreateAccountProps> = ({
                 }`}
              >
                 <div>
-                   <h4 className="font-bold text-white text-sm">Free</h4>
+                   <h4 className="font-bold text-white text-sm">24 Hours Free</h4>
                    <p className="text-[11px] text-slate-400 mt-0.5">Limited access</p>
                 </div>
                 <div className="font-bold text-white">Rp 0</div>
-             </div>
-
-             {/* 3 Days Premium Option */}
-             <div 
-                onClick={() => setSelectedPlan('vip3')}
-                className={`relative flex items-center justify-between p-4 rounded-xl cursor-pointer transition-all mb-3 border ${
-                  selectedPlan === 'vip3' 
-                    ? 'bg-[#2a1b54] border-indigo-500' 
-                    : 'bg-[#15112e] border-[#2a234f] hover:border-[#3e2b7a]'
-                }`}
-             >
-                <div>
-                   <h4 className="font-bold text-white text-sm">3 Days Premium</h4>
-                   <p className="text-[11px] text-slate-400 mt-0.5">Short term access</p>
-                </div>
-                <div className="flex flex-col items-end gap-1">
-                   <div className="flex items-center gap-2">
-                     <span className="text-[10px] text-slate-500 line-through">Rp 1.500</span>
-                     <span className="bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded text-[10px] font-bold">-50%</span>
-                   </div>
-                   <div className="font-bold text-emerald-400">Rp 750</div>
-                </div>
              </div>
 
              {/* 7 Days Premium Option */}
