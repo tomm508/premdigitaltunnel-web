@@ -1,14 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   ArrowLeft, 
   Sparkles,
   Zap,
   ShieldCheck,
   Star,
-  Globe
+  Globe,
+  AlertTriangle
 } from 'lucide-react';
-import { ProtocolType, TunnelServer } from '../types';
+import { ProtocolType, TunnelServer, VpsNode } from '../types';
 import { SERVERS_LIST } from '../data/mockData';
+import { subscribeVpsNodes, UnifiedServerNode } from '../lib/serverSync';
 
 interface FreeTunnelingProps {
   isDark: boolean;
@@ -22,9 +24,20 @@ export const FreeTunneling: React.FC<FreeTunnelingProps> = ({
   onBack
 }) => {
   const [activeProtocol, setActiveProtocol] = useState<ProtocolType>('ssh');
+  const [liveServers, setLiveServers] = useState<UnifiedServerNode[]>(() => 
+    SERVERS_LIST.map(s => ({ ...s, status: 'Down' as const }))
+  );
+
+  // Subscribe to real-time VPS heartbeats
+  useEffect(() => {
+    const unsub = subscribeVpsNodes((servers) => {
+      setLiveServers(servers);
+    });
+    return () => unsub();
+  }, []);
 
   // Filter for Free servers in SG & ID only
-  const freeServers = SERVERS_LIST.filter(s => 
+  const freeServers = liveServers.filter(s => 
     !s.isVip && (s.countryCode === 'SG' || s.countryCode === 'ID') && s.supportedProtocols.includes(activeProtocol)
   );
 
@@ -128,23 +141,46 @@ export const FreeTunneling: React.FC<FreeTunnelingProps> = ({
                   </div>
                   <div className={`p-3 rounded-2xl text-center ${isDark ? 'bg-[#1b1542]' : 'bg-slate-50'}`}>
                      <div className={`text-xs font-semibold mb-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Ping</div>
-                     <div className="font-bold text-emerald-400">{server.ping}ms</div>
+                     <div className={`font-bold ${server.status === 'Online' ? 'text-emerald-400' : 'text-slate-500'}`}>
+                       {server.status === 'Online' ? `${server.ping}ms` : 'Timeout'}
+                     </div>
                   </div>
                   <div className={`p-3 rounded-2xl text-center ${isDark ? 'bg-[#1b1542]' : 'bg-slate-50'}`}>
                      <div className={`text-xs font-semibold mb-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Status</div>
-                     <div className="font-bold text-emerald-400 flex items-center justify-center gap-1">
-                       <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
-                       Active
-                     </div>
+                     {server.status === 'Online' ? (
+                       <div className="font-bold text-emerald-400 flex items-center justify-center gap-1.5">
+                         <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+                         Active
+                       </div>
+                     ) : (
+                       <div className="font-bold text-rose-400 flex items-center justify-center gap-1.5">
+                         <div className="w-2 h-2 rounded-full bg-rose-500"></div>
+                         Offline
+                       </div>
+                     )}
                   </div>
                 </div>
 
                 <button 
                   onClick={() => onSelectServer(activeProtocol, server)}
-                  className="w-full py-3.5 rounded-xl font-bold text-sm text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 transition-all flex items-center justify-center gap-2 shadow-lg shadow-purple-600/20 active:scale-95"
+                  disabled={server.status !== 'Online'}
+                  className={`w-full py-3.5 rounded-xl font-bold text-sm text-white transition-all flex items-center justify-center gap-2 shadow-lg active:scale-95 ${
+                    server.status === 'Online'
+                      ? 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 shadow-purple-600/20 cursor-pointer'
+                      : 'bg-slate-700/60 text-slate-400 border border-rose-500/30 cursor-not-allowed opacity-80'
+                  }`}
                 >
-                  <Zap className="w-4 h-4 fill-amber-300 text-amber-300" />
-                  Generate {tabs.find(t => t.id === activeProtocol)?.label}
+                  {server.status === 'Online' ? (
+                    <>
+                      <Zap className="w-4 h-4 fill-amber-300 text-amber-300" />
+                      Generate {tabs.find(t => t.id === activeProtocol)?.label}
+                    </>
+                  ) : (
+                    <>
+                      <AlertTriangle className="w-4 h-4 text-rose-400" />
+                      Server Offline (Node Belum Aktif)
+                    </>
+                  )}
                 </button>
               </div>
             ))

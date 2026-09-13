@@ -12,6 +12,7 @@ import {
   RefreshCw
 } from 'lucide-react';
 import { TunnelServer } from '../types';
+import { subscribeVpsNodes, UnifiedServerNode } from '../lib/serverSync';
 
 interface SshServerListProps {
   isDark: boolean;
@@ -25,7 +26,7 @@ export const SshServerList: React.FC<SshServerListProps> = ({
   onBack
 }) => {
   const [activeFilter, setActiveFilter] = useState<'all' | 'ID' | 'SG'>('all');
-  const [servers, setServers] = useState<TunnelServer[]>([]);
+  const [servers, setServers] = useState<UnifiedServerNode[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [timeLeft, setTimeLeft] = useState<{ hours: number; minutes: number; seconds: number }>({
@@ -34,48 +35,13 @@ export const SshServerList: React.FC<SshServerListProps> = ({
     seconds: 42
   });
 
-  // Fetch servers from VPS API
-  const fetchServers = async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      // In a real scenario, this would be an actual API call to your VPS
-      // e.g. const response = await fetch('http://your-vps-ip/api/servers', { headers: { 'Authorization': 'Bearer YOUR_API_SECRET' }});
-      // const data = await response.json();
-      
-      // Simulating API call delay for now
-      await new Promise(resolve => setTimeout(resolve, 800));
-      
-      // Simulating response from your VPS API
-      const apiResponse: TunnelServer[] = [
-        {
-          id: 'vps-api-01',
-          country: 'Singapore',
-          countryCode: 'SG',
-          flag: '🇸🇬',
-          city: 'My Personal VPS (Auto-Fetched)',
-          host: 'sg1.domain-anda.com',
-          ip: '103.xxx.xxx.xxx',
-          load: Math.floor(Math.random() * 30), // Dynamic load from VPS
-          ping: 24,
-          totalSlots: 100,
-          usedSlots: Math.floor(Math.random() * 50), // Dynamic slots from VPS
-          supportedProtocols: ['ssh', 'vmess', 'vless', 'trojan'],
-          isVip: false
-        }
-      ];
-      
-      setServers(apiResponse);
-    } catch (err) {
-      setError('Gagal mengambil data dari server VPS Anda. Pastikan API Secret valid.');
-      console.error('API Fetch error:', err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
+  // Subscribe to live VPS heartbeats from Firestore
   useEffect(() => {
-    fetchServers();
+    const unsub = subscribeVpsNodes((liveServers) => {
+      setServers(liveServers);
+      setIsLoading(false);
+    });
+    return () => unsub();
   }, []);
 
   // Calculate countdown to next 12:00 reset
@@ -281,12 +247,26 @@ export const SshServerList: React.FC<SshServerListProps> = ({
                      <span className="text-[11px] text-slate-400 font-medium text-center px-2">Free Active Days</span>
                   </div>
                   <div className="bg-[#1e1a38] border border-[#30285a] rounded-2xl py-4 flex flex-col items-center justify-center">
-                     <span className="text-2xl font-bold text-white mb-1">{limitCreated}</span>
-                     <span className="text-[11px] text-slate-400 font-medium text-center px-2">Free Limit Created</span>
+                     <span className={`text-2xl font-bold mb-1 ${server.status === 'Online' ? 'text-emerald-400' : 'text-slate-500'}`}>
+                        {server.status === 'Online' ? `${server.ping}ms` : 'Timeout'}
+                     </span>
+                     <span className="text-[11px] text-slate-400 font-medium text-center px-2">Ping Latency</span>
                   </div>
                   <div className="bg-[#1e1a38] border border-[#30285a] rounded-2xl py-4 flex flex-col items-center justify-center">
-                     <span className="text-2xl font-bold text-purple-400 mb-1">{leftCreated}</span>
-                     <span className="text-[11px] text-slate-400 font-medium text-center px-2">Free Left Created</span>
+                     <div className="h-[32px] flex items-center justify-center mb-1">
+                       {server.status === 'Online' ? (
+                         <div className="flex items-center gap-1.5 font-bold text-emerald-400">
+                           <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></div>
+                           Active
+                         </div>
+                       ) : (
+                         <div className="flex items-center gap-1.5 font-bold text-rose-400">
+                           <div className="w-2.5 h-2.5 rounded-full bg-rose-500"></div>
+                           Offline
+                         </div>
+                       )}
+                     </div>
+                     <span className="text-[11px] text-slate-400 font-medium text-center px-2">Server Status</span>
                   </div>
                </div>
 
@@ -347,10 +327,24 @@ export const SshServerList: React.FC<SshServerListProps> = ({
                {/* Select Server Button */}
                <button
                   onClick={() => onSelectServer(server)}
-                  className="w-full py-4 rounded-xl font-bold text-sm text-white bg-blue-600 hover:bg-blue-500 shadow-lg flex items-center justify-center gap-2 transition-colors mt-2"
+                  disabled={server.status !== 'Online'}
+                  className={`w-full py-4 rounded-xl font-bold text-sm text-white shadow-lg flex items-center justify-center gap-2 transition-colors mt-2 ${
+                    server.status === 'Online'
+                      ? 'bg-blue-600 hover:bg-blue-500 cursor-pointer'
+                      : 'bg-slate-700/60 text-slate-400 border border-rose-500/30 cursor-not-allowed opacity-80'
+                  }`}
                >
-                  <span>Select Server</span>
-                  <ChevronRight className="w-4 h-4" />
+                  {server.status === 'Online' ? (
+                    <>
+                      <span>Select Server</span>
+                      <ChevronRight className="w-4 h-4" />
+                    </>
+                  ) : (
+                    <>
+                      <AlertTriangle className="w-4 h-4 text-rose-400" />
+                      <span>Server Offline (Node Belum Aktif)</span>
+                    </>
+                  )}
                </button>
             </div>
           );

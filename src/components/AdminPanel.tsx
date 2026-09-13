@@ -5,6 +5,7 @@ import { Settings, Users, Server, Clock, Save, ShieldAlert, CheckCircle2, BarCha
 import { SERVERS_LIST, INITIAL_STATS } from '../data/mockData';
 import { firebaseConfig } from '../lib/firebaseConfig';
 import { VpsNode } from '../types';
+import { isNodeHeartbeatActive } from '../lib/serverSync';
 
 interface AdminPanelProps {
   isDark: boolean;
@@ -69,11 +70,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isDark, userRole }) => {
   useEffect(() => {
     const unsubNodes = onSnapshot(collection(db, 'vps_nodes'), (snap) => {
       const list: VpsNode[] = [];
-      const now = Date.now();
       snap.forEach((d) => {
         const data = d.data();
-        const lastHb = data.lastHeartbeat ? new Date(data.lastHeartbeat).getTime() : 0;
-        const isOnline = (now - lastHb) < 15 * 60 * 1000 || data.status === 'Online';
+        const isOnline = isNodeHeartbeatActive(data.lastHeartbeat, data.status);
         list.push({
           id: d.id,
           name: data.name || d.id,
@@ -85,7 +84,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isDark, userRole }) => {
           cpuLoad: Number(data.cpuLoad || 0),
           ramUsage: Number(data.ramUsage || 0),
           status: isOnline ? 'Online' : 'Down',
-          lastHeartbeat: data.lastHeartbeat || new Date().toISOString(),
+          lastHeartbeat: data.lastHeartbeat || '',
           sshOnline: Number(data.sshOnline || 0),
           xrayOnline: Number(data.xrayOnline || 0)
         });

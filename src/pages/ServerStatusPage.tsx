@@ -15,9 +15,9 @@ import {
   Radio
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { db, collection, onSnapshot } from '../lib/firebase';
 import { SERVERS_LIST } from '../data/mockData';
 import { VpsNode } from '../types';
+import { subscribeVpsNodes, UnifiedServerNode } from '../lib/serverSync';
 
 // Define the structure based on the video
 interface ServerStatusItem {
@@ -105,38 +105,15 @@ const CategoryCard: React.FC<{ category: ServerCategory }> = ({ category }) => {
 
 export const ServerStatusPage: React.FC = () => {
   const navigate = useNavigate();
-  const [nodes, setNodes] = useState<VpsNode[]>([]);
+  const [liveServers, setLiveServers] = useState<UnifiedServerNode[]>(() => 
+    SERVERS_LIST.map(s => ({ ...s, status: 'Down' as const }))
+  );
 
-  // Listen to live VPS nodes from Firestore
+  // Subscribe to live VPS nodes from Firestore
   useEffect(() => {
-    const unsub = onSnapshot(collection(db, 'vps_nodes'), (snap) => {
-      const list: VpsNode[] = [];
-      const now = Date.now();
-      snap.forEach((d) => {
-        const data = d.data();
-        const lastHb = data.lastHeartbeat ? new Date(data.lastHeartbeat).getTime() : 0;
-        const isOnline = (now - lastHb) < 15 * 60 * 1000 || data.status === 'Online';
-        list.push({
-          id: d.id,
-          name: data.name || d.id,
-          ip: data.ip || '103.xxx.xxx.xxx',
-          city: data.city || 'Cloud VPS',
-          country: data.country || 'Global',
-          countryCode: data.countryCode || 'SG',
-          onlineUsers: Number(data.onlineUsers || 0),
-          cpuLoad: Number(data.cpuLoad || 5),
-          ramUsage: Number(data.ramUsage || 20),
-          status: isOnline ? 'Online' : 'Down',
-          lastHeartbeat: data.lastHeartbeat || new Date().toISOString(),
-          sshOnline: Number(data.sshOnline || 0),
-          xrayOnline: Number(data.xrayOnline || 0)
-        });
-      });
-      setNodes(list);
-    }, (err) => {
-      console.warn("Error listening to vps_nodes:", err);
+    const unsub = subscribeVpsNodes((servers) => {
+      setLiveServers(servers);
     });
-
     return () => unsub();
   }, []);
 
@@ -151,19 +128,19 @@ export const ServerStatusPage: React.FC = () => {
     return data;
   };
 
-  // Build categories dynamically from live VPS nodes if available, or fall back to configured SERVERS_LIST
-  const serverSources = nodes.length > 0 ? nodes : SERVERS_LIST.map((s, idx) => ({
-    id: s.id,
-    name: `${s.countryCode}1 ${s.city}`,
-    ip: s.ip,
-    city: s.city,
-    country: s.country,
-    countryCode: s.countryCode,
-    onlineUsers: s.usedSlots,
-    cpuLoad: 8 + (idx * 5),
-    ramUsage: 22 + (idx * 6),
-    status: 'Online' as const,
-    lastHeartbeat: new Date().toISOString()
+  // Build categories from resolved servers: SG and ID with their respective real heartbeat status
+  const serverSources = liveServers.map((srv) => ({
+    id: srv.id,
+    name: `${srv.countryCode}1 ${srv.city}`,
+    ip: srv.ip,
+    city: srv.city,
+    country: srv.country,
+    countryCode: srv.countryCode,
+    onlineUsers: srv.usedSlots,
+    cpuLoad: srv.cpuLoad || (srv.status === 'Online' ? 12 : 0),
+    ramUsage: srv.ramUsage || (srv.status === 'Online' ? 25 : 0),
+    status: srv.status,
+    lastHeartbeat: srv.lastHeartbeat || ''
   }));
 
   const buildServiceServers = (protoSuffix: string) => {
@@ -171,9 +148,9 @@ export const ServerStatusPage: React.FC = () => {
       id: `${srv.id}-${protoSuffix.toLowerCase()}`,
       name: `${srv.name} ${protoSuffix}`,
       ip: srv.ip,
-      status: srv.status as 'Online' | 'Down',
-      uptimeData: generateUptime(srv.status === 'Down', 4),
-      eventText: srv.status === 'Online' ? '1 min ago (Live)' : 'Downtime logged',
+      status: srv.status,
+      uptimeData: generateUptime(srv.status === 'Down', 6),
+      eventText: srv.status === 'Online' ? 'Active (Live Heartbeat)' : 'Offline (No VPS Heartbeat)',
       cpuLoad: srv.cpuLoad,
       ramUsage: srv.ramUsage,
       onlineUsers: srv.onlineUsers

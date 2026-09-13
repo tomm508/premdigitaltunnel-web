@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { ProtocolType, TunnelServer, GeneratedAccount } from '../types';
 import { SERVERS_LIST, PROTOCOL_SERVICES } from '../data/mockData';
+import { subscribeVpsNodes, UnifiedServerNode } from '../lib/serverSync';
 
 interface AccountModalProps {
   protocol: ProtocolType;
@@ -39,6 +40,9 @@ export const AccountModal: React.FC<AccountModalProps> = ({
   initialAccount,
   initialServer
 }) => {
+  const [liveServers, setLiveServers] = useState<UnifiedServerNode[]>(() => 
+    SERVERS_LIST.map(s => ({ ...s, status: 'Down' as const }))
+  );
   const [selectedServer, setSelectedServer] = useState<TunnelServer>(initialServer || SERVERS_LIST[0]);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('123456');
@@ -51,6 +55,21 @@ export const AccountModal: React.FC<AccountModalProps> = ({
   const [activeResultTab, setActiveResultTab] = useState<'info' | 'config' | 'payload' | 'qr'>('info');
 
   const protocolService = PROTOCOL_SERVICES.find((p) => p.id === protocol) || PROTOCOL_SERVICES[0];
+
+  // Subscribe to live server heartbeats
+  useEffect(() => {
+    const unsub = subscribeVpsNodes((servers) => {
+      setLiveServers(servers);
+      // If currently selected server is offline, pick the first online server
+      if (!initialServer) {
+        const firstOnline = servers.find(s => s.status === 'Online');
+        if (firstOnline) {
+          setSelectedServer(firstOnline);
+        }
+      }
+    });
+    return () => unsub();
+  }, [initialServer]);
 
   // Auto-fill random username
   useEffect(() => {
@@ -240,17 +259,22 @@ export const AccountModal: React.FC<AccountModalProps> = ({
                   1. Select Tunnel Server Location
                 </label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-48 overflow-y-auto p-1 pr-2">
-                  {SERVERS_LIST.map((srv) => {
+                  {liveServers.map((srv) => {
                     const isSelected = selectedServer.id === srv.id;
+                    const isOnline = srv.status === 'Online';
                     return (
                       <div
                         key={srv.id}
                         id={`server-select-${srv.id}`}
-                        onClick={() => setSelectedServer(srv)}
-                        className={`p-3 rounded-2xl border cursor-pointer transition-all flex items-center justify-between ${
-                          isSelected
-                            ? 'bg-purple-600/20 border-purple-400 text-white shadow-md shadow-purple-600/20'
-                            : 'bg-[#1b1542] border-purple-900/40 text-slate-300 hover:bg-[#20194e] hover:border-purple-500/30'
+                        onClick={() => {
+                          if (isOnline) setSelectedServer(srv);
+                        }}
+                        className={`p-3 rounded-2xl border transition-all flex items-center justify-between ${
+                          !isOnline
+                            ? 'bg-[#120f28]/60 border-rose-900/30 text-slate-500 opacity-60 cursor-not-allowed'
+                            : isSelected
+                            ? 'bg-purple-600/20 border-purple-400 text-white shadow-md shadow-purple-600/20 cursor-pointer'
+                            : 'bg-[#1b1542] border-purple-900/40 text-slate-300 hover:bg-[#20194e] hover:border-purple-500/30 cursor-pointer'
                         }`}
                       >
                         <div className="flex items-center gap-2.5">
@@ -258,9 +282,14 @@ export const AccountModal: React.FC<AccountModalProps> = ({
                           <div>
                             <div className="flex items-center gap-1.5">
                               <span className="font-bold text-sm text-white">{srv.country}</span>
-                              {srv.isVip && (
-                                <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                                  VIP
+                              {isOnline ? (
+                                <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                                  Online
+                                </span>
+                              ) : (
+                                <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-rose-500/20 text-rose-400 border border-rose-500/30">
+                                  Offline
                                 </span>
                               )}
                             </div>
@@ -268,9 +297,11 @@ export const AccountModal: React.FC<AccountModalProps> = ({
                           </div>
                         </div>
                         <div className="text-right">
-                          <span className="text-xs font-semibold text-emerald-400">{srv.ping}ms</span>
+                          <span className={`text-xs font-semibold ${isOnline ? 'text-emerald-400' : 'text-slate-500'}`}>
+                            {isOnline ? `${srv.ping}ms` : 'Timeout'}
+                          </span>
                           <div className="text-[10px] text-slate-400">
-                            {srv.usedSlots}/{srv.totalSlots} used
+                            {isOnline ? `${srv.usedSlots}/${srv.totalSlots} used` : 'Node Mati'}
                           </div>
                         </div>
                       </div>
