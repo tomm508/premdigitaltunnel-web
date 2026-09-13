@@ -79,8 +79,8 @@ export const SshCreateAccount: React.FC<SshCreateAccountProps> = ({
     setErrorMessage(null);
 
     // Validate Server Capacity for Free Tier
-    if (selectedPlan === 'free' && server.used >= server.capacity) {
-      setErrorMessage(`Maaf, kapasitas server ${server.country} sedang penuh (${server.used}/${server.capacity}). Silakan pilih server lain atau gunakan paket Premium.`);
+    if (selectedPlan === 'free' && server.usedSlots >= server.totalSlots) {
+      setErrorMessage(`Maaf, kapasitas server ${server.country} sedang penuh (${server.usedSlots}/${server.totalSlots}). Silakan pilih server lain atau gunakan paket Premium.`);
       return;
     }
 
@@ -110,7 +110,8 @@ export const SshCreateAccount: React.FC<SshCreateAccountProps> = ({
         year: 'numeric'
       });
 
-      const payload = `GET / HTTP/1.1[crlf]Host: ${server.host}[crlf]Upgrade: websocket[crlf]Connection: Upgrade[crlf][crlf]`;
+      const payload = `GET / HTTP/1.1[crlf]Host: ${server.host}[crlf]Upgrade: websocket[crlf]Connection: Upgrade[crlf]User-Agent: [ua][crlf][crlf]`;
+      const configStr = `ssh://${username}:${password}@${server.host}:22`;
 
       const newAccount: GeneratedAccount = {
         protocol: 'ssh',
@@ -128,6 +129,7 @@ export const SshCreateAccount: React.FC<SshCreateAccountProps> = ({
           udpCustom: '1-65535'
         },
         payloadString: payload,
+        configString: configStr,
         createdAt: new Date().toISOString()
       };
 
@@ -142,6 +144,22 @@ export const SshCreateAccount: React.FC<SshCreateAccountProps> = ({
           ...newAccount,
           createdAt: new Date().toISOString()
         });
+      }
+
+      // Add command to VPS queue for auto-creation
+      try {
+        await addDoc(collection(db, 'vps_commands'), {
+          serverId: server.id,
+          action: 'CREATE_ACCOUNT',
+          protocol: 'ssh',
+          username,
+          password,
+          activeDays,
+          status: 'pending',
+          createdAt: new Date().toISOString()
+        });
+      } catch (cmdErr) {
+        console.warn("Gagal mengirim command ke VPS:", cmdErr);
       }
 
       setTimeout(() => {

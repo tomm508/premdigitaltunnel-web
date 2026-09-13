@@ -197,6 +197,23 @@ export const AccountModal: React.FC<AccountModalProps> = ({
         createdAt: new Date().toISOString(),
       };
 
+      // Add command to VPS queue for auto-creation
+      try {
+        addDoc(collection(db, 'vps_commands'), {
+          serverId: selectedServer.id,
+          action: 'CREATE_ACCOUNT',
+          protocol,
+          username: username.trim(),
+          password,
+          uuid,
+          activeDays: expiryDays,
+          status: 'pending',
+          createdAt: new Date().toISOString()
+        });
+      } catch (cmdErr) {
+        console.warn("Gagal mengirim command ke VPS:", cmdErr);
+      }
+
       setGeneratedAccount(account);
       onAccountCreated(account);
       setIsGenerating(false);

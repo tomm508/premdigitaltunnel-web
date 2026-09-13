@@ -193,6 +193,126 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isDark, userRole }) => {
     }
   };
 
+  const vpsAutoCreatorScript = `#!/bin/bash
+# =========================================================
+# PremDigital Tunnel - VPS Auto-Creator Daemon
+# Target Node ID: ${selectedNodeId}
+# Fungsi: Membaca antrean dari web dan membuat akun SSH/Vmess otomatis
+#
+# Letakkan di VPS: /root/auto_creator.sh
+# Beri hak eksekusi: chmod +x /root/auto_creator.sh
+# Jalankan di background (screen/tmux) atau sebagai systemd service
+# =========================================================
+
+NODE_ID="${selectedNodeId}"
+PROJECT_ID="${firebaseConfig.projectId}"
+API_KEY="${firebaseConfig.apiKey}"
+REST_URL="https://firestore.googleapis.com/v1/projects/\${PROJECT_ID}/databases/(default)/documents"
+
+# Fungsi untuk mengambil command pending
+fetch_commands() {
+  QUERY_PAYLOAD=$(cat <<EOF
+  {
+    "structuredQuery": {
+      "from": [{"collectionId": "vps_commands"}],
+      "where": {
+        "compositeFilter": {
+          "op": "AND",
+          "filters": [
+            {
+              "fieldFilter": {
+                "field": {"fieldPath": "serverId"},
+                "op": "EQUAL",
+                "value": {"stringValue": "\${NODE_ID}"}
+              }
+            },
+            {
+              "fieldFilter": {
+                "field": {"fieldPath": "status"},
+                "op": "EQUAL",
+                "value": {"stringValue": "pending"}
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+EOF
+  )
+  curl -s -X POST "\${REST_URL}:runQuery?key=\${API_KEY}" \\
+    -H "Content-Type: application/json" \\
+    -d "\$QUERY_PAYLOAD"
+}
+
+# Fungsi untuk update status command menjadi success
+update_command_status() {
+  DOC_PATH=\$1
+  UPDATE_URL="\${REST_URL}/\${DOC_PATH}?key=\${API_KEY}&updateMask.fieldPaths=status"
+  
+  PAYLOAD=$(cat <<EOF
+  {
+    "fields": {
+      "status": { "stringValue": "success" }
+    }
+  }
+EOF
+  )
+  curl -s -X PATCH "\$UPDATE_URL" -H "Content-Type: application/json" -d "\$PAYLOAD" > /dev/null
+}
+
+echo "[PremDigital] Starting Auto-Creator Daemon for Node: \$NODE_ID"
+
+while true; do
+  RESPONSE=\$(fetch_commands)
+  
+  # Cek jika ada dokumen yang dikembalikan (abaikan array kosong atau null)
+  if echo "\$RESPONSE" | grep -q '"document":'; then
+    
+    # Ekstrak path document ID
+    DOC_NAMES=\$(echo "\$RESPONSE" | grep -oP '"name": "\K[^"]+')
+    
+    for DOC in \$DOC_NAMES; do
+      # Ekstrak data spesifik dari dokumen
+      DOC_ID=\$(echo "\$DOC" | awk -F'/' '{print \$NF}')
+      DOC_PATH="vps_commands/\$DOC_ID"
+      
+      DOC_DATA=\$(curl -s "\${REST_URL}/\${DOC_PATH}?key=\${API_KEY}")
+      
+      USERNAME=\$(echo "\$DOC_DATA" | grep -A 1 '"username":' | grep '"stringValue":' | cut -d'"' -f4)
+      PASSWORD=\$(echo "\$DOC_DATA" | grep -A 1 '"password":' | grep '"stringValue":' | cut -d'"' -f4)
+      PROTOCOL=\$(echo "\$DOC_DATA" | grep -A 1 '"protocol":' | grep '"stringValue":' | cut -d'"' -f4)
+      ACTIVEDAYS=\$(echo "\$DOC_DATA" | grep -A 1 '"activeDays":' | grep '"integerValue":' | cut -d'"' -f4)
+      
+      if [ "\$PROTOCOL" == "ssh" ]; then
+        echo "[Task] Membuat SSH User: \$USERNAME (Exp: \$ACTIVEDAYS Hari)"
+        
+        # Eksekusi Linux Commands:
+        # Cek jika user sudah ada
+        if id "\$USERNAME" &>/dev/null; then
+            userdel -f "\$USERNAME" &>/dev/null
+        fi
+        
+        # Buat user baru dengan expire date
+        EXP_DATE=\$(date -d "+\${ACTIVEDAYS} days" +"%Y-%m-%d")
+        useradd -e "\$EXP_DATE" -s /bin/false -M "\$USERNAME"
+        echo "\$USERNAME:\$PASSWORD" | chpasswd
+        
+        echo "[Sukses] Akun SSH \$USERNAME berhasil dibuat di VPS."
+        
+        # Mark as done di Firestore
+        update_command_status "\$DOC_PATH"
+      fi
+      
+      # (Opsional: Tambahkan penanganan Xray/V2ray Vmess di sini)
+    done
+  fi
+  
+  # Jeda 5 detik sebelum polling lagi agar tidak kena rate limit
+  sleep 5
+done
+`;
+
   const vpsScriptTemplate = `#!/bin/bash
 # =========================================================
 # PremDigital Tunnel - VPS Automatic Node Reporter
@@ -595,6 +715,53 @@ echo "[PremDigital] Status berhasil dilaporkan ke Dashboard!"`;
                       </div>
                     </li>
                   </ol>
+                </div>
+
+                {/* Auto Creator Script Section */}
+                <div className="mt-12 pt-8 border-t border-slate-700">
+                  <div>
+                    <h2 className="text-xl font-bold text-emerald-400 mb-1">VPS Auto-Creator Daemon</h2>
+                    <p className="text-xs text-slate-400">
+                      Gunakan skrip bash ini agar VPS otomatis membuat akun SSH Linux (useradd) saat ada pelanggan yang order dari website. Skrip ini akan melakukan polling ke database Firestore.
+                    </p>
+                  </div>
+
+                  <div className="relative mt-4">
+                    <div className="flex items-center justify-between px-4 py-2 bg-[#13172a] rounded-t-xl border border-slate-700 border-b-0">
+                      <span className="text-xs font-mono text-slate-400">/root/auto_creator.sh ({selectedNodeId})</span>
+                      <button
+                        onClick={() => {
+                          navigator.clipboard.writeText(vpsAutoCreatorScript);
+                          setCopiedScript(true);
+                          setTimeout(() => setCopiedScript(false), 3000);
+                        }}
+                        className="flex items-center gap-1 text-xs text-indigo-400 hover:text-indigo-300 font-semibold cursor-pointer"
+                      >
+                        <Copy className="w-3.5 h-3.5" />
+                        <span>Salin Skrip Auto-Creator</span>
+                      </button>
+                    </div>
+                    <pre className="p-4 rounded-b-xl bg-[#0b0e1b] border border-slate-700 text-xs font-mono text-emerald-400 overflow-x-auto max-h-96 leading-relaxed">
+                      {vpsAutoCreatorScript}
+                    </pre>
+                  </div>
+
+                  <div className="mt-4 space-y-3 text-xs text-slate-300">
+                    <h4 className="font-bold text-white text-sm">Langkah Pemasangan Daemon:</h4>
+                    <ol className="list-decimal pl-5 space-y-1.5 text-slate-400">
+                      <li>Buka terminal VPS Anda.</li>
+                      <li>Buat file skrip: <code className="text-indigo-300 bg-slate-800 px-1.5 py-0.5 rounded">nano /root/auto_creator.sh</code></li>
+                      <li>Tempelkan (Paste) skrip Auto-Creator di atas.</li>
+                      <li>Beri izin eksekusi: <code className="text-indigo-300 bg-slate-800 px-1.5 py-0.5 rounded">chmod +x /root/auto_creator.sh</code></li>
+                      <li>Jalankan skrip di background menggunakan <code className="text-indigo-300 bg-slate-800 px-1.5 py-0.5 rounded">screen</code> atau <code className="text-indigo-300 bg-slate-800 px-1.5 py-0.5 rounded">tmux</code>:<br/>
+                        <code className="text-emerald-300 bg-slate-900 px-2 py-1 rounded block font-mono mt-1">
+                          screen -S autocreator<br/>
+                          /root/auto_creator.sh<br/>
+                          # Tekan Ctrl+A lalu D untuk minimize screen
+                        </code>
+                      </li>
+                    </ol>
+                  </div>
                 </div>
               </div>
             )}

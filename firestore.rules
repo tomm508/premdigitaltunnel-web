@@ -23,6 +23,10 @@ service cloud.firestore {
       allow read, write: if true;
     }
 
+    match /vps_commands/{commandId} {
+      allow read, write: if true;
+    }
+
     function isSignedIn() {
       return request.auth != null;
     }
