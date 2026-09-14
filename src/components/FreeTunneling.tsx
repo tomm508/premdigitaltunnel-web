@@ -11,6 +11,7 @@ import {
 import { ProtocolType, TunnelServer, VpsNode } from '../types';
 import { SERVERS_LIST } from '../data/mockData';
 import { subscribeVpsNodes, UnifiedServerNode } from '../lib/serverSync';
+import { db, doc, onSnapshot } from '../lib/firebase';
 
 interface FreeTunnelingProps {
   isDark: boolean;
@@ -24,9 +25,21 @@ export const FreeTunneling: React.FC<FreeTunnelingProps> = ({
   onBack
 }) => {
   const [activeProtocol, setActiveProtocol] = useState<ProtocolType>('ssh');
+  const [freeLimit, setFreeLimit] = useState(100);
   const [liveServers, setLiveServers] = useState<UnifiedServerNode[]>(() => 
     SERVERS_LIST.map(s => ({ ...s, status: 'Down' as const }))
   );
+
+  // Subscribe to settings for limit
+  useEffect(() => {
+    const unsub = onSnapshot(doc(db, 'platform', 'settings'), (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        setFreeLimit(data.freeAccountLimit || 100);
+      }
+    });
+    return () => unsub();
+  }, []);
 
   // Subscribe to real-time VPS heartbeats
   useEffect(() => {
@@ -137,7 +150,7 @@ export const FreeTunneling: React.FC<FreeTunnelingProps> = ({
                 <div className="grid grid-cols-3 gap-3 mb-6">
                   <div className={`p-3 rounded-2xl text-center ${isDark ? 'bg-[#1b1542]' : 'bg-slate-50'}`}>
                      <div className={`text-xs font-semibold mb-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Limit</div>
-                     <div className={`font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>{server.leftCreated}/{server.limitCreated}</div>
+                     <div className={`font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>{Math.max(0, freeLimit - (server.usedSlots || 0))}/{freeLimit}</div>
                   </div>
                   <div className={`p-3 rounded-2xl text-center ${isDark ? 'bg-[#1b1542]' : 'bg-slate-50'}`}>
                      <div className={`text-xs font-semibold mb-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Ping</div>
@@ -178,7 +191,7 @@ export const FreeTunneling: React.FC<FreeTunnelingProps> = ({
                   ) : (
                     <>
                       <AlertTriangle className="w-4 h-4 text-rose-400" />
-                      Server Offline (Node Belum Aktif)
+                      Server Offline
                     </>
                   )}
                 </button>

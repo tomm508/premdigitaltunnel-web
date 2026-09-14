@@ -49,15 +49,35 @@ export const SshCreateAccount: React.FC<SshCreateAccountProps> = ({
   const [selectedPlan, setSelectedPlan] = useState<'free' | 'vip3' | 'vip7' | 'vip30'>('free');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [pricing, setPricing] = useState<{ssh: number, discount: number}>({ ssh: 1500, discount: 50 });
+
+  useEffect(() => {
+    const unsub = onSnapshot(doc(db, 'platform', 'settings'), (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        setPricing({
+          ssh: data.pricing?.ssh || 1500,
+          discount: data.pricing?.discount ?? 50
+        });
+      }
+    });
+    return () => unsub();
+  }, []);
+
+  const calculatePrice = (base: number) => {
+    return base * (1 - pricing.discount / 100);
+  };
 
   const planPrices = {
     free: 0,
-    vip7: 1650,
-    vip30: 6250
+    vip3: calculatePrice(pricing.ssh),
+    vip7: calculatePrice(3300), // Note: need to determine how the user wants other days priced. We assume 3300 and 12500 base.
+    vip30: calculatePrice(12500)
   };
 
   const planDays = {
     free: 1,
+    vip3: 3,
     vip7: 7,
     vip30: 30
   };
@@ -336,6 +356,30 @@ export const SshCreateAccount: React.FC<SshCreateAccountProps> = ({
                 <div className="font-bold text-white">Rp 0</div>
              </div>
 
+             {/* 3 Days Premium Option */}
+             <div 
+                onClick={() => setSelectedPlan('vip3')}
+                className={`relative flex items-center justify-between p-4 rounded-xl cursor-pointer transition-all mb-3 border ${
+                  selectedPlan === 'vip3' 
+                    ? 'bg-[#2a1b54] border-indigo-500' 
+                    : 'bg-[#15112e] border-[#2a234f] hover:border-[#3e2b7a]'
+                }`}
+             >
+                <div>
+                   <h4 className="font-bold text-white text-sm">3 Days Premium</h4>
+                   <p className="text-[11px] text-slate-400 mt-0.5">Short term access</p>
+                </div>
+                <div className="flex flex-col items-end gap-1">
+                   {pricing.discount > 0 && (
+                     <div className="flex items-center gap-2">
+                       <span className="text-[10px] text-slate-500 line-through">Rp {pricing.ssh.toLocaleString('id-ID')}</span>
+                       <span className="bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded text-[10px] font-bold">-{pricing.discount}%</span>
+                     </div>
+                   )}
+                   <div className="font-bold text-emerald-400">Rp {planPrices.vip3.toLocaleString('id-ID')}</div>
+                </div>
+             </div>
+
              {/* 7 Days Premium Option */}
              <div 
                 onClick={() => setSelectedPlan('vip7')}
@@ -350,11 +394,13 @@ export const SshCreateAccount: React.FC<SshCreateAccountProps> = ({
                    <p className="text-[11px] text-slate-400 mt-0.5">Best for weekly</p>
                 </div>
                 <div className="flex flex-col items-end gap-1">
-                   <div className="flex items-center gap-2">
-                     <span className="text-[10px] text-slate-500 line-through">Rp 3.300</span>
-                     <span className="bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded text-[10px] font-bold">-50%</span>
-                   </div>
-                   <div className="font-bold text-emerald-400">Rp 1.650</div>
+                   {pricing.discount > 0 && (
+                     <div className="flex items-center gap-2">
+                       <span className="text-[10px] text-slate-500 line-through">Rp 3.300</span>
+                       <span className="bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded text-[10px] font-bold">-{pricing.discount}%</span>
+                     </div>
+                   )}
+                   <div className="font-bold text-emerald-400">Rp {planPrices.vip7.toLocaleString('id-ID')}</div>
                 </div>
              </div>
 
@@ -372,11 +418,13 @@ export const SshCreateAccount: React.FC<SshCreateAccountProps> = ({
                    <p className="text-[11px] text-slate-400 mt-0.5">Full month access</p>
                 </div>
                 <div className="flex flex-col items-end gap-1">
-                   <div className="flex items-center gap-2">
-                     <span className="text-[10px] text-slate-500 line-through">Rp 12.500</span>
-                     <span className="bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded text-[10px] font-bold">-50%</span>
-                   </div>
-                   <div className="font-bold text-emerald-400">Rp 6.250</div>
+                   {pricing.discount > 0 && (
+                     <div className="flex items-center gap-2">
+                       <span className="text-[10px] text-slate-500 line-through">Rp 12.500</span>
+                       <span className="bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded text-[10px] font-bold">-{pricing.discount}%</span>
+                     </div>
+                   )}
+                   <div className="font-bold text-emerald-400">Rp {planPrices.vip30.toLocaleString('id-ID')}</div>
                 </div>
              </div>
            </div>

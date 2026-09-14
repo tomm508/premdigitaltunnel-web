@@ -304,8 +304,8 @@ export const SshServerList: React.FC<SshServerListProps> = ({
                      <div className="flex justify-between items-center text-[13px]">
                         <span className="text-slate-300 font-medium">3 Days</span>
                         <div className="flex items-center gap-2">
-                           {pricing.discount > 0 && <span className="text-slate-500 line-through">Rp 1.500</span>}
-                           <span className="text-emerald-400 font-bold">Rp {(1500 * (1 - pricing.discount / 100)).toLocaleString('id-ID')}</span>
+                           {pricing.discount > 0 && <span className="text-slate-500 line-through">Rp {pricing.ssh.toLocaleString('id-ID')}</span>}
+                           <span className="text-emerald-400 font-bold">Rp {(pricing.ssh * (1 - pricing.discount / 100)).toLocaleString('id-ID')}</span>
                            {pricing.discount > 0 && <span className="bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded text-[10px] font-bold">-{pricing.discount}%</span>}
                         </div>
                      </div>
