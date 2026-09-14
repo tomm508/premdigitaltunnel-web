@@ -22,6 +22,7 @@ import { TunnelServer, GeneratedAccount } from '../types';
 import { User } from 'firebase/auth';
 import { db, collection, addDoc, doc, updateDoc } from '../lib/firebase';
 import { onSnapshot } from 'firebase/firestore';
+import { Turnstile } from '@marsidev/react-turnstile';
 
 interface SshCreateAccountProps {
   server: TunnelServer | null;
@@ -50,6 +51,8 @@ export const SshCreateAccount: React.FC<SshCreateAccountProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [pricing, setPricing] = useState<{ssh: number, discount: number}>({ ssh: 1500, discount: 50 });
+  const [turnstileSiteKey, setTurnstileSiteKey] = useState<string>('');
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
 
   useEffect(() => {
     const unsub = onSnapshot(doc(db, 'platform', 'settings'), (docSnap) => {
@@ -59,6 +62,7 @@ export const SshCreateAccount: React.FC<SshCreateAccountProps> = ({
           ssh: data.pricing?.ssh || 1500,
           discount: data.pricing?.discount ?? 50
         });
+        setTurnstileSiteKey(data.turnstileSiteKey || '');
       }
     });
     return () => unsub();
@@ -96,6 +100,12 @@ export const SshCreateAccount: React.FC<SshCreateAccountProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
+
+    // Validate Turnstile
+    if (turnstileSiteKey && !turnstileToken) {
+      setErrorMessage('Silakan selesaikan verifikasi captcha (Cloudflare) terlebih dahulu.');
+      return;
+    }
 
     // Validate Server Capacity for Free Tier
     if (selectedPlan === 'free' && server.usedSlots >= server.totalSlots) {
@@ -428,6 +438,17 @@ export const SshCreateAccount: React.FC<SshCreateAccountProps> = ({
                 </div>
              </div>
            </div>
+
+           {turnstileSiteKey && (
+             <div className="mt-6 flex justify-center">
+               <Turnstile 
+                 siteKey={turnstileSiteKey} 
+                 onSuccess={(token) => setTurnstileToken(token)}
+                 onError={() => setTurnstileToken(null)}
+                 onExpire={() => setTurnstileToken(null)}
+               />
+             </div>
+           )}
 
            <button
              type="submit"

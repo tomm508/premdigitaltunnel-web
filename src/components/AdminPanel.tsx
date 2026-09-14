@@ -25,6 +25,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isDark, userRole }) => {
   const [freeLimit, setFreeLimit] = useState(50);
   const [premiumLimit, setPremiumLimit] = useState(500);
   const [resetTime, setResetTime] = useState('00:00');
+  const [turnstileSiteKey, setTurnstileSiteKey] = useState('');
   
   // Stats State
   const [activeServers, setActiveServers] = useState(2);
@@ -65,6 +66,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isDark, userRole }) => {
         setFreeLimit(data.freeAccountLimit || 50);
         setPremiumLimit(data.premiumAccountLimit || 500);
         setResetTime(data.resetTime || '00:00');
+        setTurnstileSiteKey(data.turnstileSiteKey || '');
       }
     });
     return () => unsub();
@@ -135,6 +137,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isDark, userRole }) => {
         freeAccountLimit: Number(freeLimit),
         premiumAccountLimit: Number(premiumLimit),
         resetTime: resetTime,
+        turnstileSiteKey: turnstileSiteKey,
         updatedAt: new Date().toISOString()
       }, { merge: true });
       
@@ -513,6 +516,20 @@ echo "[PremDigital] Status berhasil dilaporkan ke Dashboard!"`;
                       </div>
                     </div>
                     <p className="text-xs text-slate-500">Premium accounts do NOT reset automatically. They are managed by expiration dates.</p>
+                  </div>
+
+                  <hr className="border-slate-700/50" />
+
+                  {/* Cloudflare Turnstile Settings */}
+                  <div className="space-y-4">
+                    <h3 className="text-sm font-bold text-blue-400 uppercase tracking-wider">Security & Verification</h3>
+                    <div className="grid grid-cols-1 gap-4">
+                      <div>
+                        <label className="block text-xs text-slate-400 mb-1.5">Cloudflare Turnstile Site Key (Leave empty to disable)</label>
+                        <input type="text" value={turnstileSiteKey} onChange={(e) => setTurnstileSiteKey(e.target.value)} placeholder="0x4AAAAAA..." className="w-full bg-[#13172a] border border-slate-600 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-indigo-500" />
+                      </div>
+                    </div>
+                    <p className="text-xs text-slate-500">Enable Cloudflare Turnstile CAPTCHA on account creation to prevent bots/spam. Get your Site Key from Cloudflare dashboard.</p>
                   </div>
 
                   <div className="pt-4 flex items-center justify-between">
