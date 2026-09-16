@@ -224,7 +224,7 @@ EOF
 
 # 2. Install Worker Auto-Create & Reporter sekaligus:
 
-bash <(curl -s https://raw.githubusercontent.com/tomm508/premdigitaltunnel-v2/main/vps-scripts/install_worker.sh)`;
+bash <(curl -s https://raw.githubusercontent.com/tomm508/premdigitaltunnel-v2/main/app/applet/vps-scripts/install_worker.sh)`;
 
 
 
