@@ -228,7 +228,7 @@ export const SshServerList: React.FC<SshServerListProps> = ({
             <AlertTriangle className="w-10 h-10 text-rose-400 mx-auto mb-4" />
             <p className="text-rose-300 font-medium">{error}</p>
             <button 
-              onClick={fetchServers}
+              onClick={() => window.location.reload()}
               className="mt-4 px-6 py-2 bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 rounded-lg text-sm font-bold transition-colors"
             >
               Coba Lagi
