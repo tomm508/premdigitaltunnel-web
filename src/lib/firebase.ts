@@ -2,7 +2,6 @@ import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 import { 
   getFirestore, 
-  initializeFirestore,
   doc, 
   getDoc, 
   setDoc, 
@@ -20,7 +19,8 @@ const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
 
-export const db = getFirestore(app, "ai-studio-premdigitaltunne-563571df-29ee-44be-a591-c6690b4a41c4");
+// IMPORTANT: Do not hardcode database ID, let SDK use default database
+export const db = getFirestore(app);
 
 export { 
   signInWithPopup, 
