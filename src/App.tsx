@@ -172,7 +172,7 @@ export default function App() {
       if (docSnap.exists()) {
         const data = docSnap.data();
         setStats((prev) => ({
-          activeServers: liveNodesActiveCount !== null ? liveNodesActiveCount : (typeof data.activeServers === 'number' ? data.activeServers : prev.activeServers || SERVERS_LIST.length),
+          activeServers: liveNodesActiveCount !== null ? liveNodesActiveCount : (typeof data.activeServers === 'number' ? data.activeServers : prev.activeServers || 0),
           servicesToday: typeof data.servicesToday === 'number' ? data.servicesToday : prev.servicesToday,
           totalAccounts: typeof data.totalAccounts === 'number' ? data.totalAccounts : prev.totalAccounts,
           onlineUsers: liveNodesOnlineUsers !== null ? liveNodesOnlineUsers : (typeof data.onlineUsers === 'number' ? data.onlineUsers : prev.onlineUsers),

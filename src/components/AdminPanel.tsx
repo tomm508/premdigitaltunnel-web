@@ -107,7 +107,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isDark, userRole }) => {
     const unsubStats = onSnapshot(doc(db, 'platform', 'stats'), (docSnap) => {
       if (docSnap.exists()) {
         const data = docSnap.data();
-        setActiveServers(typeof data.activeServers === 'number' ? data.activeServers : SERVERS_LIST.length);
+        setActiveServers(typeof data.activeServers === 'number' ? data.activeServers : 0);
         setServicesToday(typeof data.servicesToday === 'number' ? data.servicesToday : 0);
         setTotalAccounts(typeof data.totalAccounts === 'number' ? data.totalAccounts : 0);
         setOnlineUsers(typeof data.onlineUsers === 'number' ? data.onlineUsers : 0);

@@ -34,8 +34,9 @@ export function isNodeHeartbeatActive(lastHeartbeat?: string, status?: string): 
  * If no Indonesia VPS is reporting heartbeat, ID automatically becomes Offline/Down (red).
  */
 
+
 export function resolveServersWithVpsStatus(vpsNodes: VpsNode[]): UnifiedServerNode[] {
-  // If no VPS nodes are registered yet, return mock servers as Online so UI works
+  // Jika belum ada VPS yang terdaftar sama sekali di database, gunakan data dummy agar UI tidak kosong
   if (!vpsNodes || vpsNodes.length === 0) {
     return SERVERS_LIST.map(srv => ({
       ...srv,
@@ -44,35 +45,50 @@ export function resolveServersWithVpsStatus(vpsNodes: VpsNode[]): UnifiedServerN
     }));
   }
 
-  return SERVERS_LIST.map((srv) => {
-    const isSG = srv.countryCode === 'SG' || srv.id.includes('sg') || srv.city.toLowerCase().includes('singapore');
-    const isID = srv.countryCode === 'ID' || srv.id.includes('id') || srv.city.toLowerCase().includes('jakarta');
+  // Jika ADA VPS yang terdaftar, kita BIKIN LIST SERVER berdasarkan VPS yang asli! (Dinamis)
+  return vpsNodes.map(node => {
+    const isOnline = isNodeHeartbeatActive(node.lastHeartbeat, node.status);
     
-    // Find matching live VPS node
-    let activeNode = null;
-    if (isSG) activeNode = vpsNodes.find(n => (n.countryCode === 'SG' || n.id.includes('sg')) && isNodeHeartbeatActive(n.lastHeartbeat, n.status));
-    else if (isID) activeNode = vpsNodes.find(n => (n.countryCode === 'ID' || n.id.includes('id')) && isNodeHeartbeatActive(n.lastHeartbeat, n.status));
+    // Helper untuk generate bendera dari kode negara
+    const getFlag = (code?: string) => {
+       if (!code) return '🌐';
+       const c = code.toUpperCase();
+       if (c === 'SG') return '🇸🇬';
+       if (c === 'ID') return '🇮🇩';
+       if (c === 'US') return '🇺🇸';
+       if (c === 'MY') return '🇲🇾';
+       try {
+           const codePoints = c.split('').map(char => 127397 + char.charCodeAt(0));
+           return String.fromCodePoint(...codePoints);
+       } catch (e) {
+           return '🌐';
+       }
+    };
 
-    if (activeNode) {
-      return {
-        ...srv,
-        ip: activeNode.ip || srv.ip,
-        city: activeNode.city || srv.city,
-        host: activeNode.name ? `${activeNode.name.toLowerCase().replace(/\s+/g, '')}.premdigital.web.id` : srv.host,
-        load: activeNode.cpuLoad || srv.load,
-        usedSlots: activeNode.onlineUsers || srv.usedSlots,
-        status: 'Online',
-        lastHeartbeat: activeNode.lastHeartbeat,
-        cpuLoad: activeNode.cpuLoad,
-        ramUsage: activeNode.ramUsage
-      };
-    } else {
-      // If a VPS is registered but offline, show Down. But if we reach here and it's just the default UI, show Online
-      return {
-        ...srv,
-        status: 'Online' // Forced online for testing 
-      };
-    }
+    const cCode = (node.countryCode || 'SG').toUpperCase();
+    const isVip = node.id.toLowerCase().includes('vip') || node.id.toLowerCase().includes('premium');
+    
+    return {
+      id: node.id,
+      country: node.country || (cCode === 'SG' ? 'Singapore' : cCode === 'ID' ? 'Indonesia' : 'Cloud Location'),
+      countryCode: cCode,
+      flag: getFlag(cCode),
+      city: node.city || node.name || 'Cloud Server',
+      host: node.name ? `${node.name.toLowerCase().replace(/\s+/g, '')}.premdigital.web.id` : `server-${node.id}.premdigital.web.id`,
+      ip: node.ip || '103.xxx.xxx.xxx',
+      load: node.cpuLoad || 0,
+      ping: isOnline ? (cCode === 'SG' ? 24 : 12) : 999, // Dummy ping for visual
+      totalSlots: isVip ? 500 : 100, 
+      usedSlots: node.onlineUsers || 0,
+      supportedProtocols: ['ssh', 'vmess', 'vless', 'trojan'],
+      isVip: isVip,
+      limitCreated: isVip ? 500 : 100,
+      leftCreated: (isVip ? 500 : 100) - (node.onlineUsers || 0),
+      status: isOnline ? 'Online' : 'Down',
+      lastHeartbeat: node.lastHeartbeat,
+      cpuLoad: node.cpuLoad,
+      ramUsage: node.ramUsage
+    };
   });
 }
 /**
