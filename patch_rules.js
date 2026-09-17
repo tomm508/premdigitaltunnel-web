@@ -1,9 +1,21 @@
 import fs from 'fs';
+
 let rules = fs.readFileSync('firestore.rules', 'utf8');
 
-const target = `    match /vps_commands/{commandId} {      allow read, write: if true;    }`;
-const replacement = `    match /vps_commands/{commandId} {      allow read, write: if true;    }    match /topups/{topupId} {      allow read, write: if true;    }`;
+const topupsRule = `
+    match /topups/{topupId} {
+      allow read: if isSignedIn() && (request.auth.uid == resource.data.uid || isAdmin());
+      allow create: if isSignedIn() && request.auth.uid == request.resource.data.uid;
+      allow update: if isSignedIn() && (request.auth.uid == resource.data.uid || isAdmin());
+      allow delete: if isAdmin();
+    }
+    
+    match /users/{userId} {`;
 
-rules = rules.replace(target, replacement);
+rules = rules.replace(
+  "    match /users/{userId} {",
+  topupsRule
+);
+
 fs.writeFileSync('firestore.rules', rules);
 console.log("Patched firestore.rules");

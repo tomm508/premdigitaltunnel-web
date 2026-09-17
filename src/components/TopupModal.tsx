@@ -132,10 +132,10 @@ export const TopupModal: React.FC<TopupModalProps> = ({
         setIsProcessing(false);
         setStep('pay');
       }, 600);
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
+      alert('Gagal membuat permintaan Top Up: ' + e.message);
       setIsProcessing(false);
-      setStep('pay');
     }
   };
 
@@ -152,10 +152,10 @@ export const TopupModal: React.FC<TopupModalProps> = ({
       }
       setIsProcessing(false);
       setStep('waiting');
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
+      alert('Terjadi kesalahan: ' + e.message);
       setIsProcessing(false);
-      setStep('waiting');
     }
   };
 
