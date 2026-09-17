@@ -1,13 +1,10 @@
-// Firebase Applet Configuration
 export const firebaseConfig = {
-  apiKey: "AIzaSyDEtjcfHC9cnqxdTpMv8hnRUMDv4c5EYB4",
-  authDomain: "web-premdigitalvpn.firebaseapp.com",
-  projectId: "web-premdigitalvpn",
-  storageBucket: "web-premdigitalvpn.firebasestorage.app",
-  messagingSenderId: "477505566350",
-  appId: "1:477505566350:web:66e2ce8d2b92b644193bdf",
-  measurementId: "G-038LJ3Q8GR"
+  apiKey: "AIzaSyAymTIeAbbtdD5JdbzkpwMZZHPi05YIlGU",
+  authDomain: "integrated-wharf-pf6jr.firebaseapp.com",
+  projectId: "integrated-wharf-pf6jr",
+  storageBucket: "integrated-wharf-pf6jr.firebasestorage.app",
+  messagingSenderId: "613043222846",
+  appId: "1:613043222846:web:e38cf882fddcbbe74bd46f",
+  measurementId: ""
 };
-
 export default firebaseConfig;
-

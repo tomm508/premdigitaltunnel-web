@@ -1,7 +1,8 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 import { 
-  initializeFirestore, 
+  getFirestore, 
+  initializeFirestore,
   doc, 
   getDoc, 
   setDoc, 
@@ -19,8 +20,7 @@ const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
 
-// Explicitly use the firestore database ID from configuration with long polling fallback for restricted networks
-export const db = initializeFirestore(app, {});
+export const db = getFirestore(app, "ai-studio-premdigitaltunne-563571df-29ee-44be-a591-c6690b4a41c4");
 
 export { 
   signInWithPopup, 
