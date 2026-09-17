@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { User } from 'firebase/auth';
 import { Settings, Wallet, List, CheckCircle2, Shield, Globe, AlertTriangle, X, Tag } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { UserSettingsModal } from './UserSettingsModal';
 import { db, doc, onSnapshot } from '../lib/firebase';
 
 interface DashboardProps {
@@ -15,6 +16,7 @@ interface DashboardProps {
 export const Dashboard: React.FC<DashboardProps> = ({ isDark, currentUser, userBalance, onOpenTopup, onLogout }) => {
   const navigate = useNavigate();
   const [discount, setDiscount] = useState<number>(0);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   useEffect(() => {
     if (!currentUser) {
@@ -105,9 +107,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ isDark, currentUser, userB
             <p className="text-xs text-slate-400 mb-1">{currentUser.email}</p>
             <p className="text-[10px] text-slate-500">Member since {creationDate}</p>
           </div>
-          <button 
-            onClick={() => {}}
-            className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold transition-all shadow-lg shadow-purple-600/20 flex items-center justify-center gap-2"
+          <button onClick={() => setIsSettingsOpen(true)} className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold transition-all shadow-lg shadow-purple-600/20 flex items-center justify-center gap-2"
           >
             <Settings className="w-4 h-4" />
             User Settings
@@ -203,6 +203,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ isDark, currentUser, userB
         </div>
 
       </div>
+      
+      <UserSettingsModal 
+        isOpen={isSettingsOpen} 
+        onClose={() => setIsSettingsOpen(false)} 
+        user={currentUser} 
+      />
     </div>
   );
 };
