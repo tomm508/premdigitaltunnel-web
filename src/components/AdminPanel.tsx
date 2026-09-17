@@ -941,7 +941,8 @@ echo "VPS Script Berhasil Dipasang!"
                     <div className="divide-y divide-slate-700/50">
                       {pendingTopups.map((topup) => (
                         <div key={topup.id} className="p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                          <div>
+
+                          <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1">
                               <span className="text-sm font-bold text-white">{topup.userEmail}</span>
                               <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-500/20 text-purple-300 uppercase">
@@ -954,6 +955,16 @@ echo "VPS Script Berhasil Dipasang!"
                             <p className="text-[10px] text-slate-500 mt-1">
                               {new Date(topup.createdAt).toLocaleString('id-ID')}
                             </p>
+                            {topup.proofUrl && (
+                              <div className="mt-3">
+                                <p className="text-[10px] font-bold text-slate-400 mb-1">Bukti Transfer:</p>
+                                <a href={topup.proofUrl} target="_blank" rel="noopener noreferrer">
+                                  <div className="w-16 h-16 bg-black/50 rounded-lg overflow-hidden border border-slate-700/50 hover:border-indigo-500 transition-colors">
+                                    <img src={topup.proofUrl} alt="Bukti Transfer" className="w-full h-full object-cover" />
+                                  </div>
+                                </a>
+                              </div>
+                            )}
                           </div>
                           
                           <div className="flex gap-2 w-full sm:w-auto">

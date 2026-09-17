@@ -1,10 +1,20 @@
 import fs from 'fs';
+
 let code = fs.readFileSync('src/components/TopupModal.tsx', 'utf8');
 
-// The qrisUrl prop is missing in <TopupModal /> inside App.tsx, but TopupModal has:
-// const displayQrisUrl = qrisUrl || fetchedQrisUrl;
-// Let's modify TopupModal to simply use fetchedQrisUrl if qrisUrl is undefined
-code = code.replace(/const displayQrisUrl = qrisUrl \|\| fetchedQrisUrl;/g, 'const displayQrisUrl = qrisUrl || fetchedQrisUrl;');
+// Replace addDoc part
+code = code.replace(
+  /await addDoc\(collection\(db, 'users', user\.uid, 'topups'\), \{[\s\S]*?\}\);/m,
+  `const docRef = await addDoc(collection(db, 'topups'), {
+          amount: currentDepositAmount,
+          paymentMethod,
+          status: 'pending',
+          uid: user.uid,
+          userEmail: user.email,
+          createdAt: new Date().toISOString()
+        });
+        setCurrentTopupId(docRef.id);`
+);
 
 fs.writeFileSync('src/components/TopupModal.tsx', code);
-console.log("Checked TopupModal.");
+console.log("Patched TopupModal.tsx");
