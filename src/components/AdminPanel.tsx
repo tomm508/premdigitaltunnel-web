@@ -608,7 +608,7 @@ echo "VPS Script Berhasil Dipasang!"
                           </div>
                           {qrisUrl && (
                             <div className="w-16 h-16 bg-white rounded-xl overflow-hidden flex-shrink-0 border border-slate-600 p-1">
-                              <img src={qrisUrl} alt="QRIS Preview" className="w-full h-full object-contain rounded-lg" referrerPolicy="no-referrer" />
+                              <img src={qrisUrl.startsWith('http') ? `https://wsrv.nl/?url=${encodeURIComponent(qrisUrl.replace(/^https?:\/\//, ''))}` : qrisUrl} alt="QRIS Preview" className="w-full h-full object-contain rounded-lg" referrerPolicy="no-referrer" />
                             </div>
                           )}
                         </div>

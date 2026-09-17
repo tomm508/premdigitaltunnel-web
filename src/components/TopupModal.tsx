@@ -237,7 +237,7 @@ export const TopupModal: React.FC<TopupModalProps> = ({
               <div className="p-6 bg-white rounded-2xl inline-block shadow-lg mx-auto">
                 {displayQrisUrl ? (
                   <div className="w-44 h-44 rounded-xl flex items-center justify-center overflow-hidden bg-slate-100">
-                    <img src={displayQrisUrl} alt="QRIS" className="w-full h-full object-contain" referrerPolicy="no-referrer" />
+                    <img src={displayQrisUrl.startsWith('http') ? `https://wsrv.nl/?url=${encodeURIComponent(displayQrisUrl.replace(/^https?:\/\//, ''))}` : displayQrisUrl} alt="QRIS" className="w-full h-full object-contain" referrerPolicy="no-referrer" />
                   </div>
                 ) : (
                   <div className="w-44 h-44 bg-slate-900 rounded-xl p-2 flex flex-col items-center justify-center text-white text-center">
