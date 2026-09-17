@@ -78,6 +78,10 @@ export const AccountModal: React.FC<AccountModalProps> = ({
     if (isOpen) {
       if (initialServer) {
         setSelectedServer(initialServer);
+      } else if (liveServers && liveServers.length > 0) {
+        // Find first online server, else fallback to first server in list
+        const firstOnline = liveServers.find(s => s.status === 'Online');
+        setSelectedServer(firstOnline || liveServers[0]);
       } else {
         setSelectedServer(SERVERS_LIST[0]);
       }
