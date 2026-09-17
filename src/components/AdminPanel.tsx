@@ -254,9 +254,9 @@ import subprocess
 import time
 import os
 
-PROJECT_ID="\${PROJECT_ID}"
-API_KEY="\${API_KEY}"
-SERVER_ID="\${NODE_ID}"
+PROJECT_ID="${firebaseConfig.projectId}"
+API_KEY="${firebaseConfig.apiKey}"
+SERVER_ID="${selectedNodeId}"
 
 BASE_URL = f"https://firestore.googleapis.com/v1/projects/{PROJECT_ID}/databases/(default)/documents"
 QUERY_URL = f"{BASE_URL}:runQuery?key={API_KEY}"

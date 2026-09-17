@@ -101,7 +101,8 @@ export function subscribeVpsNodes(
     const rawNodes: VpsNode[] = [];
     snap.forEach((doc) => {
       const data = doc.data();
-      const isOnline = isNodeHeartbeatActive(data.lastHeartbeat, data.status);
+      const hbStr = data.lastHeartbeat?.toDate ? data.lastHeartbeat.toDate().toISOString() : data.lastHeartbeat || '';
+      const isOnline = isNodeHeartbeatActive(hbStr, data.status);
       rawNodes.push({
         id: doc.id,
         name: data.name || doc.id,

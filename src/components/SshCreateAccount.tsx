@@ -74,9 +74,16 @@ export const SshCreateAccount: React.FC<SshCreateAccountProps> = ({
 
   const planPrices = {
     free: 0,
-    vip3: calculatePrice(pricing.ssh),
-    vip7: calculatePrice(3300), // Note: need to determine how the user wants other days priced. We assume 3300 and 12500 base.
-    vip30: calculatePrice(12500)
+    vip3: calculatePrice(1250),
+    vip7: calculatePrice(2500),
+    vip30: calculatePrice(pricing.ssh)
+  };
+
+  const planBasePrices = {
+    free: 0,
+    vip3: 1250,
+    vip7: 2500,
+    vip30: pricing.ssh
   };
 
   const planDays = {
@@ -382,7 +389,7 @@ export const SshCreateAccount: React.FC<SshCreateAccountProps> = ({
                 <div className="flex flex-col items-end gap-1">
                    {pricing.discount > 0 && (
                      <div className="flex items-center gap-2">
-                       <span className="text-[10px] text-slate-500 line-through">Rp {pricing.ssh.toLocaleString('id-ID')}</span>
+                       <span className="text-[10px] text-slate-500 line-through">Rp {planBasePrices.vip3.toLocaleString('id-ID')}</span>
                        <span className="bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded text-[10px] font-bold">-{pricing.discount}%</span>
                      </div>
                    )}
@@ -406,7 +413,7 @@ export const SshCreateAccount: React.FC<SshCreateAccountProps> = ({
                 <div className="flex flex-col items-end gap-1">
                    {pricing.discount > 0 && (
                      <div className="flex items-center gap-2">
-                       <span className="text-[10px] text-slate-500 line-through">Rp 3.300</span>
+                       <span className="text-[10px] text-slate-500 line-through">Rp {planBasePrices.vip7.toLocaleString('id-ID')}</span>
                        <span className="bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded text-[10px] font-bold">-{pricing.discount}%</span>
                      </div>
                    )}
@@ -430,7 +437,7 @@ export const SshCreateAccount: React.FC<SshCreateAccountProps> = ({
                 <div className="flex flex-col items-end gap-1">
                    {pricing.discount > 0 && (
                      <div className="flex items-center gap-2">
-                       <span className="text-[10px] text-slate-500 line-through">Rp 12.500</span>
+                       <span className="text-[10px] text-slate-500 line-through">Rp {planBasePrices.vip30.toLocaleString('id-ID')}</span>
                        <span className="bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded text-[10px] font-bold">-{pricing.discount}%</span>
                      </div>
                    )}
