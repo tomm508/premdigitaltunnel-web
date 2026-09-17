@@ -113,7 +113,7 @@ export function subscribeVpsNodes(
         cpuLoad: Number(data.cpuLoad || 0),
         ramUsage: Number(data.ramUsage || 0),
         status: isOnline ? 'Online' : 'Down',
-        lastHeartbeat: data.lastHeartbeat || '',
+        lastHeartbeat: data.lastHeartbeat?.toDate ? data.lastHeartbeat.toDate().toISOString() : data.lastHeartbeat || '',
         sshOnline: Number(data.sshOnline || 0),
         xrayOnline: Number(data.xrayOnline || 0)
       });
