@@ -58,6 +58,23 @@ export const TopupModal: React.FC<TopupModalProps> = ({
           status: 'pending',
           createdAt: new Date().toISOString()
         });
+        
+        // Trigger email alert directly to Admin
+        fetch('https://formsubmit.co/ajax/premdigitalssh@gmail.com', {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify({
+            _subject: `🚨 Top Up Masuk: Rp ${currentDepositAmount} dari ${user.email || 'Member'}`,
+            Email_Member: user.email,
+            Nominal: 'Rp ' + currentDepositAmount,
+            Metode_Pembayaran: paymentMethod,
+            Status: 'Menunggu Verifikasi Admin',
+            Pesan: 'Silakan login ke Admin Panel untuk memverifikasi pembayaran ini.'
+          })
+        }).catch(err => console.log('Email alert error:', err));
       }
 
       setTimeout(() => {
