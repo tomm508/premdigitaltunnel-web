@@ -12,6 +12,37 @@ interface AdminPanelProps {
   userRole: 'member' | 'admin';
 }
 
+
+function SafeImage({ src, alt, className }: { src: string, alt: string, className: string }) {
+  const [blobUrl, setBlobUrl] = React.useState<string>(src);
+  
+  React.useEffect(() => {
+    if (!src || !src.startsWith('http')) {
+      setBlobUrl(src);
+      return;
+    }
+    
+    let isMounted = true;
+    fetch(src)
+      .then(res => res.blob())
+      .then(blob => {
+        if (isMounted) {
+          setBlobUrl(URL.createObjectURL(blob));
+        }
+      })
+      .catch(err => {
+        console.error("SafeImage fetch error:", err);
+        // Fallback to normal src if fetch fails
+      });
+      
+    return () => {
+      isMounted = false;
+    };
+  }, [src]);
+
+  return <img src={blobUrl} alt={alt} className={className} />;
+}
+
 export const AdminPanel: React.FC<AdminPanelProps> = ({ isDark, userRole }) => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'settings' | 'users' | 'services' | 'stats' | 'vps'>('settings');
@@ -608,14 +639,61 @@ echo "VPS Script Berhasil Dipasang!"
                           </div>
                           {qrisUrl && (
                             <div className="w-16 h-16 bg-white rounded-xl overflow-hidden flex-shrink-0 border border-slate-600 p-1">
-                              <img src={qrisUrl + (qrisUrl.includes("?") ? "&" : "?") + "v=2"} alt="QRIS Preview" className="w-full h-full object-contain rounded-lg" referrerPolicy="no-referrer" />
+                              <SafeImage src={qrisUrl} alt="QRIS Preview" className="w-full h-full object-contain rounded-lg" />
                             </div>
                           )}
+                        </div>
+                        
+                        <div className="mt-4 pt-4 border-t border-slate-700/50">
+                          <label className="block text-xs font-bold text-emerald-400 mb-2">Atau Unggah Gambar dari HP (Otomatis & Anti-Error)</label>
+                          <input 
+                            type="file" 
+                            accept="image/*"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (!file) return;
+                              
+                              const reader = new FileReader();
+                              reader.onload = (event) => {
+                                const img = new Image();
+                                img.onload = () => {
+                                  const canvas = document.createElement('canvas');
+                                  const MAX_WIDTH = 600;
+                                  const MAX_HEIGHT = 600;
+                                  let width = img.width;
+                                  let height = img.height;
+                                  
+                                  if (width > height) {
+                                    if (width > MAX_WIDTH) {
+                                      height *= MAX_WIDTH / width;
+                                      width = MAX_WIDTH;
+                                    }
+                                  } else {
+                                    if (height > MAX_HEIGHT) {
+                                      width *= MAX_HEIGHT / height;
+                                      height = MAX_HEIGHT;
+                                    }
+                                  }
+                                  
+                                  canvas.width = width;
+                                  canvas.height = height;
+                                  const ctx = canvas.getContext('2d');
+                                  ctx?.drawImage(img, 0, 0, width, height);
+                                  
+                                  // Compress to JPEG with 0.8 quality to ensure it fits in Firestore (1MB limit)
+                                  const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+                                  setQrisUrl(dataUrl);
+                                };
+                                img.src = event.target?.result;
+                              };
+                              reader.readAsDataURL(file);
+                            }}
+                            className="block w-full text-sm text-slate-400 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-emerald-600/20 file:text-emerald-400 hover:file:bg-emerald-600/30 cursor-pointer"
+                          />
                         </div>
                       </div>
                     </div>
                   </div>
-
                   <div className="pt-4 flex items-center justify-between">
                     {saveSuccess ? (
                       <span className="flex items-center gap-2 text-emerald-400 text-sm font-medium">

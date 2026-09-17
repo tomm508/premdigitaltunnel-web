@@ -23,6 +23,37 @@ interface TopupModalProps {
   qrisUrl?: string;
 }
 
+
+function SafeImage({ src, alt, className }: { src: string, alt: string, className: string }) {
+  const [blobUrl, setBlobUrl] = React.useState<string>(src);
+  
+  React.useEffect(() => {
+    if (!src || !src.startsWith('http')) {
+      setBlobUrl(src);
+      return;
+    }
+    
+    let isMounted = true;
+    fetch(src)
+      .then(res => res.blob())
+      .then(blob => {
+        if (isMounted) {
+          setBlobUrl(URL.createObjectURL(blob));
+        }
+      })
+      .catch(err => {
+        console.error("SafeImage fetch error:", err);
+        // Fallback to normal src if fetch fails
+      });
+      
+    return () => {
+      isMounted = false;
+    };
+  }, [src]);
+
+  return <img src={blobUrl} alt={alt} className={className} />;
+}
+
 export const TopupModal: React.FC<TopupModalProps> = ({
   isOpen,
   onClose,
@@ -237,7 +268,7 @@ export const TopupModal: React.FC<TopupModalProps> = ({
               <div className="p-6 bg-white rounded-2xl inline-block shadow-lg mx-auto">
                 {displayQrisUrl ? (
                   <div className="w-44 h-44 rounded-xl flex items-center justify-center overflow-hidden bg-slate-100">
-                    <img src={displayQrisUrl + (displayQrisUrl.includes("?") ? "&" : "?") + "v=2"} alt="QRIS" className="w-full h-full object-contain" referrerPolicy="no-referrer" />
+                    <SafeImage src={displayQrisUrl} alt="QRIS" className="w-full h-full object-contain" />
                   </div>
                 ) : (
                   <div className="w-44 h-44 bg-slate-900 rounded-xl p-2 flex flex-col items-center justify-center text-white text-center">
