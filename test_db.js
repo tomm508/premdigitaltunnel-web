@@ -1,20 +1,17 @@
-import { initializeApp } from "firebase/app";
-import { getFirestore, doc, setDoc } from "firebase/firestore";
-import fs from "fs";
+import { initializeApp } from 'firebase/app';
+import { getFirestore, doc, getDoc } from 'firebase/firestore';
 
-const firebaseConfig = JSON.parse(fs.readFileSync('firebase-applet-config.json', 'utf8'));
+const firebaseConfig = {
+  apiKey: "AIzaSyCBKAcHs0TldS7_Ia78Mig3TR8tJMbt0jw",
+  projectId: "premdigital-vpn"
+};
+
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-async function test() {
-  try {
-    await setDoc(doc(db, 'platform', 'settings'), {
-      test: true
-    }, { merge: true });
-    console.log("Write success!");
-  } catch (e) {
-    console.error("Write failed:", e);
-  }
-  process.exit();
+async function check() {
+  const ref = doc(db, 'platform', 'settings');
+  const snap = await getDoc(ref);
+  console.log(snap.data());
 }
-test();
+check();

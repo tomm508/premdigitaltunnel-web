@@ -32,7 +32,8 @@ export const TopupModal: React.FC<TopupModalProps> = ({
   const [selectedAmount, setSelectedAmount] = useState<number>(10000);
   const [customAmount, setCustomAmount] = useState<string>('');
   const [paymentMethod, setPaymentMethod] = useState<'qris' | 'dana' | 'gopay'>('qris');
-  const [step, setStep] = useState<'select' | 'pay' | 'success'>('select');
+  const [step, setStep] = useState<'select' | 'pay' | 'success' | 'waiting'>('select');
+  const [currentTopupId, setCurrentTopupId] = useState<string>('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [copied, setCopied] = useState(false);
 
@@ -71,24 +72,19 @@ export const TopupModal: React.FC<TopupModalProps> = ({
   const handleSimulatePaymentSuccess = async () => {
     setIsProcessing(true);
     try {
-      if (user) {
-        const newBalance = balance + currentDepositAmount;
-        await setDoc(doc(db, 'users', user.uid), {
-          uid: user.uid,
-          email: user.email || '',
-          displayName: user.displayName || 'Member',
-          balance: newBalance,
+      if (user && currentTopupId) {
+        // Update topup status to waiting_verification instead of instantly adding balance
+        await setDoc(doc(db, 'topups', currentTopupId), {
+          status: 'waiting_verification',
           updatedAt: new Date().toISOString()
         }, { merge: true });
-        
-        onSuccessDeposit(currentDepositAmount);
       }
       setIsProcessing(false);
-      setStep('success');
+      setStep('waiting');
     } catch (e) {
       console.error(e);
       setIsProcessing(false);
-      setStep('success');
+      setStep('waiting');
     }
   };
 
@@ -164,44 +160,18 @@ export const TopupModal: React.FC<TopupModalProps> = ({
                 <label className="block text-xs font-semibold text-slate-300 mb-2">
                   Metode Pembayaran
                 </label>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-1 gap-2">
                   <button
                     type="button"
                     onClick={() => setPaymentMethod('qris')}
-                    className={`p-2.5 rounded-xl border text-xs font-bold text-center transition-all cursor-pointer ${
+                    className={`p-3 rounded-xl border text-sm font-bold text-center transition-all cursor-pointer flex flex-col items-center justify-center gap-1 ${
                       paymentMethod === 'qris'
                         ? 'bg-purple-600 border-purple-400 text-white'
                         : 'bg-purple-950/40 border-purple-500/20 text-slate-300'
                     }`}
                   >
-                    <QrCode className="w-4 h-4 mx-auto mb-1 text-pink-300" />
-                    QRIS Realtime
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setPaymentMethod('dana')}
-                    className={`p-2.5 rounded-xl border text-xs font-bold text-center transition-all cursor-pointer ${
-                      paymentMethod === 'dana'
-                        ? 'bg-purple-600 border-purple-400 text-white'
-                        : 'bg-purple-950/40 border-purple-500/20 text-slate-300'
-                    }`}
-                  >
-                    <CreditCard className="w-4 h-4 mx-auto mb-1 text-sky-400" />
-                    DANA / OVO
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setPaymentMethod('gopay')}
-                    className={`p-2.5 rounded-xl border text-xs font-bold text-center transition-all cursor-pointer ${
-                      paymentMethod === 'gopay'
-                        ? 'bg-purple-600 border-purple-400 text-white'
-                        : 'bg-purple-950/40 border-purple-500/20 text-slate-300'
-                    }`}
-                  >
-                    <CreditCard className="w-4 h-4 mx-auto mb-1 text-emerald-400" />
-                    GoPay / Shopee
+                    <QrCode className="w-6 h-6 text-pink-300" />
+                    QRIS All Payment
                   </button>
                 </div>
               </div>
@@ -263,6 +233,30 @@ export const TopupModal: React.FC<TopupModalProps> = ({
                   Ubah
                 </button>
               </div>
+            </div>
+          )}
+
+          {step === 'waiting' && (
+            <div className="py-6 text-center space-y-4">
+              <div className="w-14 h-14 mx-auto rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center">
+                <Clock className="w-8 h-8" />
+              </div>
+              <div>
+                <h4 className="text-xl font-bold text-white">Menunggu Verifikasi Admin</h4>
+                <p className="text-xs text-slate-300 mt-1">
+                  Tagihan senilai <strong className="text-emerald-400">Rp {currentDepositAmount.toLocaleString()}</strong> sedang diproses. Admin akan memverifikasi pembayaran Anda maksimal dalam 1x24 jam.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setStep('select');
+                  onClose();
+                }}
+                className="w-full py-3 rounded-xl font-bold text-xs text-white bg-purple-600 hover:bg-purple-500 cursor-pointer"
+              >
+                Tutup Jendela
+              </button>
             </div>
           )}
 
