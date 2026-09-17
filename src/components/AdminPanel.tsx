@@ -78,6 +78,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isDark, userRole }) => {
   const [premiumLimit, setPremiumLimit] = useState(500);
   const [resetTime, setResetTime] = useState('00:00');
   const [turnstileSiteKey, setTurnstileSiteKey] = useState('');
+  const [qrisUrl, setQrisUrl] = useState('');
   
   // Stats State
   const [activeServers, setActiveServers] = useState(2);
@@ -119,6 +120,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isDark, userRole }) => {
         setPremiumLimit(data.premiumAccountLimit || 500);
         setResetTime(data.resetTime || '00:00');
         setTurnstileSiteKey(data.turnstileSiteKey || '');
+        setQrisUrl(data.qrisUrl || '');
       }
     });
     return () => unsub();
@@ -190,6 +192,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isDark, userRole }) => {
         premiumAccountLimit: Number(premiumLimit),
         resetTime: resetTime,
         turnstileSiteKey: turnstileSiteKey,
+        qrisUrl: qrisUrl,
         updatedAt: new Date().toISOString()
       }, { merge: true });
       
