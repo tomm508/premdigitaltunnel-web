@@ -174,21 +174,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isDark, userRole }) => {
     return () => unsubStats();
   }, []);
 
-  const handleQrisUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      if (file.size > 500 * 1024) {
-        alert("Ukuran gambar terlalu besar. Maksimal 500KB. Silakan kompres atau gunakan gambar lain.");
-        return;
-      }
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setQrisUrl(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
   const handleSaveSettings = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSaving(true);
@@ -599,26 +584,24 @@ echo "VPS Script Berhasil Dipasang!"
                     <h3 className="text-sm font-bold text-pink-400 uppercase tracking-wider">Payment Configuration (QRIS)</h3>
                     <div className="grid grid-cols-1 gap-4">
                       <div>
-                        <label className="block text-xs text-slate-400 mb-1.5">Upload Gambar QRIS</label>
-                        <div className="flex items-center gap-4">
+                        <label className="block text-xs text-slate-400 mb-1.5">Link / URL Gambar QRIS</label>
+                        <div className="flex items-start gap-4">
+                          <div className="flex-1">
+                            <input 
+                              type="text" 
+                              placeholder="https://example.com/qris.jpg" 
+                              value={qrisUrl} 
+                              onChange={(e) => setQrisUrl(e.target.value)} 
+                              className="w-full bg-[#13172a] border border-slate-600 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-indigo-500" 
+                            />
+                            <p className="text-[10px] text-slate-500 mt-2">Tempel (paste) link/URL gambar QRIS Anda di sini.</p>
+                          </div>
                           {qrisUrl && (
                             <div className="w-16 h-16 bg-white rounded-xl overflow-hidden flex-shrink-0 border border-slate-600 p-1">
                               <img src={qrisUrl} alt="QRIS Preview" className="w-full h-full object-contain rounded-lg" />
                             </div>
                           )}
-                          <div className="flex-1">
-                            <input 
-                              type="file" 
-                              accept="image/*"
-                              onChange={handleQrisUpload}
-                              className="w-full text-sm text-slate-400 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-indigo-500/10 file:text-indigo-400 hover:file:bg-indigo-500/20 bg-[#13172a] border border-slate-600 rounded-xl focus:outline-none focus:border-indigo-500 cursor-pointer" 
-                            />
-                          </div>
                         </div>
-                        <p className="text-[10px] text-slate-500 mt-2">Pilih file gambar dari galeri Anda. Maks 500KB. Akan otomatis dikonversi.</p>
-                        
-                        <label className="block text-xs text-slate-400 mt-4 mb-1.5">Atau masukkan Link/URL Manual (jika punya)</label>
-                        <input type="text" placeholder="https://example.com/qris.jpg" value={qrisUrl} onChange={(e) => setQrisUrl(e.target.value)} className="w-full bg-[#13172a] border border-slate-600 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-indigo-500" />
                       </div>
                     </div>
                   </div>
