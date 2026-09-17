@@ -591,14 +591,24 @@ echo "VPS Script Berhasil Dipasang!"
                               type="text" 
                               placeholder="https://example.com/qris.jpg" 
                               value={qrisUrl} 
-                              onChange={(e) => setQrisUrl(e.target.value)} 
+                              onChange={(e) => {
+                                let val = e.target.value;
+                                if (val.includes("imgur.com/a/")) {
+                                  const id = val.split("imgur.com/a/")[1].split("?")[0].split("/")[0];
+                                  val = `https://i.imgur.com/${id}.jpg`;
+                                } else if (val.includes("imgur.com/") && !val.includes("i.imgur.com/")) {
+                                  const id = val.split("imgur.com/")[1].split("?")[0].split("/")[0];
+                                  val = `https://i.imgur.com/${id}.jpg`;
+                                }
+                                setQrisUrl(val);
+                              }} 
                               className="w-full bg-[#13172a] border border-slate-600 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-indigo-500" 
                             />
                             <p className="text-[10px] text-slate-500 mt-2">Tempel (paste) link/URL gambar QRIS Anda di sini.</p>
                           </div>
                           {qrisUrl && (
                             <div className="w-16 h-16 bg-white rounded-xl overflow-hidden flex-shrink-0 border border-slate-600 p-1">
-                              <img src={qrisUrl} alt="QRIS Preview" className="w-full h-full object-contain rounded-lg" />
+                              <img src={qrisUrl} alt="QRIS Preview" className="w-full h-full object-contain rounded-lg" referrerPolicy="no-referrer" />
                             </div>
                           )}
                         </div>
