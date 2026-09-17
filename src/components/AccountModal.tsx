@@ -91,8 +91,8 @@ export const AccountModal: React.FC<AccountModalProps> = ({
         setActiveResultTab('info');
       } else {
         const randNum = Math.floor(1000 + Math.random() * 9000);
-        setUsername(`prem_${randNum}`);
-        setPassword(Math.random().toString(36).slice(-8));
+        setUsername('');
+        setPassword('');
         setGeneratedAccount(null);
         setQrDataUrl('');
         setActiveResultTab('info');
