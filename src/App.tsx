@@ -63,6 +63,9 @@ export default function App() {
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
       setCurrentUser(user);
+      if (user && ['agustiantomi80@gmail.com', 'premdigitalssh@gmail.com'].includes(user.email?.toLowerCase() || '')) {
+        setUserRole('admin');
+      }
     });
     return () => unsubscribeAuth();
   }, []);
@@ -78,16 +81,20 @@ export default function App() {
       if (docSnap.exists()) {
         const data = docSnap.data();
         setUserBalance(data.balance ?? 0);
-        setUserRole(currentUser.email === 'agustiantomi80@gmail.com' ? 'admin' : (data.role ?? 'member'));
+        const userIsAdmin = ['agustiantomi80@gmail.com', 'premdigitalssh@gmail.com'].includes(currentUser.email?.toLowerCase() || '');
+        setUserRole(userIsAdmin ? 'admin' : (data.role ?? 'member'));
+        if (userIsAdmin && data.role !== 'admin') {
+          updateDoc(doc(db, 'users', currentUser.uid), { role: 'admin' }).catch(() => {});
+        }
       } else {
         setUserBalance(0);
-        setUserRole(currentUser.email === 'agustiantomi80@gmail.com' ? 'admin' : 'member');
+        setUserRole(['agustiantomi80@gmail.com', 'premdigitalssh@gmail.com'].includes(currentUser.email?.toLowerCase() || '') ? 'admin' : 'member');
         
         // Auto-create missing user document (useful after DB migration)
         setDoc(doc(db, 'users', currentUser.uid), {
           email: currentUser.email,
           balance: 0,
-          role: currentUser.email === 'agustiantomi80@gmail.com' ? 'admin' : 'member',
+          role: ['agustiantomi80@gmail.com', 'premdigitalssh@gmail.com'].includes(currentUser.email?.toLowerCase() || '') ? 'admin' : 'member',
           createdAt: new Date().toISOString()
         }).catch(err => console.log('Error auto-creating user doc:', err));
       }

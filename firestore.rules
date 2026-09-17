@@ -30,7 +30,7 @@ service cloud.firestore {
     }
     
     function isAdmin() {
-      return isSignedIn() && request.auth.token.email == 'agustiantomi80@gmail.com';
+      return isSignedIn() && (request.auth.token.email == 'agustiantomi80@gmail.com' || request.auth.token.email == 'premdigitalssh@gmail.com');
     }
 
     match /users/{userId} {

@@ -57,7 +57,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           email: user.email || '',
           displayName: 'Member',
           balance: 0,
-          role: 'member',
+          role: ['agustiantomi80@gmail.com', 'premdigitalssh@gmail.com'].includes(user.email?.toLowerCase() || '') ? 'admin' : 'member',
           createdAt: new Date().toISOString()
         });
         onClose();
@@ -87,7 +87,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           email: user.email || '',
           displayName: user.displayName || 'Member',
           balance: 0,
-          role: 'member',
+          role: ['agustiantomi80@gmail.com', 'premdigitalssh@gmail.com'].includes(user.email?.toLowerCase() || '') ? 'admin' : 'member',
           createdAt: new Date().toISOString()
         });
       }
