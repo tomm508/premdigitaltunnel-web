@@ -1,28 +1,22 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    
-    // Default Deny
     match /{document=**} {
       allow read, write: if false;
     }
-
+    
     match /platform/{docId} {
       allow read, write: if true;
     }
-
     match /statistics/{statsId} {
       allow read, write: if true;
     }
-
     match /server_status/{statusId} {
       allow read, write: if true;
     }
-
     match /vps_nodes/{nodeId} {
       allow read, write: if true;
     }
-
     match /vps_commands/{commandId} {
       allow read, write: if true;
     }
@@ -30,39 +24,24 @@ service cloud.firestore {
     function isSignedIn() {
       return request.auth != null;
     }
-
+    
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
     }
-
-    function isValidId(id) {
-      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    
+    function isAdmin() {
+      return isSignedIn() && request.auth.token.email == 'agustiantomi80@gmail.com';
     }
 
-    // User Profile
     match /users/{userId} {
-      allow get: if isOwner(userId);
-      allow create: if isOwner(userId) 
-        && request.resource.data.uid == request.auth.uid
-        && request.resource.data.balance == 0
-        && (!('role' in request.resource.data) || request.resource.data.role == 'member');
-      allow update: if isOwner(userId)
-        && request.resource.data.uid == resource.data.uid; // Balance update allowed for demo purposes
-
-      // Topups subcollection
+      allow read: if isOwner(userId) || isAdmin();
+      allow write: if isOwner(userId) || isAdmin();
+      
       match /topups/{topupId} {
-        allow read: if isOwner(userId);
-        allow create: if isOwner(userId)
-          && request.resource.data.userId == request.auth.uid
-          && request.resource.data.status == 'pending';
+        allow read, write: if isOwner(userId) || isAdmin();
       }
-
-      // Accounts history subcollection
       match /accounts/{accountId} {
-        allow read: if isOwner(userId);
-        allow create: if isOwner(userId)
-          && request.resource.data.userId == request.auth.uid;
-        allow delete: if isOwner(userId);
+        allow read, write: if isOwner(userId) || isAdmin();
       }
     }
   }

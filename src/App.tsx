@@ -79,6 +79,17 @@ export default function App() {
         const data = docSnap.data();
         setUserBalance(data.balance ?? 0);
         setUserRole(currentUser.email === 'agustiantomi80@gmail.com' ? 'admin' : (data.role ?? 'member'));
+      } else {
+        setUserBalance(0);
+        setUserRole(currentUser.email === 'agustiantomi80@gmail.com' ? 'admin' : 'member');
+        
+        // Auto-create missing user document (useful after DB migration)
+        setDoc(doc(db, 'users', currentUser.uid), {
+          email: currentUser.email,
+          balance: 0,
+          role: currentUser.email === 'agustiantomi80@gmail.com' ? 'admin' : 'member',
+          createdAt: new Date().toISOString()
+        }).catch(err => console.log('Error auto-creating user doc:', err));
       }
     }, (err) => {
       console.warn("Firestore snapshot error:", err);
