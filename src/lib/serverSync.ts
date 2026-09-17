@@ -66,7 +66,7 @@ export function resolveServersWithVpsStatus(vpsNodes: VpsNode[]): UnifiedServerN
     };
 
     const cCode = (node.countryCode || 'SG').toUpperCase();
-    const isVip = node.id.toLowerCase().includes('vip') || node.id.toLowerCase().includes('premium');
+    const isVip = node.id.toLowerCase().includes('vip'); // Only treat explicitly named 'vip' nodes as VIP
     
     return {
       id: node.id,

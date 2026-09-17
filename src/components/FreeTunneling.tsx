@@ -51,7 +51,7 @@ export const FreeTunneling: React.FC<FreeTunnelingProps> = ({
 
   // Filter for Free servers in SG & ID only
   const freeServers = liveServers.filter(s => 
-    !s.isVip && (s.countryCode === 'SG' || s.countryCode === 'ID') && s.supportedProtocols.includes(activeProtocol)
+    !s.isVip && (s.supportedProtocols || []).includes(activeProtocol)
   );
 
   const tabs: { id: ProtocolType; label: string }[] = [
