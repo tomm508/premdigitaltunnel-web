@@ -300,7 +300,7 @@ export const AccountModal: React.FC<AccountModalProps> = ({
                 <label className="block text-xs font-bold uppercase tracking-wider text-purple-300 mb-2.5">
                   1. Select Tunnel Server Location
                 </label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-48 overflow-y-auto p-1 pr-2">
+                <div className="flex flex-col gap-3 max-h-64 overflow-y-auto p-1 pr-2 custom-scrollbar">
                   {liveServers.map((srv) => {
                     const isSelected = selectedServer.id === srv.id;
                     const isOnline = srv.status === 'Online';
@@ -319,30 +319,30 @@ export const AccountModal: React.FC<AccountModalProps> = ({
                             : 'bg-[#1b1542] border-purple-900/40 text-slate-300 hover:bg-[#20194e] hover:border-purple-500/30 cursor-pointer'
                         }`}
                       >
-                        <div className="flex items-center gap-2.5">
-                          <span className="text-2xl">{srv.flag}</span>
-                          <div>
-                            <div className="flex items-center gap-1.5">
-                              <span className="font-bold text-sm text-white">{srv.country}</span>
+                        <div className="flex items-center gap-3">
+                          <span className="text-2xl sm:text-3xl">{srv.flag}</span>
+                          <div className="flex flex-col">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="font-bold text-[13px] sm:text-sm text-white whitespace-nowrap">{srv.country}</span>
                               {isOnline ? (
-                                <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
-                                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                                <span className="text-[9px] sm:text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center gap-1 whitespace-nowrap">
+                                  <span className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
                                   Online
                                 </span>
                               ) : (
-                                <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-rose-500/20 text-rose-400 border border-rose-500/30">
+                                <span className="text-[9px] sm:text-[10px] font-bold px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-400 border border-rose-500/30 whitespace-nowrap">
                                   Offline
                                 </span>
                               )}
                             </div>
-                            <span className="text-xs text-slate-400">{srv.city}</span>
+                            <span className="text-[11px] sm:text-xs text-slate-400">{srv.city}</span>
                           </div>
                         </div>
-                        <div className="text-right">
-                          <span className={`text-xs font-semibold ${isOnline ? 'text-emerald-400' : 'text-slate-500'}`}>
+                        <div className="text-right flex flex-col justify-center">
+                          <span className={`text-[11px] sm:text-xs font-semibold ${isOnline ? 'text-emerald-400' : 'text-slate-500'}`}>
                             {isOnline ? `${srv.ping}ms` : 'Timeout'}
                           </span>
-                          <div className="text-[10px] text-slate-400">
+                          <div className="text-[9px] sm:text-[10px] text-slate-400">
                             {isOnline ? `${srv.usedSlots}/${srv.totalSlots} used` : 'Node Mati'}
                           </div>
                         </div>

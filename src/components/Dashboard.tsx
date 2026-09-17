@@ -185,7 +185,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ isDark, currentUser, userB
             <h4 className="text-white font-bold mb-2">No Services Found</h4>
             <p className="text-slate-400 text-sm mb-6 max-w-sm">You haven't created any accounts yet.</p>
             <button 
-              onClick={() => navigate('/free')}
+              onClick={() => navigate('/')}
               className="px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-bold shadow-lg shadow-indigo-600/20 transition-all"
             >
               Create Your First Account

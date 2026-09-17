@@ -1,5 +1,8 @@
-@import "tailwindcss";
+import fs from 'fs';
+let code = fs.readFileSync('src/index.css', 'utf8');
 
+if (!code.includes('.custom-scrollbar')) {
+    code += `
 /* Custom Scrollbar for better UX */
 .custom-scrollbar::-webkit-scrollbar {
   width: 6px;
@@ -14,4 +17,7 @@
 }
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: rgba(147, 51, 234, 0.6);
+}
+`;
+    fs.writeFileSync('src/index.css', code);
 }
