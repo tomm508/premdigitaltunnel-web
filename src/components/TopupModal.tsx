@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   X, 
   Wallet, 
@@ -12,7 +12,7 @@ import {
   CreditCard
 } from 'lucide-react';
 import { User } from 'firebase/auth';
-import { db, doc, setDoc, addDoc, collection } from '../lib/firebase';
+import { db, doc, setDoc, addDoc, collection, onSnapshot } from '../lib/firebase';
 
 interface TopupModalProps {
   isOpen: boolean;
@@ -38,6 +38,21 @@ export const TopupModal: React.FC<TopupModalProps> = ({
   const [currentTopupId, setCurrentTopupId] = useState<string>('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [fetchedQrisUrl, setFetchedQrisUrl] = useState<string>('');
+
+  useEffect(() => {
+    if (isOpen) {
+      const unsub = onSnapshot(doc(db, 'platform', 'settings'), (docSnap) => {
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          setFetchedQrisUrl(data.qrisUrl || '');
+        }
+      });
+      return () => unsub();
+    }
+  }, [isOpen]);
+
+  const displayQrisUrl = qrisUrl || fetchedQrisUrl;
 
   if (!isOpen) return null;
 
@@ -220,9 +235,9 @@ export const TopupModal: React.FC<TopupModalProps> = ({
 
               {/* QR Code / Pay instructions */}
               <div className="p-6 bg-white rounded-2xl inline-block shadow-lg mx-auto">
-                {qrisUrl ? (
+                {displayQrisUrl ? (
                   <div className="w-44 h-44 rounded-xl flex items-center justify-center overflow-hidden bg-slate-100">
-                    <img src={qrisUrl} alt="QRIS" className="w-full h-full object-contain" />
+                    <img src={displayQrisUrl} alt="QRIS" className="w-full h-full object-contain" />
                   </div>
                 ) : (
                   <div className="w-44 h-44 bg-slate-900 rounded-xl p-2 flex flex-col items-center justify-center text-white text-center">
