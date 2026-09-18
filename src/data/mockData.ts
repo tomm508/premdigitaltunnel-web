@@ -138,6 +138,7 @@ export const INITIAL_STATS = {
   servicesToday: 0,
   totalAccounts: 0,
   onlineUsers: 0,
+  totalVisitors: 0,
   breakdown: {
     ssh: 0,
     trojan: 0,

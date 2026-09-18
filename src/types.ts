@@ -63,6 +63,7 @@ export interface PlatformStat {
   servicesToday: number;
   totalAccounts: number;
   onlineUsers: number;
+  totalVisitors?: number;
   breakdown: {
     ssh: number;
     trojan: number;

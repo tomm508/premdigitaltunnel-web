@@ -107,9 +107,9 @@ export const Statistics: React.FC<StatisticsProps> = ({ stats, isDark }) => {
             <div className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>All time created</div>
           </div>
 
-          {/* Online Users */}
+          {/* Total Web Visitors (Pengunjung Masuk Web) */}
           <div 
-            id="stat-card-online-users"
+            id="stat-card-visitors"
             className={`p-6 rounded-3xl text-center shadow-xl transition-all ${
               isDark 
                 ? 'bg-[#171239] border border-purple-500/20 hover:border-purple-400/40' 
@@ -122,12 +122,12 @@ export const Statistics: React.FC<StatisticsProps> = ({ stats, isDark }) => {
             <div className={`text-3xl sm:text-4xl font-black mb-1 transition-colors ${
               isDark ? 'text-white' : 'text-slate-900'
             }`}>
-              {stats.onlineUsers.toLocaleString()}
+              {(stats.totalVisitors !== undefined ? stats.totalVisitors : (stats.onlineUsers || 0)).toLocaleString()}
             </div>
             <div className={`text-sm font-bold mb-0.5 ${
               isDark ? 'text-slate-200' : 'text-slate-700'
-            }`}>Online Users</div>
-            <div className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Active sessions worldwide</div>
+            }`}>Total Visitors</div>
+            <div className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Pengunjung masuk ke web</div>
           </div>
         </div>
 

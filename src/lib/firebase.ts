@@ -13,7 +13,8 @@ import {
   onSnapshot,
   query,
   where,
-  orderBy
+  orderBy,
+  increment
 } from 'firebase/firestore';
 import { firebaseConfig } from './firebaseConfig';
 
@@ -41,5 +42,6 @@ export {
   onSnapshot,
   query,
   where,
-  orderBy
+  orderBy,
+  increment
 };

@@ -24,7 +24,7 @@ import { ServerStatusPage } from './pages/ServerStatusPage';
 import { ProtocolType, GeneratedAccount, PlatformStat, TunnelServer } from './types';
 import { INITIAL_STATS, SERVERS_LIST } from './data/mockData';
 import { CheckCircle2, Loader2 } from 'lucide-react';
-import { auth, onSnapshot, doc, db, signOut, getDoc, setDoc, updateDoc, collection } from './lib/firebase';
+import { auth, onSnapshot, doc, db, signOut, getDoc, setDoc, updateDoc, collection, increment } from './lib/firebase';
 import { User, onAuthStateChanged } from 'firebase/auth';
 
 export default function App() {
@@ -113,19 +113,25 @@ export default function App() {
     }
   }, []);
 
-  // Real-time Platform Statistics Activity
+  // Real-time Platform Statistics & Visitor Tracking
   useEffect(() => {
     const initStats = async () => {
       try {
         const statsRef = doc(db, 'platform', 'stats');
         const docSnap = await getDoc(statsRef);
         if (!docSnap.exists()) {
-          await setDoc(statsRef, INITIAL_STATS);
+          await setDoc(statsRef, {
+            ...INITIAL_STATS,
+            totalVisitors: 1
+          });
         } else {
           const d = docSnap.data();
           // If Firestore still holds the initial old 47466 / 19 mock data, clean it up to match reality
           if (d.activeServers === 19 && d.totalAccounts === 47466) {
-            await setDoc(statsRef, INITIAL_STATS);
+            await setDoc(statsRef, {
+              ...INITIAL_STATS,
+              totalVisitors: d.totalVisitors || 1
+            });
           }
         }
       } catch (e) {
@@ -134,10 +140,30 @@ export default function App() {
     };
     initStats();
 
+    // Track real web visitors (increment counter for new session)
+    const trackVisitor = async () => {
+      try {
+        const sessionKey = 'premdigital_has_visited_session';
+        const hasVisited = sessionStorage.getItem(sessionKey);
+        const statsRef = doc(db, 'platform', 'stats');
+
+        if (!hasVisited) {
+          sessionStorage.setItem(sessionKey, 'true');
+          // Increment total visitor counter in Firestore
+          await setDoc(statsRef, {
+            totalVisitors: increment(1)
+          }, { merge: true });
+        }
+      } catch (err) {
+        console.warn("Visitor tracking error:", err);
+      }
+    };
+    trackVisitor();
+
     let liveNodesActiveCount: number | null = null;
     let liveNodesOnlineUsers: number | null = null;
 
-    // Listen to vps_nodes collection to automatically aggregate activeServers and onlineUsers across 1 or more VPS
+    // Listen to vps_nodes collection to automatically aggregate activeServers across VPS
     const unsubNodes = onSnapshot(collection(db, 'vps_nodes'), (snap) => {
       if (!snap.empty) {
         const now = Date.now();
@@ -171,11 +197,16 @@ export default function App() {
     const unsubStats = onSnapshot(doc(db, 'platform', 'stats'), (docSnap) => {
       if (docSnap.exists()) {
         const data = docSnap.data();
+        const visitors = typeof data.totalVisitors === 'number'
+          ? data.totalVisitors
+          : (typeof data.onlineUsers === 'number' && data.onlineUsers > 0 ? data.onlineUsers : 1);
+
         setStats((prev) => ({
           activeServers: liveNodesActiveCount !== null ? liveNodesActiveCount : (typeof data.activeServers === 'number' ? data.activeServers : prev.activeServers || 0),
           servicesToday: typeof data.servicesToday === 'number' ? data.servicesToday : prev.servicesToday,
           totalAccounts: typeof data.totalAccounts === 'number' ? data.totalAccounts : prev.totalAccounts,
           onlineUsers: liveNodesOnlineUsers !== null ? liveNodesOnlineUsers : (typeof data.onlineUsers === 'number' ? data.onlineUsers : prev.onlineUsers),
+          totalVisitors: visitors,
           breakdown: data.breakdown || prev.breakdown
         }));
       }
