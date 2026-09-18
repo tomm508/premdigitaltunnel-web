@@ -470,6 +470,8 @@ export default function App() {
         onAccountCreated={handleAccountCreated}
         initialAccount={recentlyCreatedAccount}
         initialServer={selectedServer}
+        currentUser={currentUser}
+        userBalance={userBalance}
       />
 
       {/* Tools Modal (My IP, Ping, DNS, Subdomain, AI Chat) */}

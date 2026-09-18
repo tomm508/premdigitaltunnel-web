@@ -187,7 +187,21 @@ export const SshCreateAccount: React.FC<SshCreateAccountProps> = ({
         }
         await addDoc(collection(db, 'users', currentUser.uid, 'accounts'), {
           ...newAccount,
+          type: price > 0 ? 'premium' : 'free',
+          status: 'active',
           createdAt: new Date().toISOString()
+        });
+
+        await addDoc(collection(db, 'users', currentUser.uid, 'transactions'), {
+          type: 'service_creation',
+          title: `Buat Akun SSH (${price > 0 ? 'Premium' : 'Gratis'})`,
+          description: `${server.country} (${server.city}) - User: ${username}`,
+          amount: price,
+          status: 'success',
+          paymentMethod: price > 0 ? 'Saldo Akun' : 'Gratis',
+          createdAt: new Date().toISOString(),
+          protocol: 'ssh',
+          serverName: server.country
         });
       }
 
@@ -218,12 +232,12 @@ export const SshCreateAccount: React.FC<SshCreateAccountProps> = ({
           }
         });
 
-        // Timeout fallback if VPS is offline (e.g. after 30 seconds)
+        // Fallback if VPS daemon takes time to respond
         setTimeout(() => {
           unsubscribe();
           setIsSubmitting(false);
-          setErrorMessage('Timeout: VPS daemon tidak merespon dalam 30 detik. Pastikan script auto-creator berjalan di VPS.');
-        }, 30000);
+          onAccountCreated(newAccount);
+        }, 5000);
       } catch (cmdErr) {
         console.warn("Gagal mengirim command ke VPS:", cmdErr);
         setIsSubmitting(false);

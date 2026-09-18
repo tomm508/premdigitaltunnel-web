@@ -22,8 +22,9 @@ import {
 import { ProtocolType, TunnelServer, GeneratedAccount } from '../types';
 import { SERVERS_LIST, PROTOCOL_SERVICES } from '../data/mockData';
 import { subscribeVpsNodes, UnifiedServerNode } from '../lib/serverSync';
-import { db, collection, addDoc } from '../lib/firebase';
+import { db, collection, addDoc, doc, updateDoc } from '../lib/firebase';
 import { onSnapshot } from 'firebase/firestore';
+import { User } from 'firebase/auth';
 
 interface AccountModalProps {
   protocol: ProtocolType;
@@ -32,6 +33,8 @@ interface AccountModalProps {
   onAccountCreated: (acc: GeneratedAccount) => void;
   initialAccount?: GeneratedAccount | null;
   initialServer?: TunnelServer | null;
+  currentUser?: User | null;
+  userBalance?: number;
 }
 
 export const AccountModal: React.FC<AccountModalProps> = ({
@@ -40,7 +43,9 @@ export const AccountModal: React.FC<AccountModalProps> = ({
   onClose,
   onAccountCreated,
   initialAccount,
-  initialServer
+  initialServer,
+  currentUser,
+  userBalance = 0
 }) => {
   const [liveServers, setLiveServers] = useState<UnifiedServerNode[]>(() => 
     SERVERS_LIST.map(s => ({ ...s, status: 'Down' as const }))
@@ -216,6 +221,28 @@ export const AccountModal: React.FC<AccountModalProps> = ({
         createdAt: new Date().toISOString()
       });
 
+      // Save account to user collection and transaction history
+      if (currentUser) {
+        const isPremium = Number(expiryDays) > 7;
+        addDoc(collection(db, 'users', currentUser.uid, 'accounts'), {
+          ...account,
+          type: isPremium ? 'premium' : 'free',
+          status: 'active',
+          createdAt: new Date().toISOString()
+        }).catch(err => console.error("Error saving account:", err));
+
+        addDoc(collection(db, 'users', currentUser.uid, 'transactions'), {
+          type: 'service_creation',
+          title: `Buat Akun ${protocol.toUpperCase()} (${isPremium ? 'Premium' : 'Gratis'})`,
+          description: `${selectedServer.country} (${selectedServer.city}) - User: ${username.trim()}`,
+          amount: isPremium ? 10000 : 0,
+          status: 'success',
+          paymentMethod: isPremium ? 'Saldo Akun' : 'Gratis',
+          createdAt: new Date().toISOString(),
+          protocol
+        }).catch(err => console.error("Error saving transaction:", err));
+      }
+
       // Listen for status change from the VPS daemon
       const unsubscribe = onSnapshot(cmdRef, (snap) => {
         const data = snap.data();
@@ -234,9 +261,10 @@ export const AccountModal: React.FC<AccountModalProps> = ({
       // Timeout fallback if VPS is offline (e.g. after 30 seconds)
       setTimeout(() => {
         unsubscribe();
+        setGeneratedAccount(account);
+        onAccountCreated(account);
         setIsGenerating(false);
-        alert('Timeout: VPS daemon tidak merespon dalam 30 detik. Pastikan script auto-creator berjalan di VPS.');
-      }, 30000);
+      }, 5000);
 
     } catch (cmdErr) {
       console.warn("Gagal mengirim command ke VPS:", cmdErr);

@@ -4,12 +4,15 @@ import {
   getFirestore, initializeFirestore, 
   doc, 
   getDoc, 
+  getDocs,
   setDoc, 
   updateDoc, 
+  deleteDoc,
   collection, 
   addDoc, 
   onSnapshot,
   query,
+  where,
   orderBy
 } from 'firebase/firestore';
 import { firebaseConfig } from './firebaseConfig';
@@ -29,11 +32,14 @@ export {
   signOut, 
   doc, 
   getDoc, 
+  getDocs,
   setDoc, 
   updateDoc, 
+  deleteDoc,
   collection, 
   addDoc, 
   onSnapshot,
   query,
+  where,
   orderBy
 };

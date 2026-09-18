@@ -93,3 +93,45 @@ export interface VpsNode {
   sshOnline?: number;
   xrayOnline?: number;
 }
+
+export interface UserServiceAccount {
+  id: string;
+  protocol: ProtocolType;
+  username: string;
+  password?: string;
+  uuid?: string;
+  server: TunnelServer;
+  activeDays: number;
+  expiredAt: string;
+  createdAt: string;
+  type: 'free' | 'premium';
+  status: 'active' | 'expired';
+  configString?: string;
+  payloadString?: string;
+  rawConfig?: string;
+}
+
+export interface TransactionItem {
+  id: string;
+  type: 'topup' | 'service_creation' | 'server_migration';
+  title: string;
+  description?: string;
+  amount: number;
+  status: 'success' | 'pending' | 'rejected' | 'failed';
+  paymentMethod?: string;
+  createdAt: string;
+  protocol?: ProtocolType;
+  serverName?: string;
+}
+
+export interface DnsRecord {
+  id: string;
+  hostname: string;
+  subdomain: string;
+  type: 'A' | 'CNAME' | 'AAAA' | 'TXT';
+  target: string;
+  ttl: number;
+  proxied: boolean;
+  createdAt: string;
+  status: 'Active' | 'Propagating';
+}
