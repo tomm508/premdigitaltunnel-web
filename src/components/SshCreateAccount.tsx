@@ -13,6 +13,7 @@ import {
   Clock,
   ShieldCheck,
   Zap,
+  Globe,
   Globe2,
   BarChart3,
   Star,
@@ -47,12 +48,19 @@ export const SshCreateAccount: React.FC<SshCreateAccountProps> = ({
 }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [customSni, setCustomSni] = useState<string>(server?.host || '');
   const [selectedPlan, setSelectedPlan] = useState<'free' | 'vip3' | 'vip7' | 'vip30'>('free');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [pricing, setPricing] = useState<{ssh: number, discount: number}>({ ssh: 1500, discount: 50 });
   const [turnstileSiteKey, setTurnstileSiteKey] = useState<string>('');
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (server?.host) {
+      setCustomSni(server.host);
+    }
+  }, [server?.host]);
 
   useEffect(() => {
     const unsub = onSnapshot(doc(db, 'platform', 'settings'), (docSnap) => {
@@ -146,7 +154,8 @@ export const SshCreateAccount: React.FC<SshCreateAccountProps> = ({
         year: 'numeric'
       });
 
-      const payload = `GET / HTTP/1.1[crlf]Host: ${server.host}[crlf]Upgrade: websocket[crlf]Connection: Upgrade[crlf]User-Agent: [ua][crlf][crlf]`;
+      const cleanSni = (customSni || server.host).trim();
+      const payload = `GET / HTTP/1.1[crlf]Host: ${cleanSni}[crlf]Upgrade: websocket[crlf]Connection: Upgrade[crlf]User-Agent: [ua][crlf][crlf]`;
       const configStr = `ssh://${username}:${password}@${server.host}:22`;
 
       const newAccount: GeneratedAccount = {
@@ -156,7 +165,7 @@ export const SshCreateAccount: React.FC<SshCreateAccountProps> = ({
         password,
         activeDays,
         expiryDate: expiryDateStr,
-        sni: server.host,
+        sni: cleanSni,
         ports: {
           sslTls: 443,
           dropbear: 888,
@@ -190,7 +199,7 @@ export const SshCreateAccount: React.FC<SshCreateAccountProps> = ({
           protocol: 'ssh',
           username,
           password,
-          activeDays,
+          activeDays: Number(activeDays),
           status: 'pending',
           createdAt: new Date().toISOString()
         });
@@ -259,8 +268,8 @@ export const SshCreateAccount: React.FC<SshCreateAccountProps> = ({
            <div className="w-10 h-10 rounded-full bg-blue-500/10 border border-blue-500/20 flex items-center justify-center mb-3">
              <Server className="w-5 h-5 text-blue-400" />
            </div>
-           <span className="text-[15px] font-bold text-white mb-1">{server.host}</span>
-           <span className="text-xs text-slate-400 font-medium">Ultahost, Inc.</span>
+           <span className="text-[15px] font-bold text-white mb-1 truncate max-w-full px-2">{server.host}</span>
+           <span className="text-xs text-slate-400 font-medium">Host / Cloudflare Domain</span>
         </div>
         <div className="bg-[#15112e] border border-[#2a234f] rounded-2xl p-5 flex flex-col items-center justify-center text-center">
            <div className="w-10 h-10 rounded-full bg-purple-500/10 border border-purple-500/20 flex items-center justify-center mb-3">
@@ -273,8 +282,8 @@ export const SshCreateAccount: React.FC<SshCreateAccountProps> = ({
            <div className="w-10 h-10 rounded-full bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center mb-3">
              <ShieldCheck className="w-5 h-5 text-indigo-400" />
            </div>
-           <span className="text-[15px] font-bold text-white mb-1">{server.countryCode === 'SG' ? 'SG1 SSH' : 'ID1 SSH'}</span>
-           <span className="text-xs text-slate-400 font-medium">Server Name</span>
+           <span className="text-[15px] font-bold text-white mb-1 truncate max-w-full px-2">{server.city || server.id}</span>
+           <span className="text-xs text-slate-400 font-medium">Server Node</span>
         </div>
       </div>
 
@@ -350,6 +359,54 @@ export const SshCreateAccount: React.FC<SshCreateAccountProps> = ({
                <Lock className="w-4 h-4 text-slate-500 absolute right-4 top-4" />
              </div>
              <p className="mt-2 text-[11px] text-slate-500">Minimum 5 characters for security</p>
+           </div>
+
+           {/* SNI / Bug Host */}
+           <div>
+             <div className="flex items-center justify-between mb-2">
+               <label className="block text-[13px] font-medium text-slate-300">SNI / Bug Host (Opsional)</label>
+               <span className="text-[11px] text-indigo-400 font-mono">Default: {server.host}</span>
+             </div>
+             <div className="relative">
+               <input
+                 type="text"
+                 value={customSni}
+                 onChange={(e) => setCustomSni(e.target.value.trim())}
+                 placeholder={server.host}
+                 className="w-full pl-4 pr-11 py-3.5 rounded-xl bg-[#15112e] border border-[#2a234f] text-emerald-400 font-mono placeholder-slate-500 focus:outline-none focus:border-indigo-400 text-sm transition-colors"
+               />
+               <Globe className="w-4 h-4 text-slate-500 absolute right-4 top-4" />
+             </div>
+             <p className="mt-2 text-[11px] text-slate-500">Domain / SNI yang disisipkan ke payload HTTP injector & konfigurasi VPN</p>
+
+             {/* Quick Bug Host Presets */}
+             <div className="flex flex-wrap gap-1.5 mt-2.5">
+               <button
+                 type="button"
+                 onClick={() => setCustomSni(server.host)}
+                 className={`px-2.5 py-1 rounded-lg text-[11px] font-mono border transition-colors cursor-pointer ${
+                   customSni === server.host 
+                     ? 'bg-indigo-600/30 border-indigo-500 text-indigo-200 font-bold' 
+                     : 'bg-[#15112e] border-[#2a234f] text-slate-400 hover:text-white'
+                 }`}
+               >
+                 Default Host
+               </button>
+               {['m.youtube.com', 'zoom.us', 'quiz.int.vidio.com', 'v.whatsapp.net'].map((preset) => (
+                 <button
+                   key={preset}
+                   type="button"
+                   onClick={() => setCustomSni(preset)}
+                   className={`px-2.5 py-1 rounded-lg text-[11px] font-mono border transition-colors cursor-pointer ${
+                     customSni === preset 
+                       ? 'bg-indigo-600/30 border-indigo-500 text-indigo-200 font-bold' 
+                       : 'bg-[#15112e] border-[#2a234f] text-slate-400 hover:text-white'
+                   }`}
+                 >
+                   {preset}
+                 </button>
+               ))}
+             </div>
            </div>
 
            {/* Billing Tier */}

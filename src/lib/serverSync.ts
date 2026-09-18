@@ -68,13 +68,39 @@ export function resolveServersWithVpsStatus(vpsNodes: VpsNode[]): UnifiedServerN
     const cCode = (node.countryCode || 'SG').toUpperCase();
     const isVip = node.id.toLowerCase().includes('vip'); // Only treat explicitly named 'vip' nodes as VIP
     
+    // Resolve host / domain:
+    // 1. Explicit domain or host set in Firestore
+    // 2. Intelligent extraction from node.name (e.g. "SG1 DigitalOcean" -> "sg1.premdigital.web.id")
+    const resolveNodeHost = (): string => {
+      const explicitDomain = (node.domain || node.host || '').trim();
+      if (explicitDomain) return explicitDomain;
+
+      // SG server pointing domain in Cloudflare
+      if (cCode === 'SG' || node.id.includes('sg') || node.name?.toLowerCase().includes('sg')) {
+        return 'sgdo-premdigital.web.id';
+      }
+
+      if (node.name) {
+        // Detect codes like ID1, ID2, etc.
+        const match = node.name.match(/^([a-zA-Z]{2}[-_]?[0-9]{1,2})/i);
+        if (match) {
+          const cleanCode = match[1].toLowerCase().replace(/[-_]/g, '');
+          return `${cleanCode}.premdigital.web.id`;
+        }
+      }
+      return 'id1.premdigital.web.id';
+    };
+
+    const hostDomain = resolveNodeHost();
+
     return {
       id: node.id,
       country: node.country || (cCode === 'SG' ? 'Singapore' : cCode === 'ID' ? 'Indonesia' : 'Cloud Location'),
       countryCode: cCode,
       flag: getFlag(cCode),
       city: node.city || node.name || 'Cloud Server',
-      host: node.name ? `${node.name.toLowerCase().replace(/\s+/g, '')}.premdigital.web.id` : `server-${node.id}.premdigital.web.id`,
+      host: hostDomain,
+      domain: hostDomain,
       ip: node.ip || '103.xxx.xxx.xxx',
       load: node.cpuLoad || 0,
       ping: isOnline ? (cCode === 'SG' ? 24 : 12) : 999, // Dummy ping for visual
@@ -107,6 +133,8 @@ export function subscribeVpsNodes(
         id: doc.id,
         name: data.name || doc.id,
         ip: data.ip || '103.xxx.xxx.xxx',
+        domain: data.domain || data.host || '',
+        host: data.host || data.domain || '',
         city: data.city,
         country: data.country,
         countryCode: data.countryCode,

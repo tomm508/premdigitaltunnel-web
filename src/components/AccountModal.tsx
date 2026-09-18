@@ -48,7 +48,7 @@ export const AccountModal: React.FC<AccountModalProps> = ({
   const [selectedServer, setSelectedServer] = useState<TunnelServer>(initialServer || SERVERS_LIST[0]);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('123456');
-  const [sni, setSni] = useState('sg1.premdigital.web.id');
+  const [sni, setSni] = useState('sgdo-premdigital.web.id');
   const [expiryDays, setExpiryDays] = useState<number>(3);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedAccount, setGeneratedAccount] = useState<GeneratedAccount | null>(null);
@@ -211,7 +211,7 @@ export const AccountModal: React.FC<AccountModalProps> = ({
         username: username.trim(),
         password,
         uuid,
-        activeDays: expiryDays,
+        activeDays: Number(expiryDays),
         status: 'pending',
         createdAt: new Date().toISOString()
       });

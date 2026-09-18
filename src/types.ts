@@ -21,6 +21,7 @@ export interface TunnelServer {
   flag: string;
   city: string;
   host: string;
+  domain?: string;
   ip: string;
   load: number;
   ping: number;
@@ -79,6 +80,8 @@ export interface VpsNode {
   id: string;
   name: string;
   ip: string;
+  domain?: string;
+  host?: string;
   city?: string;
   country?: string;
   countryCode?: string;

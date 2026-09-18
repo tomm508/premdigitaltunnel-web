@@ -1,7 +1,7 @@
 // Trigger sync: Admin Panel Topup Proof
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { db, doc, collection, onSnapshot, setDoc, updateDoc } from '../lib/firebase';
+import { db, doc, collection, onSnapshot, setDoc, updateDoc, getDoc } from '../lib/firebase';
 import { Settings, Users, Server, Clock, Save, ShieldAlert, CheckCircle2, BarChart2, Terminal, Copy, Check, RefreshCw, Cpu, HardDrive, Globe, Radio, X } from 'lucide-react';
 import { SERVERS_LIST, INITIAL_STATS } from '../data/mockData';
 import { firebaseConfig } from '../lib/firebaseConfig';
@@ -144,8 +144,31 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isDark, userRole }) => {
   const [vpsNodes, setVpsNodes] = useState<VpsNode[]>([]);
   const [selectedNodeId, setSelectedNodeId] = useState<string>('sg-premium-01');
   const [customNodeName, setCustomNodeName] = useState<string>('SG1 DigitalOcean');
+  const [customNodeDomain, setCustomNodeDomain] = useState<string>('sgdo-premdigital.web.id');
   const [customNodeCity, setCustomNodeCity] = useState<string>('Singapore');
   const [customNodeCountryCode, setCustomNodeCountryCode] = useState<string>('SG');
+  
+  const [editingNodeId, setEditingNodeId] = useState<string | null>(null);
+  const [editingDomainValue, setEditingDomainValue] = useState<string>('');
+  const [isUpdatingNodeDomain, setIsUpdatingNodeDomain] = useState<boolean>(false);
+
+  const handleUpdateNodeDomain = async (nodeId: string, newDomain: string) => {
+    setIsUpdatingNodeDomain(true);
+    try {
+      await setDoc(doc(db, 'vps_nodes', nodeId), {
+        domain: newDomain.trim(),
+        host: newDomain.trim(),
+        updatedAt: new Date().toISOString()
+      }, { merge: true });
+      setEditingNodeId(null);
+      alert(`Domain untuk node ${nodeId} berhasil diperbarui menjadi: ${newDomain.trim()}`);
+    } catch (err: any) {
+      console.error(err);
+      alert('Gagal memperbarui domain node: ' + err.message);
+    } finally {
+      setIsUpdatingNodeDomain(false);
+    }
+  };
 
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
@@ -187,6 +210,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isDark, userRole }) => {
           id: d.id,
           name: data.name || d.id,
           ip: data.ip || '103.xxx.xxx.xxx',
+          domain: data.domain || data.host || '',
+          host: data.host || data.domain || '',
           city: data.city || 'Singapore',
           country: data.country || 'Global',
           countryCode: data.countryCode || 'SG',
@@ -311,19 +336,31 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isDark, userRole }) => {
 cat > /root/node_config.txt << 'EOF2'
 NODE_ID="${selectedNodeId}"
 NODE_NAME="${customNodeName}"
+DOMAIN="${customNodeDomain}"
 CITY="${customNodeCity}"
 COUNTRY_CODE="${customNodeCountryCode}"
 PROJECT_ID="${firebaseConfig.projectId}"
 API_KEY="${firebaseConfig.apiKey}"
 EOF2
 
-# 2. Buat script Auto-Reporter
+# 2. Buat script Auto-Reporter (Lapor IP, Host Domain, RAM & CPU ke Firestore)
 cat > /root/premdigital_reporter.sh << 'EOF2'
 #!/bin/bash
 source /root/node_config.txt
 if [ -z "\$REST_URL" ]; then
     REST_URL="https://firestore.googleapis.com/v1/projects/\${PROJECT_ID}/databases/(default)/documents/vps_nodes"
 fi
+
+# Otomatis baca domain dari file konfigurasi script VPN jika ada di VPS
+for df in /etc/xray/domain /root/domain /etc/v2ray/domain /usr/local/etc/xray/domain; do
+    if [ -f "\$df" ] && [ -s "\$df" ]; then
+        AUTO_DOMAIN=\$(head -n 1 "\$df" | tr -d ' \r\n\t')
+        [ -n "\$AUTO_DOMAIN" ] && DOMAIN="\$AUTO_DOMAIN"
+        break
+    fi
+done
+[ -z "\$DOMAIN" ] && DOMAIN="${customNodeDomain}"
+
 SERVER_IP=\$(curl -s https://api.ipify.org || hostname -I | awk '{print \$1}')
 [ -z "\$SERVER_IP" ] && SERVER_IP="127.0.0.1"
 RAM_USAGE=\$(free | grep Mem | awk '{print int(\$3/\$2 * 100.0)}')
@@ -333,6 +370,8 @@ JSON_PAYLOAD=\$(cat <<JSON
 {
   "fields": {
     "name": { "stringValue": "\${NODE_NAME}" },
+    "domain": { "stringValue": "\${DOMAIN}" },
+    "host": { "stringValue": "\${DOMAIN}" },
     "ip": { "stringValue": "\${SERVER_IP}" },
     "city": { "stringValue": "\${CITY}" },
     "countryCode": { "stringValue": "\${COUNTRY_CODE}" },
@@ -345,65 +384,85 @@ JSON_PAYLOAD=\$(cat <<JSON
 }
 JSON
 )
-curl -s -X PATCH "\${REST_URL}/\${NODE_ID}?key=\${API_KEY}" -H "Content-Type: application/json" -d "\${JSON_PAYLOAD}" > /dev/null
+curl -s -X PATCH "\${REST_URL}/\${NODE_ID}?updateMask.fieldPaths=name&updateMask.fieldPaths=domain&updateMask.fieldPaths=host&updateMask.fieldPaths=ip&updateMask.fieldPaths=city&updateMask.fieldPaths=countryCode&updateMask.fieldPaths=status&updateMask.fieldPaths=onlineUsers&updateMask.fieldPaths=cpuLoad&updateMask.fieldPaths=ramUsage&updateMask.fieldPaths=lastHeartbeat&key=\${API_KEY}" -H "Content-Type: application/json" -d "\${JSON_PAYLOAD}" > /dev/null
 EOF2
 
 chmod +x /root/premdigital_reporter.sh
 
-
-# 4. Pasang Auto-Creator Service (Python)
+# 3. Pasang Auto-Creator Service (Python Real Creator untuk SSH, VMess, VLESS, Trojan)
 cat > /root/premdigital_creator.py << 'EOF_PY'
 import urllib.request
 import json
 import subprocess
 import time
 import os
+import datetime
+import uuid
 
-PROJECT_ID="${firebaseConfig.projectId}"
-API_KEY="${firebaseConfig.apiKey}"
-SERVER_ID="${selectedNodeId}"
+def load_config():
+    config = {
+        "PROJECT_ID": "${firebaseConfig.projectId}",
+        "API_KEY": "${firebaseConfig.apiKey}",
+        "SERVER_ID": "${selectedNodeId}"
+    }
+    if os.path.exists("/root/node_config.txt"):
+        with open("/root/node_config.txt") as f:
+            for line in f:
+                line = line.strip()
+                if "=" in line and not line.startswith("#"):
+                    k, v = line.split("=", 1)
+                    k = k.strip()
+                    v = v.strip().strip('"').strip("'")
+                    if k == "NODE_ID":
+                        config["SERVER_ID"] = v
+                    elif k in ["PROJECT_ID", "API_KEY"]:
+                        config[k] = v
+    return config
+
+CONF = load_config()
+PROJECT_ID = CONF["PROJECT_ID"]
+API_KEY = CONF["API_KEY"]
+SERVER_ID = CONF["SERVER_ID"]
 
 BASE_URL = f"https://firestore.googleapis.com/v1/projects/{PROJECT_ID}/databases/(default)/documents"
-QUERY_URL = f"{BASE_URL}:runQuery?key={API_KEY}"
+
+print(f"[PREMDIGITAL-CREATOR] Dimulai untuk Node: {SERVER_ID} (Project: {PROJECT_ID})")
 
 def get_pending_commands():
-    query_payload = {
-        "structuredQuery": {
-            "from": [{"collectionId": "vps_commands"}],
-            "where": {
-                "compositeFilter": {
-                    "op": "AND",
-                    "filters": [
-                        {"fieldFilter": {"field": {"fieldPath": "serverId"}, "op": "EQUAL", "value": {"stringValue": SERVER_ID}}},
-                        {"fieldFilter": {"field": {"fieldPath": "status"}, "op": "EQUAL", "value": {"stringValue": "pending"}}}
-                    ]
-                }
-            }
-        }
-    }
-    
+    url = f"{BASE_URL}/vps_commands?key={API_KEY}&pageSize=50"
     try:
-        req = urllib.request.Request(QUERY_URL, data=json.dumps(query_payload).encode('utf-8'), headers={'Content-Type': 'application/json'})
-        with urllib.request.urlopen(req) as response:
+        req = urllib.request.Request(url)
+        with urllib.request.urlopen(req, timeout=10) as response:
             res_data = json.loads(response.read().decode())
             commands = []
-            for item in res_data:
-                if 'document' in item:
-                    doc = item['document']
-                    doc_id = doc['name'].split('/')[-1]
-                    fields = doc.get('fields', {})
-                    # pastikan statusnya pending
-                    if fields.get('status', {}).get('stringValue') == 'pending':
-                         commands.append({
-                             "id": doc_id,
-                             "username": fields.get('username', {}).get('stringValue', ''),
-                             "password": fields.get('password', {}).get('stringValue', ''),
-                             "action": fields.get('action', {}).get('stringValue', ''),
-                             "activeDays": fields.get('activeDays', {}).get('integerValue', '30')
-                         })
+            for doc in res_data.get('documents', []):
+                doc_id = doc['name'].split('/')[-1]
+                fields = doc.get('fields', {})
+                sid = fields.get('serverId', {}).get('stringValue', '')
+                status = fields.get('status', {}).get('stringValue', '')
+                
+                if sid == SERVER_ID and status == 'pending':
+                    act_days = 30
+                    if 'activeDays' in fields:
+                        f_days = fields['activeDays']
+                        if 'integerValue' in f_days:
+                            act_days = int(f_days['integerValue'])
+                        elif 'stringValue' in f_days:
+                            try:
+                                act_days = int(f_days['stringValue'])
+                            except:
+                                act_days = 30
+                    commands.append({
+                        "id": doc_id,
+                        "username": fields.get('username', {}).get('stringValue', ''),
+                        "password": fields.get('password', {}).get('stringValue', ''),
+                        "protocol": fields.get('protocol', {}).get('stringValue', 'ssh').lower(),
+                        "uuid": fields.get('uuid', {}).get('stringValue', ''),
+                        "activeDays": act_days
+                    })
             return commands
     except Exception as e:
-        print("Error fetching commands:", e)
+        print("[ERROR] Fetching commands:", e)
         return []
 
 def update_command_status(doc_id, status, message=""):
@@ -416,40 +475,96 @@ def update_command_status(doc_id, status, message=""):
     }
     try:
         req = urllib.request.Request(patch_url, data=json.dumps(payload).encode('utf-8'), headers={'Content-Type': 'application/json'}, method='PATCH')
-        with urllib.request.urlopen(req) as response:
+        with urllib.request.urlopen(req, timeout=10) as response:
             pass
     except Exception as e:
-        print("Error updating status:", e)
+        print("[ERROR] Updating status:", e)
 
-def create_ssh_account(username, password, days):
+def create_ssh(username, password, days):
     if not username or not password:
-        return False, "Username/Password kosong"
+        return False, "Username atau password kosong"
     try:
-        # Create user
-        subprocess.run(['useradd', '-e', f'$(date -d "{days} days" +"%Y-%m-%d")', '-s', '/bin/false', '-M', username], check=True, stderr=subprocess.PIPE)
-        # Set password
-        process = subprocess.Popen(['chpasswd'], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-        process.communicate(f"{username}:{password}")
-        if process.returncode != 0:
-            return False, "Gagal set password"
-        return True, "Sukses"
-    except subprocess.CalledProcessError as e:
-        return False, f"Gagal membuat user: {e.stderr.decode().strip()}"
+        exp_date = (datetime.date.today() + datetime.timedelta(days=int(days))).strftime("%Y-%m-%d")
+        check = subprocess.run(f"id {username}", shell=True, capture_output=True, text=True)
+        if check.returncode == 0:
+            subprocess.run(f"usermod -e {exp_date} -s /bin/false {username}", shell=True, check=True)
+        else:
+            subprocess.run(f"useradd -e {exp_date} -s /bin/false -M {username}", shell=True, check=True)
+        subprocess.run(f'echo "{username}:{password}" | chpasswd', shell=True, check=True)
+        return True, f"Akun SSH {username} aktif s/d {exp_date}"
+    except Exception as e:
+        return False, str(e)
+
+def create_xray(protocol, username, password, user_uuid, days):
+    config_path = "/etc/xray/config.json"
+    if not os.path.exists(config_path):
+        return False, f"File config Xray tidak ditemukan di {config_path}"
+    try:
+        exp_date = (datetime.date.today() + datetime.timedelta(days=int(days))).strftime("%Y-%m-%d")
+        final_uuid = user_uuid if user_uuid else str(uuid.uuid4())
+        
+        with open(config_path, "r") as f:
+            data = json.load(f)
+            
+        inbounds = data.get("inbounds", [])
+        added = False
+        for ib in inbounds:
+            proto = ib.get("protocol", "").lower()
+            if proto == protocol.lower():
+                settings = ib.setdefault("settings", {})
+                clients = settings.setdefault("clients", [])
+                clients = [c for c in clients if c.get("email") != username]
+                if protocol.lower() == "trojan":
+                    clients.append({"password": password or final_uuid, "email": username})
+                elif protocol.lower() == "vmess":
+                    clients.append({"id": final_uuid, "alterId": 0, "email": username})
+                elif protocol.lower() == "vless":
+                    clients.append({"id": final_uuid, "email": username})
+                settings["clients"] = clients
+                added = True
+                
+        if not added:
+            return False, f"Inbound {protocol} tidak ditemukan di config Xray"
+            
+        with open(config_path, "w") as f:
+            json.dump(data, f, indent=2)
+            
+        os.makedirs("/etc/premdigital", exist_ok=True)
+        with open("/etc/premdigital/xray-users.db", "a") as f:
+            f.write(f"{username} | {final_uuid} | {exp_date} | {protocol}\\n")
+            
+        subprocess.run("systemctl restart xray", shell=True)
+        return True, f"Akun {protocol.upper()} {username} aktif s/d {exp_date}"
     except Exception as e:
         return False, str(e)
 
 while True:
     commands = get_pending_commands()
     for cmd in commands:
-        if cmd['action'] == 'CREATE_ACCOUNT':
-             success, msg = create_ssh_account(cmd['username'], cmd['password'], cmd['activeDays'])
-             if success:
-                 update_command_status(cmd['id'], 'success', 'Account created successfully')
-             else:
-                 update_command_status(cmd['id'], 'error', msg)
+        proto = cmd['protocol']
+        u = cmd['username']
+        p = cmd['password']
+        days = cmd['activeDays']
+        print(f"[MEMPROSES] {proto.upper()} untuk user '{u}' ({days} hari)...")
+        
+        if proto in ["ssh", "websocket"]:
+            success, msg = create_ssh(u, p, days)
+        elif proto in ["vmess", "vless", "trojan"]:
+            success, msg = create_xray(proto, u, p, cmd['uuid'], days)
+        else:
+            success, msg = False, f"Protokol {proto} tidak dikenal"
+            
+        if success:
+            print(f"[SUKSES] {msg}")
+            update_command_status(cmd['id'], 'success', msg)
+        else:
+            print(f"[GAGAL] {msg}")
+            update_command_status(cmd['id'], 'error', msg)
+            
     time.sleep(5)
 EOF_PY
 
+# 4. Pasang systemd Service Auto-Creator
 cat > /etc/systemd/system/premdigital_creator.service << 'EOF_SVC'
 [Unit]
 Description=PremDigital VPS Auto-Creator Service
@@ -470,10 +585,10 @@ systemctl daemon-reload
 systemctl enable premdigital_creator
 systemctl restart premdigital_creator
 
-
-# 5. Pasang Cronjob (Reporter)
-(crontab -l 2>/dev/null | grep -v "premdigital_reporter.sh"; echo "*/1 * * * * /root/premdigital_reporter.sh >/dev/null 2>&1") | crontab -
-echo "VPS Script Berhasil Dipasang!"
+# 5. Pasang Cronjob Reporter (Tiap Menit) & Jalankan Segera
+(crontab -l 2>/dev/null | grep -v "premdigital_reporter.sh"; echo "*/1 * * * * /bin/bash /root/premdigital_reporter.sh >/dev/null 2>&1") | crontab -
+/bin/bash /root/premdigital_reporter.sh
+echo "=== Script PremDigital Berhasil Dipasang & Berjalan ==="
 `;
 
 
@@ -703,7 +818,7 @@ echo "VPS Script Berhasil Dipasang!"
                                   const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
                                   setQrisUrl(dataUrl);
                                 };
-                                img.src = event.target?.result;
+                                img.src = event.target?.result as string;
                               };
                               reader.readAsDataURL(file);
                             }}
@@ -828,8 +943,11 @@ echo "VPS Script Berhasil Dipasang!"
 
                 {/* VPS Node Configurator */}
                 <div className="bg-[#13172a] border border-slate-700/60 rounded-xl p-4 space-y-4">
-                  <h3 className="text-sm font-bold text-indigo-300">Konfigurasi Target Node VPS Ini:</h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                  <div>
+                    <h3 className="text-sm font-bold text-indigo-300">Konfigurasi Target Node VPS Ini:</h3>
+                    <p className="text-[11px] text-slate-400 mt-0.5">Pastikan Domain / Host diisi sesuai subdomain / domain yang sudah Anda pointing (A Record) di Cloudflare ke IP VPS ini.</p>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                     <div>
                       <label className="block text-xs text-slate-400 mb-1">Node ID (Unik untuk tiap VPS)</label>
                       <input 
@@ -848,6 +966,16 @@ echo "VPS Script Berhasil Dipasang!"
                         onChange={(e) => setCustomNodeName(e.target.value)} 
                         className="w-full bg-[#0b0e1b] border border-slate-600 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500"
                         placeholder="e.g. SG1 DigitalOcean"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-slate-400 mb-1">Domain / Host (Pointing Cloudflare)</label>
+                      <input 
+                        type="text" 
+                        value={customNodeDomain} 
+                        onChange={(e) => setCustomNodeDomain(e.target.value.trim())} 
+                        className="w-full bg-[#0b0e1b] border border-slate-600 rounded-lg px-3 py-2 text-xs text-emerald-400 font-mono focus:outline-none focus:border-indigo-500"
+                        placeholder="e.g. sgdo-premdigital.web.id"
                       />
                     </div>
                     <div>
@@ -876,28 +1004,52 @@ echo "VPS Script Berhasil Dipasang!"
                     <span className="font-semibold text-slate-300">Preset Cepat:</span>
                     <button 
                       type="button"
-                      onClick={() => { setSelectedNodeId('sg-do-01'); setCustomNodeName('SG1 DigitalOcean'); setCustomNodeCity('Singapore'); setCustomNodeCountryCode('SG'); }} 
+                      onClick={() => { 
+                        setSelectedNodeId('sg-premium-01'); 
+                        setCustomNodeName('SG DigitalOcean'); 
+                        setCustomNodeDomain('sgdo-premdigital.web.id');
+                        setCustomNodeCity('Singapore'); 
+                        setCustomNodeCountryCode('SG'); 
+                      }} 
                       className="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 cursor-pointer"
                     >
-                      Node SG-1
+                      Node SG (sgdo-premdigital.web.id)
                     </button>
                     <button 
                       type="button"
-                      onClick={() => { setSelectedNodeId('id-biznet-01'); setCustomNodeName('ID1 Biznet'); setCustomNodeCity('Jakarta'); setCustomNodeCountryCode('ID'); }} 
+                      onClick={() => { 
+                        setSelectedNodeId('id-biznet-01'); 
+                        setCustomNodeName('ID1 Biznet'); 
+                        setCustomNodeDomain('id1.premdigital.web.id');
+                        setCustomNodeCity('Jakarta'); 
+                        setCustomNodeCountryCode('ID'); 
+                      }} 
                       className="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 cursor-pointer"
                     >
-                      Node ID-1
+                      Node ID-1 (id1.premdigital.web.id)
                     </button>
                     <button 
                       type="button"
-                      onClick={() => { setSelectedNodeId('sg-aws-02'); setCustomNodeName('SG2 Linode'); setCustomNodeCity('Singapore'); setCustomNodeCountryCode('SG'); }} 
+                      onClick={() => { 
+                        setSelectedNodeId('sg-aws-02'); 
+                        setCustomNodeName('SG2 Linode'); 
+                        setCustomNodeDomain('sg2.premdigital.web.id');
+                        setCustomNodeCity('Singapore'); 
+                        setCustomNodeCountryCode('SG'); 
+                      }} 
                       className="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 cursor-pointer"
                     >
                       Node SG-2
                     </button>
                     <button 
                       type="button"
-                      onClick={() => { setSelectedNodeId('id-telkom-02'); setCustomNodeName('ID2 Telkom'); setCustomNodeCity('Surabaya'); setCustomNodeCountryCode('ID'); }} 
+                      onClick={() => { 
+                        setSelectedNodeId('id-telkom-02'); 
+                        setCustomNodeName('ID2 Telkom'); 
+                        setCustomNodeDomain('id2.premdigital.web.id');
+                        setCustomNodeCity('Surabaya'); 
+                        setCustomNodeCountryCode('ID'); 
+                      }} 
                       className="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 cursor-pointer"
                     >
                       Node ID-2
@@ -1038,44 +1190,109 @@ echo "VPS Script Berhasil Dipasang!"
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {vpsNodes.map((node) => (
-                      <div key={node.id} className="p-4 rounded-xl bg-[#13172a] border border-slate-700/60 flex flex-col justify-between space-y-3">
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <span className="font-bold text-white text-sm">{node.name}</span>
-                              <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${node.status === 'Online' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'}`}>
-                                {node.status}
-                              </span>
+                    {vpsNodes.map((node) => {
+                      const displayDomain = node.domain || node.host || (node.id === 'sg-premium-01' || node.countryCode === 'SG' ? 'sgdo-premdigital.web.id' : `${node.id}.premdigital.web.id`);
+                      const isEditing = editingNodeId === node.id;
+
+                      return (
+                        <div key={node.id} className="p-4 rounded-xl bg-[#13172a] border border-slate-700/60 flex flex-col justify-between space-y-3">
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <span className="font-bold text-white text-sm">{node.name}</span>
+                                <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${node.status === 'Online' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'}`}>
+                                  {node.status}
+                                </span>
+                              </div>
+                              <div className="text-xs text-slate-400 font-mono mt-0.5">{node.ip} • {node.city}, {node.countryCode}</div>
                             </div>
-                            <div className="text-xs text-slate-400 font-mono mt-0.5">{node.ip} • {node.city}, {node.countryCode}</div>
+                            <span className="text-[11px] font-mono text-slate-400 bg-slate-800/80 px-2 py-1 rounded">
+                              ID: {node.id}
+                            </span>
                           </div>
-                          <span className="text-[11px] font-mono text-slate-400 bg-slate-800/80 px-2 py-1 rounded">
-                            ID: {node.id}
-                          </span>
-                        </div>
 
-                        <div className="grid grid-cols-3 gap-2 pt-2 border-t border-slate-700/40 text-center">
-                          <div className="bg-[#0b0e1b] p-2 rounded-lg">
-                            <div className="text-[10px] text-slate-400">Online Users</div>
-                            <div className="text-sm font-bold text-indigo-400">{node.onlineUsers}</div>
-                          </div>
-                          <div className="bg-[#0b0e1b] p-2 rounded-lg">
-                            <div className="text-[10px] text-slate-400">CPU Load</div>
-                            <div className="text-sm font-bold text-cyan-400">{node.cpuLoad}%</div>
-                          </div>
-                          <div className="bg-[#0b0e1b] p-2 rounded-lg">
-                            <div className="text-[10px] text-slate-400">RAM Used</div>
-                            <div className="text-sm font-bold text-purple-400">{node.ramUsage}%</div>
-                          </div>
-                        </div>
+                          {/* Domain / Host Cloudflare Pointing Card */}
+                          <div className="p-2.5 rounded-lg bg-[#0b0e1b] border border-slate-800 space-y-1.5">
+                            <div className="flex items-center justify-between text-xs">
+                              <span className="text-slate-400 flex items-center gap-1.5 font-medium">
+                                <Globe className="w-3.5 h-3.5 text-indigo-400" />
+                                Host / Cloudflare Domain:
+                              </span>
+                              {!isEditing && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setEditingNodeId(node.id);
+                                    setEditingDomainValue(displayDomain);
+                                  }}
+                                  className="text-[11px] font-semibold text-indigo-400 hover:text-indigo-300 transition-colors cursor-pointer"
+                                >
+                                  Ubah Domain
+                                </button>
+                              )}
+                            </div>
 
-                        <div className="text-[10px] text-slate-500 flex items-center justify-between">
-                          <span>SSH: {node.sshOnline || 0} | Xray: {node.xrayOnline || 0}</span>
-                          <span>Hb: {new Date(node.lastHeartbeat).toLocaleTimeString()}</span>
+                            {isEditing ? (
+                              <div className="space-y-2 pt-1">
+                                <input
+                                  type="text"
+                                  value={editingDomainValue}
+                                  onChange={(e) => setEditingDomainValue(e.target.value.trim())}
+                                  placeholder="e.g. sgdo-premdigital.web.id"
+                                  className="w-full bg-[#13172a] border border-indigo-500 rounded px-2.5 py-1.5 text-xs text-emerald-400 font-mono focus:outline-none"
+                                />
+                                <div className="flex items-center gap-2 justify-end">
+                                  <button
+                                    type="button"
+                                    onClick={() => setEditingNodeId(null)}
+                                    className="px-2.5 py-1 rounded text-[11px] font-medium text-slate-400 hover:text-white cursor-pointer"
+                                  >
+                                    Batal
+                                  </button>
+                                  <button
+                                    type="button"
+                                    disabled={isUpdatingNodeDomain || !editingDomainValue}
+                                    onClick={() => handleUpdateNodeDomain(node.id, editingDomainValue)}
+                                    className="px-3 py-1 rounded bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-bold disabled:opacity-50 cursor-pointer"
+                                  >
+                                    {isUpdatingNodeDomain ? 'Menyimpan...' : 'Simpan Domain'}
+                                  </button>
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="flex items-center justify-between">
+                                <span className="font-mono text-xs text-emerald-400 font-bold truncate">
+                                  {displayDomain}
+                                </span>
+                                <span className="text-[10px] px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300 font-medium">
+                                  Output SNI Active
+                                </span>
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="grid grid-cols-3 gap-2 pt-2 border-t border-slate-700/40 text-center">
+                            <div className="bg-[#0b0e1b] p-2 rounded-lg">
+                              <div className="text-[10px] text-slate-400">Online Users</div>
+                              <div className="text-sm font-bold text-indigo-400">{node.onlineUsers}</div>
+                            </div>
+                            <div className="bg-[#0b0e1b] p-2 rounded-lg">
+                              <div className="text-[10px] text-slate-400">CPU Load</div>
+                              <div className="text-sm font-bold text-cyan-400">{node.cpuLoad}%</div>
+                            </div>
+                            <div className="bg-[#0b0e1b] p-2 rounded-lg">
+                              <div className="text-[10px] text-slate-400">RAM Used</div>
+                              <div className="text-sm font-bold text-purple-400">{node.ramUsage}%</div>
+                            </div>
+                          </div>
+
+                          <div className="text-[10px] text-slate-500 flex items-center justify-between">
+                            <span>SSH: {node.sshOnline || 0} | Xray: {node.xrayOnline || 0}</span>
+                            <span>Hb: {new Date(node.lastHeartbeat).toLocaleTimeString()}</span>
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </div>
