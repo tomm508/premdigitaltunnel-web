@@ -49,16 +49,32 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isDark, userRole }) => {
   const [activeTab, setActiveTab] = useState<'settings' | 'users' | 'services' | 'stats' | 'vps'>('settings');
   const [pendingTopups, setPendingTopups] = useState<any[]>([]);
 
-  // Fetch pending topups
+  // Fetch pending topups polling
+  const fetchPendingTopups = async () => {
+    try {
+      const { getDocs } = await import('firebase/firestore');
+      const usersSnap = await getDocs(collection(db, 'users'));
+      let allTopups: any[] = [];
+      for (const uDoc of usersSnap.docs) {
+        const topupsSnap = await getDocs(collection(db, 'users', uDoc.id, 'topups'));
+        topupsSnap.docs.forEach((tDoc: any) => {
+          const t = { id: tDoc.id, ...tDoc.data(), userDocId: uDoc.id };
+          if (t.status === 'waiting_verification') {
+            allTopups.push(t);
+          }
+        });
+      }
+      allTopups.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      setPendingTopups(allTopups);
+    } catch(err) {
+      console.error(err);
+    }
+  };
+
   useEffect(() => {
-    const unsub = onSnapshot(collection(db, 'topups'), (snapshot) => {
-      const topups = snapshot.docs
-        .map(d => ({ id: d.id, ...d.data() }))
-        .filter((t: any) => t.status === 'waiting_verification')
-        .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-      setPendingTopups(topups);
-    });
-    return () => unsub();
+    fetchPendingTopups();
+    const interval = setInterval(fetchPendingTopups, 15000);
+    return () => clearInterval(interval);
   }, []);
 
   const handleApproveTopup = async (topup: any) => {
@@ -75,25 +91,27 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ isDark, userRole }) => {
       }, { merge: true });
 
       // 3. Mark topup as success
-      await setDoc(doc(db, 'topups', topup.id), {
+      await setDoc(doc(db, 'users', topup.userDocId, 'topups', topup.id), {
         status: 'success',
         updatedAt: new Date().toISOString()
       }, { merge: true });
       
       alert('Top Up sebesar Rp ' + topup.amount.toLocaleString() + ' berhasil disetujui.');
+      fetchPendingTopups();
     } catch (err) {
       console.error(err);
       alert('Gagal menyetujui top up.');
     }
   };
 
-  const handleRejectTopup = async (topupId: string) => {
+  const handleRejectTopup = async (topup: any) => {
     if (confirm('Anda yakin ingin menolak Top Up ini?')) {
       try {
-        await setDoc(doc(db, 'topups', topupId), {
+        await setDoc(doc(db, 'users', topup.userDocId, 'topups', topup.id), {
           status: 'rejected',
           updatedAt: new Date().toISOString()
         }, { merge: true });
+        fetchPendingTopups();
       } catch (err) {
         console.error(err);
       }
@@ -976,7 +994,7 @@ echo "VPS Script Berhasil Dipasang!"
                               <Check className="w-3.5 h-3.5" /> Approve
                             </button>
                             <button 
-                              onClick={() => handleRejectTopup(topup.id)}
+                              onClick={() => handleRejectTopup(topup)}
                               className="flex-1 sm:flex-none px-4 py-2 rounded-lg bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold transition-all flex items-center justify-center gap-1.5"
                             >
                               <X className="w-3.5 h-3.5" /> Reject

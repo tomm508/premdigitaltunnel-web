@@ -1,4 +1,3 @@
-// Trigger sync: Firebase Rules for Topup
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -21,7 +20,7 @@ service cloud.firestore {
     match /vps_commands/{commandId} {
       allow read, write: if true;
     }
-
+    
     function isSignedIn() {
       return request.auth != null;
     }
@@ -34,17 +33,12 @@ service cloud.firestore {
       return isSignedIn() && (request.auth.token.email == 'agustiantomi80@gmail.com' || request.auth.token.email == 'premdigitalssh@gmail.com');
     }
 
-
     match /topups/{topupId} {
-      allow read: if isSignedIn();
-      allow create: if isSignedIn();
-      allow update: if isSignedIn();
-      allow delete: if isAdmin();
+      allow read, write: if isSignedIn();
     }
     
     match /users/{userId} {
-      allow read: if isOwner(userId) || isAdmin();
-      allow write: if isOwner(userId) || isAdmin();
+      allow read, write: if isOwner(userId) || isAdmin();
       
       match /topups/{topupId} {
         allow read, write: if isOwner(userId) || isAdmin();

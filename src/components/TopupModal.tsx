@@ -101,7 +101,7 @@ export const TopupModal: React.FC<TopupModalProps> = ({
     try {
       if (user) {
         // Save pending topup in Firestore
-        const docRef = await addDoc(collection(db, 'topups'), {
+        const docRef = await addDoc(collection(db, 'users', user.uid, 'topups'), {
           amount: currentDepositAmount,
           paymentMethod,
           status: 'pending',
@@ -145,7 +145,7 @@ export const TopupModal: React.FC<TopupModalProps> = ({
     try {
       if (user && currentTopupId) {
         // Update topup status to waiting_verification instead of instantly adding balance
-        await setDoc(doc(db, 'topups', currentTopupId), {
+        await setDoc(doc(db, 'users', user.uid, 'topups', currentTopupId), {
           status: 'waiting_verification',
           proofUrl: proofUrl || null,
           updatedAt: new Date().toISOString()
