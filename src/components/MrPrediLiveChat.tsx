@@ -34,7 +34,7 @@ export const MrPrediLiveChat: React.FC<MrPrediLiveChatProps> = ({
     {
       id: 'welcome',
       sender: 'mr_predi',
-      text: 'Yo halo Kak! Kenalin, gue **Mr. Predi** 😎🎩\n\nAda yang bisa Mr. Predi bantu hari ini?',
+      text: 'Yo halo Kak! Kenalin, gue **Mr. Predi** 😎🎩\nAda yang bisa Mr. Predi bantu hari ini?',
       time: 'Online',
       options: [
         { label: '🚀 Cek Status Server & Kuota', action: 'menu_server' },
@@ -330,7 +330,7 @@ export const MrPrediLiveChat: React.FC<MrPrediLiveChatProps> = ({
               </div>
               <p className="text-[11px] text-purple-300/80 flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                Online 24/7 • Asisten Virtual PremDigital
+                Online
               </p>
             </div>
           </div>
@@ -370,11 +370,8 @@ export const MrPrediLiveChat: React.FC<MrPrediLiveChatProps> = ({
             <div className="bg-purple-950/50 border-b border-purple-500/10 px-4 py-2 flex items-center justify-between text-[11px] text-purple-200">
               <span className="flex items-center gap-1.5">
                 <Sparkles className="w-3.5 h-3.5 text-yellow-400 shrink-0" />
-                <span>Tanya bug SNI, V2Ray, SSH WS, atau server ke Mr. Predi!</span>
-              </span>
-              <span className="text-[10px] font-semibold text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded-full border border-emerald-500/30">
-                24 Jam
-              </span>
+                <span>Tanya bug SNI, V2Ray, SSH WS, atau server ke Mr. Predi!
+                </span>
             </div>
 
             {/* Messages Scroll Area */}
@@ -407,7 +404,7 @@ export const MrPrediLiveChat: React.FC<MrPrediLiveChatProps> = ({
                     {msg.text}
                   </div>
 
-                  {/* Interactive Quick Buttons ala Maya AXISnet */}
+                  {/* Interactive Quick Buttons */}
                   {msg.sender === 'mr_predi' && msg.options && msg.options.length > 0 && (
                     <div className="mt-2.5 flex flex-wrap gap-1.5 max-w-[95%]">
                       {msg.options.map((opt, idx) => (
@@ -463,10 +460,6 @@ export const MrPrediLiveChat: React.FC<MrPrediLiveChatProps> = ({
                   <span className="hidden sm:inline">Kirim</span>
                 </button>
               </form>
-              <div className="mt-1.5 flex items-center justify-between px-1 text-[10px] text-purple-300/60">
-                <span>Mr. Predi • Virtual Assistant PremDigital</span>
-                <span>Siap Bantu 24/7</span>
-              </div>
             </div>
           </>
         )}
