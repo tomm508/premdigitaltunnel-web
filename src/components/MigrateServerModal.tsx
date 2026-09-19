@@ -20,6 +20,7 @@ import { TunnelServer, UserServiceAccount } from '../types';
 import { SERVERS_LIST } from '../data/mockData';
 import { subscribeVpsNodes, UnifiedServerNode } from '../lib/serverSync';
 import { db, doc, updateDoc, addDoc, collection } from '../lib/firebase';
+import { useLanguage } from '../context/LanguageContext';
 
 interface MigrateServerModalProps {
   isOpen: boolean;
@@ -36,6 +37,7 @@ export const MigrateServerModal: React.FC<MigrateServerModalProps> = ({
   currentUser,
   onMigrationSuccess
 }) => {
+  const { t } = useLanguage();
   const [availableServers, setAvailableServers] = useState<UnifiedServerNode[]>([]);
   const [selectedTargetServer, setSelectedTargetServer] = useState<TunnelServer | null>(null);
   const [isMigrating, setIsMigrating] = useState(false);
@@ -177,14 +179,14 @@ export const MigrateServerModal: React.FC<MigrateServerModalProps> = ({
             <div>
               <div className="flex items-center gap-2">
                 <h2 className="text-lg font-bold text-white">
-                  Pindah Server VPN
+                  {t('migrate.modal_title', 'Migrate VPN Server')}
                 </h2>
                 <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                  GRATIS 100%
+                  {t('migrate.free_badge', '100% FREE')}
                 </span>
               </div>
               <p className="text-xs text-slate-400">
-                Pindahkan akun Anda ke server lain kapan saja tanpa biaya & tanpa mengurangi masa aktif
+                {t('migrate.modal_sub', 'Move your account to any server anytime without extra fees and retain all remaining active days')}
               </p>
             </div>
           </div>
@@ -206,9 +208,9 @@ export const MigrateServerModal: React.FC<MigrateServerModalProps> = ({
                 <CheckCircle2 className="w-8 h-8" />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-white">Pindah Server Berhasil!</h3>
+                <h3 className="text-lg font-bold text-white">{t('migrate.success_title', 'Server Migration Successful!')}</h3>
                 <p className="text-xs text-slate-400 max-w-md mx-auto mt-1">
-                  Akun <strong className="text-purple-300">{migratedAccount.username}</strong> berhasil dipindahkan ke server <strong className="text-white">{migratedAccount.server.country} ({migratedAccount.server.city})</strong>.
+                  {t('migrate.success_desc', 'Account')} <strong className="text-purple-300">{migratedAccount.username}</strong> {t('migrate.success_to', 'has been successfully moved to')} <strong className="text-white">{migratedAccount.server.country} ({migratedAccount.server.city})</strong>.
                 </p>
               </div>
 
@@ -241,21 +243,21 @@ export const MigrateServerModal: React.FC<MigrateServerModalProps> = ({
                     <span className="text-emerald-400">{migratedAccount.username}</span>
                   </div>
                   <div className="flex justify-between text-slate-400">
-                    <span>Masa Aktif:</span>
-                    <span className="text-amber-400">{remainingDays} Hari Lagi</span>
+                    <span>{t('migrate.active_period', 'Active Period')}:</span>
+                    <span className="text-amber-400">{remainingDays} {t('dash.days', 'Days')} {t('migrate.left', 'Left')}</span>
                   </div>
                 </div>
 
                 {migratedAccount.configString && (
                   <div className="pt-2">
                     <div className="flex items-center justify-between mb-1 text-[11px] text-slate-400">
-                      <span>Config Baru:</span>
+                      <span>{t('migrate.new_cfg', 'New Config')}:</span>
                       <button
                         onClick={() => handleCopy(migratedAccount.configString || '', 'new-cfg')}
                         className="text-indigo-400 hover:text-indigo-300 flex items-center gap-1 cursor-pointer"
                       >
                         {copiedKey === 'new-cfg' ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
-                        Salin Config
+                        {t('modal.copy_config', 'Copy Config')}
                       </button>
                     </div>
                     <pre className="bg-[#0f111a] border border-slate-700/80 rounded-lg p-2.5 text-[11px] text-slate-300 font-mono overflow-x-auto max-h-32">
@@ -270,7 +272,7 @@ export const MigrateServerModal: React.FC<MigrateServerModalProps> = ({
                   onClick={onClose}
                   className="px-6 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold transition-all cursor-pointer"
                 >
-                  Selesai & Kembali
+                  {t('migrate.done_btn', 'Done & Return')}
                 </button>
               </div>
             </div>
@@ -282,7 +284,7 @@ export const MigrateServerModal: React.FC<MigrateServerModalProps> = ({
                 {/* Current Server */}
                 <div className="bg-[#181d2f] border border-slate-800 rounded-xl p-4">
                   <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
-                    SERVER SAAT INI
+                    {t('migrate.current_server', 'CURRENT SERVER')}
                   </span>
                   <div className="flex items-center gap-2.5">
                     <span className="text-2xl">{account.server.flag}</span>
@@ -294,17 +296,17 @@ export const MigrateServerModal: React.FC<MigrateServerModalProps> = ({
                   <div className="mt-3 pt-2.5 border-t border-slate-800/80 text-[11px] text-slate-400 space-y-1 font-mono">
                     <div>Host: <span className="text-slate-200">{account.server.domain || account.server.host}</span></div>
                     <div>User: <span className="text-emerald-400">{account.username}</span></div>
-                    <div>Sisa: <span className="text-amber-400">{remainingDays} Hari</span></div>
+                    <div>{t('dash.days_left_prefix', 'Remaining')}: <span className="text-amber-400">{remainingDays} {t('dash.days', 'Days')}</span></div>
                   </div>
                 </div>
 
                 {/* Target Server */}
                 <div className="bg-[#181d2f] border border-purple-500/40 rounded-xl p-4 relative overflow-hidden">
                   <div className="absolute top-0 right-0 bg-purple-600 text-white text-[9px] font-bold px-2 py-0.5 rounded-bl">
-                    TUJUAN
+                    {t('migrate.target_badge', 'TARGET')}
                   </div>
                   <span className="text-[10px] font-bold text-purple-300 uppercase tracking-wider block mb-1">
-                    SERVER TUJUAN
+                    {t('migrate.target_server', 'TARGET SERVER')}
                   </span>
                   {selectedTargetServer ? (
                     <>
@@ -318,12 +320,12 @@ export const MigrateServerModal: React.FC<MigrateServerModalProps> = ({
                       <div className="mt-3 pt-2.5 border-t border-slate-800/80 text-[11px] text-slate-400 space-y-1 font-mono">
                         <div>Host: <span className="text-emerald-400">{selectedTargetServer.domain || selectedTargetServer.host}</span></div>
                         <div>Ping: <span className="text-emerald-400">{selectedTargetServer.ping}ms</span></div>
-                        <div>Biaya: <span className="text-emerald-400 font-bold">Rp 0 (GRATIS)</span></div>
+                        <div>{t('migrate.cost_label', 'Cost')}: <span className="text-emerald-400 font-bold">Rp 0 ({t('migrate.free_cost', 'FREE')})</span></div>
                       </div>
                     </>
                   ) : (
                     <div className="text-xs text-slate-500 py-4 text-center">
-                      Pilih server tujuan di bawah
+                      {t('migrate.select_target_prompt', 'Select target server below')}
                     </div>
                   )}
                 </div>
@@ -332,8 +334,8 @@ export const MigrateServerModal: React.FC<MigrateServerModalProps> = ({
               {/* Server Selection Grid */}
               <div>
                 <label className="block text-xs font-bold text-white mb-2 flex items-center justify-between">
-                  <span>Pilih Server Tujuan Baru:</span>
-                  <span className="text-[11px] text-purple-400 font-normal">Tersedia {availableServers.length} Server</span>
+                  <span>{t('migrate.select_new_server', 'Select New Target Server')}:</span>
+                  <span className="text-[11px] text-purple-400 font-normal">{t('migrate.available_prefix', 'Available')} {availableServers.length} {t('migrate.servers_word', 'Servers')}</span>
                 </label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-56 overflow-y-auto pr-1">
                   {availableServers.map((server) => {
@@ -360,7 +362,7 @@ export const MigrateServerModal: React.FC<MigrateServerModalProps> = ({
                             <div className="text-xs font-bold text-white flex items-center gap-1.5">
                               {server.country} - {server.city}
                               {isCurrent && (
-                                <span className="text-[9px] text-slate-400 font-normal">(Saat Ini)</span>
+                                <span className="text-[9px] text-slate-400 font-normal">({t('migrate.current_word', 'Current')})</span>
                               )}
                             </div>
                             <div className="text-[10px] text-slate-400 font-mono truncate max-w-[170px]">
@@ -387,11 +389,11 @@ export const MigrateServerModal: React.FC<MigrateServerModalProps> = ({
               <div className="bg-[#181d2f] border border-indigo-500/20 rounded-xl p-3.5 flex items-start gap-3 text-xs text-slate-300">
                 <Sparkles className="w-5 h-5 text-indigo-400 shrink-0 mt-0.5" />
                 <div className="space-y-1 leading-relaxed text-[11px]">
-                  <p className="font-semibold text-white">Jaminan Pindah Server PremDigital:</p>
+                  <p className="font-semibold text-white">{t('migrate.guarantee_title', 'PremDigital Server Migration Guarantee')}:</p>
                   <ul className="list-disc list-inside text-slate-400 space-y-0.5">
-                    <li>Username, password, dan protokol tetap sama.</li>
-                    <li>Sisa masa aktif (<strong className="text-amber-300">{remainingDays} hari</strong>) otomatis terbawa secara penuh.</li>
-                    <li>Akun di server lama otomatis dipindahkan ke server baru secara instan.</li>
+                    <li>{t('migrate.guarantee_1', 'Username, password, and protocol remain completely identical.')}</li>
+                    <li>{t('migrate.guarantee_2', 'Remaining active period is fully transferred automatically.')}</li>
+                    <li>{t('migrate.guarantee_3', 'Old server credentials transition seamlessly to the new node.')}</li>
                   </ul>
                 </div>
               </div>
@@ -407,12 +409,12 @@ export const MigrateServerModal: React.FC<MigrateServerModalProps> = ({
                   {isMigrating ? (
                     <>
                       <RefreshCw className="w-4 h-4 animate-spin" />
-                      Memindahkan Server...
+                      {t('migrate.migrating_btn', 'Migrating Server...')}
                     </>
                   ) : (
                     <>
                       <Repeat className="w-4 h-4" />
-                      Konfirmasi Pindah ke {selectedTargetServer?.country || 'Server Baru'} (Gratis)
+                      {t('migrate.confirm_btn', `Confirm Migration to ${selectedTargetServer?.country || 'New Server'} (Free)`)}
                     </>
                   )}
                 </button>
@@ -424,12 +426,12 @@ export const MigrateServerModal: React.FC<MigrateServerModalProps> = ({
 
         {/* Footer */}
         <div className="p-4 border-t border-slate-800 bg-[#161b2e] flex items-center justify-between text-xs text-slate-400">
-          <span>Protokol: {account.protocol.toUpperCase()} • User: {account.username}</span>
+          <span>{t('migrate.proto_label', 'Protocol')}: {account.protocol.toUpperCase()} • {t('migrate.user_label', 'User')}: {account.username}</span>
           <button
             onClick={onClose}
             className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold transition-colors cursor-pointer"
           >
-            Batal
+            {t('modal.close', 'Cancel')}
           </button>
         </div>
       </div>

@@ -24,6 +24,8 @@ import { ProtocolType } from '../types';
 import { Logo } from './Logo';
 import { User } from 'firebase/auth';
 import { Wallet } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
+import { LanguageSelector } from './LanguageSelector';
 
 interface NavbarProps {
   isDark: boolean;
@@ -52,6 +54,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   const [servicesOpen, setServicesOpen] = useState(false);
   const [toolsOpen, setToolsOpen] = useState(false);
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   const servicesList: { id: ProtocolType; label: string; icon: React.ReactNode; path?: string }[] = [
     { id: 'ssh', label: 'SSH Tunnel', icon: <Share2 className="w-4 h-4 text-blue-400" />, path: '/ssh-tunnel' },
@@ -98,7 +101,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   : 'text-slate-700 hover:text-purple-700 hover:bg-purple-50'
               }`}
             >
-              Home
+              {t('nav.home', 'Home')}
             </button>
 
             {/* Services Dropdown */}
@@ -111,7 +114,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     : 'text-slate-700 hover:text-purple-700 hover:bg-purple-50'
                 }`}
               >
-                Services
+                {t('nav.services', 'Services')}
                 <ChevronDown className={`w-4 h-4 transition-transform group-hover:rotate-180 ${
                   isDark ? 'text-purple-300' : 'text-purple-600'
                 }`} />
@@ -155,7 +158,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     : 'text-slate-700 hover:text-purple-700 hover:bg-purple-50'
                 }`}
               >
-                Tools
+                {t('nav.tools', 'Tools')}
                 <ChevronDown className={`w-4 h-4 transition-transform group-hover:rotate-180 ${
                   isDark ? 'text-purple-300' : 'text-purple-600'
                 }`} />
@@ -191,13 +194,16 @@ export const Navbar: React.FC<NavbarProps> = ({
             </div>
           </nav>
 
-          {/* Right Action Icons (Theme toggle + Login + Mobile toggle) */}
-          <div className="flex items-center space-x-2 sm:space-x-3">
+          {/* Right Action Icons (Theme toggle + Language selector + Login + Mobile toggle) */}
+          <div className="flex items-center space-x-1.5 sm:space-x-2">
+            {/* Language Selector */}
+            <LanguageSelector isDark={isDark} />
+
             <button
               id="theme-toggle-btn"
               onClick={toggleTheme}
               aria-label="Toggle theme"
-              className={`p-2.5 rounded-xl border transition-all ${
+              className={`p-2 rounded-xl border transition-all ${
                 isDark 
                   ? 'text-slate-300 hover:text-white bg-white/5 hover:bg-white/10 border-white/10' 
                   : 'text-amber-600 hover:text-amber-700 bg-amber-50 hover:bg-amber-100 border-amber-200 shadow-sm'
@@ -217,7 +223,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     title="Admin Panel"
                   >
                     <Shield className="w-3.5 h-3.5" />
-                    <span>Admin</span>
+                    <span>{t('nav.admin', 'Admin')}</span>
                   </button>
                 )}
 
@@ -225,7 +231,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   id="header-balance-chip"
                   onClick={onOpenTopup}
                   className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 transition-all cursor-pointer"
-                  title="Klik untuk top up saldo"
+                  title="Top up balance"
                 >
                   <Wallet className="w-3.5 h-3.5 text-emerald-400" />
                   <span>Rp {userBalance.toLocaleString()}</span>
@@ -249,7 +255,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 className="hidden sm:flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white shadow-md shadow-purple-600/20 transition-all cursor-pointer"
               >
                 <LogIn className="w-4 h-4" />
-                <span>Login Member</span>
+                <span>{t('nav.login', 'Sign In')}</span>
               </button>
             )}
 
@@ -275,6 +281,9 @@ export const Navbar: React.FC<NavbarProps> = ({
         <div id="mobile-menu-drawer" className={`md:hidden border-t px-4 pt-3 pb-6 space-y-3 ${
           isDark ? 'bg-[#120e2d] border-purple-900/40' : 'bg-white border-purple-200 shadow-lg'
         }`}>
+          {/* Mobile Language Selector */}
+          <LanguageSelector isDark={isDark} isMobile={true} />
+
           <div className={`rounded-2xl p-2 border space-y-1 ${
             isDark ? 'bg-[#1a143f] border-purple-500/20' : 'bg-purple-50/70 border-purple-200'
           }`}>
@@ -288,7 +297,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 isDark ? 'text-white hover:bg-purple-600/20' : 'text-slate-900 hover:bg-purple-100'
               }`}
             >
-              Home
+              {t('nav.home', 'Home')}
             </button>
 
             {/* Services Accordion */}
@@ -300,7 +309,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   isDark ? 'text-slate-200 hover:bg-purple-600/20' : 'text-slate-800 hover:bg-purple-100'
                 }`}
               >
-                <span>Services</span>
+                <span>{t('nav.services', 'Services')}</span>
                 <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${
                   isDark ? 'text-purple-300' : 'text-purple-600'
                 } ${servicesOpen ? 'rotate-180' : ''}`} />
@@ -344,7 +353,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   isDark ? 'text-slate-200 hover:bg-purple-600/20' : 'text-slate-800 hover:bg-purple-100'
                 }`}
               >
-                <span>Tools</span>
+                <span>{t('nav.tools', 'Tools')}</span>
                 <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${
                   isDark ? 'text-purple-300' : 'text-purple-600'
                 } ${toolsOpen ? 'rotate-180' : ''}`} />
@@ -389,7 +398,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   }}
                   className="w-full py-2.5 px-4 rounded-xl text-sm font-bold bg-rose-500/10 border border-rose-500/20 text-rose-400 text-center mb-2"
                 >
-                  Admin Panel
+                  {t('nav.admin', 'Admin')} Panel
                 </button>
               )}
 
@@ -404,7 +413,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   }}
                   className="w-full py-2.5 px-4 rounded-xl text-sm font-bold bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg shadow-purple-600/30 text-center"
                 >
-                  Go to Dashboard
+                  {t('nav.dashboard', 'Dashboard')}
                 </button>
               ) : (
                 <button
@@ -415,7 +424,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   }}
                   className="w-full py-2.5 px-4 rounded-xl text-sm font-bold bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg shadow-purple-600/30 text-center"
                 >
-                  Login Member
+                  {t('nav.login', 'Sign In')}
                 </button>
               )}
             </div>

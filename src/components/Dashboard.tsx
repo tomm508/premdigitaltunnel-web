@@ -32,6 +32,7 @@ import { MigrateServerModal } from './MigrateServerModal';
 import { ServiceDetailModal } from './ServiceDetailModal';
 import { db, doc, onSnapshot, collection, deleteDoc } from '../lib/firebase';
 import { UserServiceAccount, TunnelServer } from '../types';
+import { useLanguage } from '../context/LanguageContext';
 
 interface DashboardProps {
   isDark: boolean;
@@ -49,6 +50,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
   onLogout 
 }) => {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [discount, setDiscount] = useState<number>(0);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isTransactionsOpen, setIsTransactionsOpen] = useState(false);
@@ -212,7 +214,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 <X className="w-4 h-4" />
               </button>
               <div className="absolute top-0 right-10 bg-emerald-500 text-white text-[10px] font-bold px-2.5 py-1 rounded-b-md">
-                FREE FEATURE
+                {t('dash.free_feature', 'FREE FEATURE')}
               </div>
               <div className="flex gap-4">
                 <div className="w-10 h-10 rounded-xl bg-indigo-500/20 flex items-center justify-center shrink-0">
@@ -220,13 +222,13 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 </div>
                 <div>
                   <h3 className="font-bold text-white text-sm mb-1 flex items-center gap-2">
-                    Gratis Pindah Server
+                    {t('dash.migrate_feature', 'Free Server Migration')}
                     <span className="text-[10px] font-normal text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
                       Unlimited
                     </span>
                   </h3>
                   <p className="text-xs text-slate-400 leading-relaxed">
-                    Pindahkan akun VPN Anda ke server lain <span className="text-indigo-400 font-medium">sampai puas tanpa biaya tambahan</span>! Masa aktif dan username akun Anda tetap dipertahankan.
+                    {t('dash.migrate_banner', 'Switch your VPN account to any server anytime with zero extra fees! Your username, password, and active days remain preserved.')}
                   </p>
                   <div className="mt-3 flex items-center gap-3">
                     <button
@@ -236,14 +238,14 @@ export const Dashboard: React.FC<DashboardProps> = ({
                       }}
                       className="text-xs text-indigo-400 hover:text-indigo-300 font-semibold flex items-center gap-1 cursor-pointer"
                     >
-                      Lihat Layanan Aktif <ArrowRight className="w-3.5 h-3.5" />
+                      {t('dash.view_active', 'View Active Services')} <ArrowRight className="w-3.5 h-3.5" />
                     </button>
                     <span className="text-slate-600">•</span>
                     <button
                       onClick={() => setIsDnsOpen(true)}
                       className="text-xs text-purple-400 hover:text-purple-300 font-semibold flex items-center gap-1 cursor-pointer"
                     >
-                      Kelola DNS Records <Globe className="w-3.5 h-3.5" />
+                      {t('dash.manage_dns', 'Manage DNS Records')} <Globe className="w-3.5 h-3.5" />
                     </button>
                   </div>
                 </div>
@@ -261,9 +263,9 @@ export const Dashboard: React.FC<DashboardProps> = ({
                   <Tag className="w-5 h-5 text-rose-400" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-white text-sm mb-1">Promo Spesial</h3>
+                  <h3 className="font-bold text-white text-sm mb-1">{t('dash.special_promo', 'Special Promotion')}</h3>
                   <p className="text-xs text-slate-400">
-                    Dapatkan <span className="text-rose-400 font-medium">diskon up to {discount}%</span> setiap pembelian layanan premium! Saldo Anda siap digunakan kapan saja.
+                    {t('dash.discount_info', `Enjoy up to ${discount}% discount on all premium service purchases! Balance is ready to use anytime.`)}
                   </p>
                 </div>
               </div>
@@ -279,14 +281,14 @@ export const Dashboard: React.FC<DashboardProps> = ({
           <div className="text-center sm:text-left flex-1 min-w-0">
             <h2 className="text-lg font-bold text-white truncate">{currentUser.displayName || currentUser.email?.split('@')[0]}</h2>
             <p className="text-xs text-slate-400 mb-1 truncate">{currentUser.email}</p>
-            <p className="text-[10px] text-slate-500">Member since {creationDate}</p>
+            <p className="text-[10px] text-slate-500">{t('dash.member_since', 'Member since')} {creationDate}</p>
           </div>
           <button 
             onClick={() => setIsSettingsOpen(true)} 
             className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold transition-all shadow-lg shadow-purple-600/20 flex items-center justify-center gap-2 cursor-pointer"
           >
             <Settings className="w-4 h-4" />
-            User Settings
+            {t('dash.user_settings', 'User Settings')}
           </button>
         </div>
 
@@ -298,7 +300,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
             <Wallet className="absolute -bottom-4 -right-4 w-32 h-32 text-white opacity-10" />
             <div className="relative z-10">
               <span className="text-emerald-100 text-xs font-semibold uppercase tracking-wider block mb-1">
-                SALDO AKUN
+                {t('dash.balance_card', 'ACCOUNT BALANCE')}
               </span>
               <div className="text-3xl sm:text-4xl font-black text-white tracking-tight mb-4">
                 Rp {userBalance.toLocaleString()}
@@ -309,7 +311,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
               className="w-full py-3 rounded-xl bg-white/20 hover:bg-white/30 text-white text-sm font-bold transition-all flex items-center justify-center gap-2 cursor-pointer backdrop-blur-sm relative z-10"
             >
               <Wallet className="w-4 h-4" />
-              Top Up Saldo
+              {t('dash.topup_btn', 'Top Up Balance')}
             </button>
           </div>
 
@@ -321,10 +323,10 @@ export const Dashboard: React.FC<DashboardProps> = ({
             <List className="absolute -bottom-4 -right-4 w-32 h-32 text-white opacity-10 group-hover:opacity-15 transition-opacity" />
             <div className="relative z-10">
               <span className="text-purple-100 text-xs font-semibold uppercase tracking-wider block mb-1">
-                TRANSAKSI
+                {t('dash.transactions_title', 'TRANSACTIONS')}
               </span>
-              <div className="text-2xl font-bold text-white mb-1">Riwayat & Mutasi</div>
-              <p className="text-purple-200 text-xs">Lihat semua catatan deposit & pembelian akun</p>
+              <div className="text-2xl font-bold text-white mb-1">{t('dash.history_title', 'History & Activity')}</div>
+              <p className="text-purple-200 text-xs">{t('dash.history_desc', 'View all deposit and account purchase records')}</p>
             </div>
             <button 
               onClick={(e) => {
@@ -334,7 +336,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
               className="w-full mt-4 py-3 rounded-xl bg-white/20 hover:bg-white/30 text-white text-sm font-bold transition-all flex items-center justify-center gap-2 cursor-pointer backdrop-blur-sm relative z-10"
             >
               <List className="w-4 h-4" />
-              View Transactions
+              {t('dash.view_tx', 'View Transactions')}
             </button>
           </div>
         </div>
@@ -399,7 +401,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
               </div>
             </div>
             <span className="text-[11px] font-semibold text-purple-400 group-hover:text-purple-300 flex items-center gap-1">
-              Kelola <ArrowRight className="w-3 h-3" />
+              {t('dash.manage', 'Manage')} <ArrowRight className="w-3.5 h-3.5" />
             </span>
           </div>
         </div>
@@ -409,10 +411,10 @@ export const Dashboard: React.FC<DashboardProps> = ({
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
               <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                Your Active Services ({accounts.length})
+                {t('dash.my_services', 'Your Active Services')} ({accounts.length})
               </h3>
               <p className="text-xs text-slate-400">
-                Kelola config, salin akun, atau pindahkan server secara instan
+                {t('dash.my_services_sub', 'Manage configs, copy credentials, or switch servers instantly')}
               </p>
             </div>
 
@@ -427,7 +429,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                       : 'text-slate-400 hover:text-slate-200'
                   }`}
                 >
-                  Semua ({accounts.length})
+                  {t('dash.filter_all', 'All')} ({accounts.length})
                 </button>
                 <button
                   onClick={() => setActiveFilter('free')}
@@ -437,7 +439,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                       : 'text-slate-400 hover:text-slate-200'
                   }`}
                 >
-                  Free ({freeServicesCount})
+                  {t('dash.filter_free', 'Free')} ({freeServicesCount})
                 </button>
                 <button
                   onClick={() => setActiveFilter('premium')}
@@ -447,7 +449,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                       : 'text-slate-400 hover:text-slate-200'
                   }`}
                 >
-                  Premium ({premiumServicesCount})
+                  {t('dash.filter_premium', 'Premium')} ({premiumServicesCount})
                 </button>
               </div>
             )}
@@ -457,25 +459,25 @@ export const Dashboard: React.FC<DashboardProps> = ({
           {accounts.length === 0 ? (
             <div className="bg-[#1e2335] rounded-2xl p-10 border border-slate-700/50 text-center flex flex-col items-center justify-center">
               <AlertTriangle className="w-12 h-12 text-slate-500 mb-4" />
-              <h4 className="text-white font-bold mb-2">No Services Found</h4>
+              <h4 className="text-white font-bold mb-2">{t('dash.no_services_title', 'No Services Found')}</h4>
               <p className="text-slate-400 text-sm mb-6 max-w-sm">
-                You haven't created any accounts yet. Buat akun SSH, VMess, VLESS, atau Trojan gratis sekarang!
+                {t('dash.no_services_desc', "You haven't created any accounts yet. Create a free SSH, VMess, VLESS, or Trojan account now!")}
               </p>
               <button 
                 onClick={() => navigate('/')}
                 className="px-6 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-sm font-bold shadow-lg shadow-purple-600/20 transition-all cursor-pointer"
               >
-                Create Your First Account
+                {t('dash.create_first', 'Create Your First Account')}
               </button>
             </div>
           ) : filteredAccounts.length === 0 ? (
             <div className="bg-[#1e2335] rounded-2xl p-8 border border-slate-700/50 text-center">
-              <p className="text-slate-400 text-sm">Tidak ada layanan pada kategori filter ini.</p>
+              <p className="text-slate-400 text-sm">{t('dash.no_filtered_services', 'No services found in this filter category.')}</p>
               <button
                 onClick={() => setActiveFilter('all')}
                 className="mt-3 text-xs text-purple-400 hover:underline cursor-pointer"
               >
-                Tampilkan Semua Layanan
+                {t('dash.show_all_services', 'Show All Services')}
               </button>
             </div>
           ) : (
@@ -511,7 +513,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                             {acc.server.country} ({acc.server.city})
                           </h4>
                           <span className="flex items-center gap-1 text-[11px] text-emerald-400 font-medium">
-                            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" /> Aktif
+                            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" /> {t('dash.active_status', 'Active')}
                           </span>
                         </div>
 
@@ -527,9 +529,9 @@ export const Dashboard: React.FC<DashboardProps> = ({
                           <Clock className="w-3.5 h-3.5 text-amber-400" />
                           <span>
                             {isExpired ? (
-                              <span className="text-rose-400 font-bold">Expired</span>
+                              <span className="text-rose-400 font-bold">{t('dash.expired', 'Expired')}</span>
                             ) : (
-                              <>Sisa <strong className="text-amber-400">{daysLeft} Hari</strong> (Exp: {new Date(acc.expiredAt).toLocaleDateString('id-ID')})</>
+                              <>{t('dash.days_left_prefix', 'Remaining')}: <strong className="text-amber-400">{daysLeft} {t('dash.days', 'Days')}</strong> (Exp: {new Date(acc.expiredAt).toLocaleDateString()})</>
                             )}
                           </span>
                         </div>
@@ -543,20 +545,20 @@ export const Dashboard: React.FC<DashboardProps> = ({
                       <button
                         onClick={() => setMigratingAccount(acc)}
                         className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white text-xs font-bold shadow-md shadow-indigo-600/20 flex items-center gap-1.5 transition-all cursor-pointer"
-                        title="Pindah Server Gratis"
+                        title={t('dash.btn_migrate', 'Migrate Server')}
                       >
                         <Repeat className="w-3.5 h-3.5" />
-                        Pindah Server
+                        {t('dash.btn_migrate', 'Migrate Server')}
                       </button>
 
                       {/* Detail / Config Button */}
                       <button
                         onClick={() => setInspectingAccount(acc)}
                         className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 flex items-center gap-1.5 transition-colors cursor-pointer"
-                        title="Lihat Konfigurasi Lengkap"
+                        title={t('dash.btn_detail', 'Detail Config')}
                       >
                         <Terminal className="w-3.5 h-3.5 text-purple-400" />
-                        Detail Config
+                        {t('dash.btn_detail', 'Detail Config')}
                       </button>
 
                       {/* Download txt */}
@@ -572,7 +574,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                       <button
                         onClick={() => handleDeleteService(acc)}
                         className="p-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 transition-colors cursor-pointer"
-                        title="Hapus Layanan"
+                        title={t('dash.btn_delete', 'Delete Service')}
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>

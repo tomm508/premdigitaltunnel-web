@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { db, collection, addDoc, onSnapshot, deleteDoc, doc } from '../lib/firebase';
 import { DnsRecord } from '../types';
+import { useLanguage } from '../context/LanguageContext';
 
 interface DnsRecordsModalProps {
   isOpen: boolean;
@@ -31,6 +32,7 @@ export const DnsRecordsModal: React.FC<DnsRecordsModalProps> = ({
   currentUser,
   defaultIp = '159.65.10.28'
 }) => {
+  const { t } = useLanguage();
   const [records, setRecords] = useState<DnsRecord[]>([]);
   const [subdomain, setSubdomain] = useState('');
   const [recordType, setRecordType] = useState<'A' | 'CNAME' | 'AAAA' | 'TXT'>('A');
@@ -186,10 +188,10 @@ export const DnsRecordsModal: React.FC<DnsRecordsModalProps> = ({
             </div>
             <div>
               <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                DNS Records & Subdomain Pointing
+                {t('dns.modal_title', 'DNS Records & Subdomain Pointing')}
               </h2>
               <p className="text-xs text-slate-400">
-                Kelola pointing domain/subdomain Cloudflare gratis untuk server VPN & tunnel Anda
+                {t('dns.modal_sub', 'Manage free Cloudflare domain/subdomain pointing for your VPN and tunnel servers')}
               </p>
             </div>
           </div>
@@ -207,7 +209,7 @@ export const DnsRecordsModal: React.FC<DnsRecordsModalProps> = ({
           {/* Create Form Card */}
           <div className="bg-[#181d2f] border border-slate-700/70 rounded-xl p-5 shadow-lg">
             <h3 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
-              <Plus className="w-4 h-4 text-purple-400" /> Tambah Subdomain / DNS Record Baru
+              <Plus className="w-4 h-4 text-purple-400" /> {t('dns.add_title', 'Add New Subdomain / DNS Record')}
             </h3>
             
             <form onSubmit={handleCreateRecord} className="space-y-4">
@@ -216,26 +218,26 @@ export const DnsRecordsModal: React.FC<DnsRecordsModalProps> = ({
                 {/* Subdomain Input */}
                 <div className="md:col-span-5">
                   <label className="block text-[11px] font-semibold text-slate-400 mb-1">
-                    Nama Subdomain
+                    {t('dns.subdomain_name', 'Subdomain Name')}
                   </label>
                   <div className="relative flex items-center">
                     <input 
                       type="text"
                       value={subdomain}
                       onChange={(e) => setSubdomain(e.target.value.toLowerCase().replace(/[^a-z0-9-_]/g, ''))}
-                      placeholder="contoh: myserver1"
+                      placeholder={t('dns.subdomain_placeholder', 'e.g. myserver1')}
                       className="w-full bg-[#0f111a] border border-slate-700 rounded-lg px-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-purple-500"
                     />
                   </div>
                   <span className="text-[10px] text-purple-300 font-mono mt-1 block truncate">
-                    Preview: {fullHostname}
+                    {t('dns.preview_label', 'Preview')}: {fullHostname}
                   </span>
                 </div>
 
                 {/* Type */}
                 <div className="md:col-span-2">
                   <label className="block text-[11px] font-semibold text-slate-400 mb-1">
-                    Tipe
+                    {t('dns.type_label', 'Type')}
                   </label>
                   <select
                     value={recordType}
@@ -252,13 +254,13 @@ export const DnsRecordsModal: React.FC<DnsRecordsModalProps> = ({
                 {/* Target IP / Value */}
                 <div className="md:col-span-5">
                   <label className="block text-[11px] font-semibold text-slate-400 mb-1 flex items-center justify-between">
-                    <span>Target IP / Host</span>
+                    <span>{t('dns.target_label', 'Target IP / Host')}</span>
                     <button
                       type="button"
                       onClick={() => setTarget(defaultIp)}
                       className="text-[10px] text-indigo-400 hover:underline cursor-pointer"
                     >
-                      Pakai IP VPS ({defaultIp})
+                      {t('dns.use_vps_ip', 'Use VPS IP')} ({defaultIp})
                     </button>
                   </label>
                   <input 
@@ -284,11 +286,11 @@ export const DnsRecordsModal: React.FC<DnsRecordsModalProps> = ({
                     <span className="text-xs font-medium text-slate-300 flex items-center gap-1.5">
                       {isProxied ? (
                         <span className="flex items-center gap-1 text-amber-400">
-                          <Cloud className="w-3.5 h-3.5 fill-amber-400/20" /> Cloudflare Proxied (CDN On)
+                          <Cloud className="w-3.5 h-3.5 fill-amber-400/20" /> {t('dns.proxied_label', 'Cloudflare Proxied (CDN On)')}
                         </span>
                       ) : (
                         <span className="flex items-center gap-1 text-slate-400">
-                          <CloudOff className="w-3.5 h-3.5" /> DNS Only (Bypass CDN - Rekomendasi SSH)
+                          <CloudOff className="w-3.5 h-3.5" /> {t('dns.dnsonly_label', 'DNS Only (Bypass CDN - SSH/VPN Recommended)')}
                         </span>
                       )}
                     </span>
@@ -313,7 +315,7 @@ export const DnsRecordsModal: React.FC<DnsRecordsModalProps> = ({
                   ) : (
                     <Plus className="w-4 h-4" />
                   )}
-                  Simpan DNS Record
+                  {t('dns.save_btn', 'Save DNS Record')}
                 </button>
               </div>
             </form>
@@ -323,19 +325,19 @@ export const DnsRecordsModal: React.FC<DnsRecordsModalProps> = ({
           <div>
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                <Globe className="w-4 h-4 text-purple-400" /> Daftar DNS Records Anda ({records.length})
+                <Globe className="w-4 h-4 text-purple-400" /> {t('dns.your_records', 'Your DNS Records')} ({records.length})
               </h3>
               <span className="text-[11px] text-slate-400">
-                Poin domain aktif & terintegrasi Cloudflare
+                {t('dns.cf_integrated', 'Active domain pointing with Cloudflare integration')}
               </span>
             </div>
 
             {records.length === 0 ? (
               <div className="bg-[#181d2f] border border-slate-800 rounded-xl p-8 text-center">
                 <Globe className="w-10 h-10 text-slate-600 mx-auto mb-2" />
-                <h4 className="text-white font-semibold text-sm">Belum Ada DNS Record</h4>
+                <h4 className="text-white font-semibold text-sm">{t('dns.empty_title', 'No DNS Records Yet')}</h4>
                 <p className="text-xs text-slate-400 mt-1 max-w-sm mx-auto">
-                  Buat subdomain kustom pertama Anda di atas untuk menghubungkan IP VPS dengan nama domain <span className="text-purple-400 font-mono">.premdigital.web.id</span>
+                  {t('dns.empty_desc', 'Create your first custom subdomain above to point any VPS IP with')} <span className="text-purple-400 font-mono">.premdigital.web.id</span>
                 </p>
               </div>
             ) : (
@@ -361,7 +363,7 @@ export const DnsRecordsModal: React.FC<DnsRecordsModalProps> = ({
                             <button
                               onClick={() => handleCopy(rec.hostname, `host-${rec.id}`)}
                               className="p-1 rounded text-slate-400 hover:text-white bg-slate-800/80 hover:bg-slate-700 cursor-pointer"
-                              title="Salin Hostname"
+                              title={t('dns.copy_hostname', 'Copy Hostname')}
                             >
                               {copiedId === `host-${rec.id}` ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
                             </button>
@@ -398,12 +400,12 @@ export const DnsRecordsModal: React.FC<DnsRecordsModalProps> = ({
                             title="Uji DNS Propagation"
                           >
                             <Activity className={`w-3.5 h-3.5 text-cyan-400 ${isTesting ? 'animate-spin' : ''}`} />
-                            {isTesting ? 'Checking...' : 'Test DNS'}
+                            {isTesting ? t('dns.checking', 'Checking...') : t('dns.test_btn', 'Test DNS')}
                           </button>
                           <button
                             onClick={() => handleDeleteRecord(rec.id, rec.hostname)}
                             className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 transition-colors cursor-pointer"
-                            title="Hapus Record"
+                            title={t('dns.delete_title', 'Delete Record')}
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -419,12 +421,12 @@ export const DnsRecordsModal: React.FC<DnsRecordsModalProps> = ({
 
         {/* Footer */}
         <div className="p-4 border-t border-slate-800 bg-[#161b2e] flex items-center justify-between text-xs text-slate-400">
-          <span>{records.length} Subdomain DNS terdaftar</span>
+          <span>{records.length} {t('dns.footer_count', 'DNS Subdomains Registered')}</span>
           <button
             onClick={onClose}
             className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold transition-colors cursor-pointer"
           >
-            Tutup
+            {t('modal.close', 'Close')}
           </button>
         </div>
       </div>

@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { db, collection, onSnapshot, query, orderBy } from '../lib/firebase';
 import { TransactionItem } from '../types';
+import { useLanguage } from '../context/LanguageContext';
 
 interface TransactionsModalProps {
   isOpen: boolean;
@@ -34,6 +35,7 @@ export const TransactionsModal: React.FC<TransactionsModalProps> = ({
   onOpenTopup,
   userBalance
 }) => {
+  const { t, language } = useLanguage();
   const [activeTab, setActiveTab] = useState<'all' | 'topup' | 'services' | 'migration'>('all');
   const [transactions, setTransactions] = useState<TransactionItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -139,20 +141,20 @@ export const TransactionsModal: React.FC<TransactionsModalProps> = ({
       case 'success':
         return (
           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-            <CheckCircle2 className="w-3 h-3" /> Berhasil
+            <CheckCircle2 className="w-3 h-3" /> {t('tx.status_success', 'Success')}
           </span>
         );
       case 'pending':
         return (
           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20">
-            <Clock className="w-3 h-3 animate-spin" /> Verifikasi
+            <Clock className="w-3 h-3 animate-spin" /> {t('tx.status_pending', 'Pending Verification')}
           </span>
         );
       case 'rejected':
       case 'failed':
         return (
           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/20">
-            <XCircle className="w-3 h-3" /> Ditolak
+            <XCircle className="w-3 h-3" /> {t('tx.status_rejected', 'Rejected')}
           </span>
         );
       default:
@@ -172,10 +174,10 @@ export const TransactionsModal: React.FC<TransactionsModalProps> = ({
             </div>
             <div>
               <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                Riwayat Transaksi
+                {t('tx.modal_title', 'Transaction History')}
               </h2>
               <p className="text-xs text-slate-400">
-                Catatan deposit saldo, pembelian layanan, dan pindah server
+                {t('tx.modal_subtitle', 'Deposit records, service purchases, and server migrations')}
               </p>
             </div>
           </div>
@@ -190,7 +192,7 @@ export const TransactionsModal: React.FC<TransactionsModalProps> = ({
         {/* Current Balance Banner */}
         <div className="px-5 py-3.5 bg-gradient-to-r from-purple-950/40 via-indigo-950/40 to-slate-900 border-b border-slate-800 flex items-center justify-between">
           <div>
-            <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider">Saldo Akun Anda</span>
+            <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider">{t('tx.current_balance', 'Your Account Balance')}</span>
             <div className="text-xl font-bold text-white">
               Rp {userBalance.toLocaleString()}
             </div>
@@ -203,7 +205,7 @@ export const TransactionsModal: React.FC<TransactionsModalProps> = ({
             className="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white text-xs font-bold shadow-md shadow-emerald-600/20 flex items-center gap-1.5 transition-all cursor-pointer"
           >
             <Wallet className="w-3.5 h-3.5" />
-            Top Up Saldo
+            {t('dash.topup_btn', 'Top Up Balance')}
           </button>
         </div>
 
@@ -217,7 +219,7 @@ export const TransactionsModal: React.FC<TransactionsModalProps> = ({
                 : 'bg-slate-800/60 text-slate-400 hover:text-slate-200'
             }`}
           >
-            Semua ({transactions.length})
+            {t('tx.tab_all', 'All')} ({transactions.length})
           </button>
           <button
             onClick={() => setActiveTab('topup')}
@@ -227,7 +229,7 @@ export const TransactionsModal: React.FC<TransactionsModalProps> = ({
                 : 'bg-slate-800/60 text-slate-400 hover:text-slate-200'
             }`}
           >
-            Deposit ({transactions.filter(t => t.type === 'topup').length})
+            {t('tx.tab_deposit', 'Deposit')} ({transactions.filter(t => t.type === 'topup').length})
           </button>
           <button
             onClick={() => setActiveTab('services')}
@@ -237,7 +239,7 @@ export const TransactionsModal: React.FC<TransactionsModalProps> = ({
                 : 'bg-slate-800/60 text-slate-400 hover:text-slate-200'
             }`}
           >
-            Layanan VPN ({transactions.filter(t => t.type === 'service_creation').length})
+            {t('tx.tab_services', 'VPN Services')} ({transactions.filter(t => t.type === 'service_creation').length})
           </button>
           <button
             onClick={() => setActiveTab('migration')}
@@ -247,7 +249,7 @@ export const TransactionsModal: React.FC<TransactionsModalProps> = ({
                 : 'bg-slate-800/60 text-slate-400 hover:text-slate-200'
             }`}
           >
-            Pindah Server ({transactions.filter(t => t.type === 'server_migration').length})
+            {t('tx.tab_migration', 'Migrate Server')} ({transactions.filter(t => t.type === 'server_migration').length})
           </button>
         </div>
 
@@ -256,20 +258,20 @@ export const TransactionsModal: React.FC<TransactionsModalProps> = ({
           {isLoading ? (
             <div className="py-12 flex flex-col items-center justify-center text-slate-500">
               <RefreshCw className="w-8 h-8 animate-spin text-purple-500 mb-3" />
-              <p className="text-sm">Memuat riwayat transaksi...</p>
+              <p className="text-sm">{t('tx.loading', 'Loading transaction history...')}</p>
             </div>
           ) : filteredTransactions.length === 0 ? (
             <div className="py-12 flex flex-col items-center justify-center text-center">
               <div className="w-14 h-14 rounded-full bg-slate-800/80 flex items-center justify-center text-slate-600 mb-3">
                 <Filter className="w-6 h-6" />
               </div>
-              <h3 className="text-white font-semibold text-sm mb-1">Belum Ada Transaksi</h3>
+              <h3 className="text-white font-semibold text-sm mb-1">{t('tx.empty_title', 'No Transactions Yet')}</h3>
               <p className="text-xs text-slate-400 max-w-xs mb-4">
                 {activeTab === 'topup' 
-                  ? 'Anda belum pernah melakukan deposit saldo.'
+                  ? t('tx.empty_topup', "You haven't made any balance deposits yet.")
                   : activeTab === 'migration'
-                  ? 'Anda belum pernah melakukan pemindahan server.'
-                  : 'Belum ada riwayat aktivitas pada kategori ini.'}
+                  ? t('tx.empty_migration', "You haven't performed any server migrations yet.")
+                  : t('tx.empty_general', 'No activity history found in this category.')}
               </p>
               {activeTab === 'topup' && (
                 <button
@@ -279,13 +281,14 @@ export const TransactionsModal: React.FC<TransactionsModalProps> = ({
                   }}
                   className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold transition-all cursor-pointer"
                 >
-                  Deposit Saldo Sekarang
+                  {t('tx.deposit_now', 'Deposit Balance Now')}
                 </button>
               )}
             </div>
           ) : (
             filteredTransactions.map((tx) => {
-              const dateStr = new Date(tx.createdAt).toLocaleDateString('id-ID', {
+              const dateLocale = language === 'id' ? 'id-ID' : 'en-US';
+              const dateStr = new Date(tx.createdAt).toLocaleDateString(dateLocale, {
                 day: 'numeric',
                 month: 'short',
                 year: 'numeric',
@@ -339,7 +342,7 @@ export const TransactionsModal: React.FC<TransactionsModalProps> = ({
                   </div>
 
                   <div className="text-right sm:border-l sm:border-slate-800 sm:pl-4 flex sm:flex-col items-center sm:items-end justify-between sm:justify-center">
-                    <span className="text-[11px] text-slate-500 sm:hidden">Nominal:</span>
+                    <span className="text-[11px] text-slate-500 sm:hidden">{t('tx.amount_label', 'Amount')}:</span>
                     <span className={`text-sm font-extrabold font-mono ${
                       isTopup 
                         ? 'text-emerald-400' 
@@ -347,7 +350,7 @@ export const TransactionsModal: React.FC<TransactionsModalProps> = ({
                         ? 'text-indigo-400'
                         : 'text-purple-300'
                     }`}>
-                      {isTopup ? `+Rp ${tx.amount.toLocaleString()}` : tx.amount > 0 ? `-Rp ${tx.amount.toLocaleString()}` : 'GRATIS (Rp 0)'}
+                      {isTopup ? `+Rp ${tx.amount.toLocaleString()}` : tx.amount > 0 ? `-Rp ${tx.amount.toLocaleString()}` : t('tx.free_badge', 'FREE (Rp 0)')}
                     </span>
                     <span className="text-[10px] text-slate-500 hidden sm:block">
                       ID: {tx.id.substring(0, 8)}...
@@ -361,12 +364,12 @@ export const TransactionsModal: React.FC<TransactionsModalProps> = ({
 
         {/* Footer */}
         <div className="p-4 border-t border-slate-800 bg-[#161b2e] flex items-center justify-between text-xs text-slate-400">
-          <span>Menampilkan {filteredTransactions.length} transaksi</span>
+          <span>{t('tx.showing', 'Showing')} {filteredTransactions.length} {t('tx.items', 'transactions')}</span>
           <button
             onClick={onClose}
             className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold transition-colors cursor-pointer"
           >
-            Tutup
+            {t('modal.close', 'Close')}
           </button>
         </div>
       </div>

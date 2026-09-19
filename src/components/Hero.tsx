@@ -1,5 +1,6 @@
 import React from 'react';
-import { ShieldCheck, Globe2, ShieldAlert, Zap, ArrowRight, Sparkles } from 'lucide-react';
+import { ShieldCheck, Globe2, ShieldAlert, Zap } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
 
 interface HeroProps {
   isDark: boolean;
@@ -7,7 +8,9 @@ interface HeroProps {
   onExploreProtocols: () => void;
 }
 
-export const Hero: React.FC<HeroProps> = ({ isDark, onGetStarted, onExploreProtocols }) => {
+export const Hero: React.FC<HeroProps> = ({ isDark }) => {
+  const { t } = useLanguage();
+
   return (
     <section id="hero" className="relative pt-12 pb-16 md:pt-20 md:pb-24 overflow-hidden">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
@@ -21,16 +24,16 @@ export const Hero: React.FC<HeroProps> = ({ isDark, onGetStarted, onExploreProto
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
             <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
           </span>
-          <span>Keep Alive & Secure, by premdigital.web.id</span>
+          <span>{t('hero.badge', 'Keep Alive & Secure, by premdigital.web.id')}</span>
         </div>
 
         {/* Headline */}
         <h1 className={`text-3xl sm:text-5xl md:text-6xl font-extrabold tracking-tight mb-6 transition-colors ${
           isDark ? 'text-white' : 'text-slate-900'
         }`}>
-          Fast Secure <br className="hidden sm:block" />
+          {t('hero.title_prefix', 'Fast Secure')} <br className="hidden sm:block" />
           <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-500 via-indigo-500 to-blue-500">
-            SSH VPN Tunneling
+            {t('hero.title_highlight', 'SSH VPN Tunneling')}
           </span>
         </h1>
 
@@ -38,7 +41,7 @@ export const Hero: React.FC<HeroProps> = ({ isDark, onGetStarted, onExploreProto
         <p className={`text-sm sm:text-base md:text-lg max-w-2xl mx-auto leading-relaxed mb-10 transition-colors ${
           isDark ? 'text-slate-300' : 'text-slate-600'
         }`}>
-          Create VPN and SSH tunneling accounts in seconds. <strong className={isDark ? 'text-purple-300 font-semibold' : 'text-purple-700 font-semibold'}>SSH Tunnel WebSocket, V2Ray Vmess, Xray Vless, Trojan VPN</strong> with global servers and zero logs policy.
+          {t('hero.subtitle', 'Create VPN and SSH tunneling accounts in seconds. SSH Tunnel WebSocket, V2Ray Vmess, Xray Vless, Trojan VPN with global servers and zero logs policy.')}
         </p>
 
         {/* 4 Feature Cards (2x2 Grid) */}
@@ -58,7 +61,7 @@ export const Hero: React.FC<HeroProps> = ({ isDark, onGetStarted, onExploreProto
             <span className={`text-xs sm:text-sm font-semibold transition-colors ${
               isDark ? 'text-slate-100' : 'text-slate-800'
             }`}>
-              Secure Encryption
+              {t('hero.encryption', 'Secure Encryption')}
             </span>
           </div>
 
@@ -77,7 +80,7 @@ export const Hero: React.FC<HeroProps> = ({ isDark, onGetStarted, onExploreProto
             <span className={`text-xs sm:text-sm font-semibold transition-colors ${
               isDark ? 'text-slate-100' : 'text-slate-800'
             }`}>
-              Global Servers
+              {t('hero.servers', 'Global Servers')}
             </span>
           </div>
 
@@ -96,7 +99,7 @@ export const Hero: React.FC<HeroProps> = ({ isDark, onGetStarted, onExploreProto
             <span className={`text-xs sm:text-sm font-semibold transition-colors ${
               isDark ? 'text-slate-100' : 'text-slate-800'
             }`}>
-              Zero Logs
+              {t('hero.zero_log', 'Zero Logging')}
             </span>
           </div>
 
@@ -115,12 +118,10 @@ export const Hero: React.FC<HeroProps> = ({ isDark, onGetStarted, onExploreProto
             <span className={`text-xs sm:text-sm font-semibold transition-colors ${
               isDark ? 'text-slate-100' : 'text-slate-800'
             }`}>
-              Instant Setup
+              {t('hero.speed', 'High Speed')}
             </span>
           </div>
         </div>
-
-        {/* Action Button Removed as requested */}
       </div>
     </section>
   );

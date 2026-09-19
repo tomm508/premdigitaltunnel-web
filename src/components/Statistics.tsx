@@ -1,6 +1,7 @@
 import React from 'react';
-import { Server, Zap, FileText, Users, Activity } from 'lucide-react';
+import { Server, Zap, FileText, Users } from 'lucide-react';
 import { PlatformStat } from '../types';
+import { useLanguage } from '../context/LanguageContext';
 
 interface StatisticsProps {
   stats: PlatformStat;
@@ -8,6 +9,8 @@ interface StatisticsProps {
 }
 
 export const Statistics: React.FC<StatisticsProps> = ({ stats, isDark }) => {
+  const { t } = useLanguage();
+
   return (
     <section id="statistics" className="py-12 md:py-20 relative">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -22,17 +25,17 @@ export const Statistics: React.FC<StatisticsProps> = ({ stats, isDark }) => {
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
             </span>
-            <span>Live Statistics</span>
+            <span>{t('stats.live_badge', 'Live Statistics')}</span>
           </div>
           <h2 className={`text-2xl sm:text-4xl font-extrabold tracking-tight mb-3 transition-colors ${
             isDark ? 'text-white' : 'text-slate-900'
           }`}>
-            Platform Statistics
+            {t('stats.title', 'Platform Statistics')}
           </h2>
           <p className={`text-sm sm:text-base max-w-xl mx-auto transition-colors ${
             isDark ? 'text-slate-300' : 'text-slate-600'
           }`}>
-            Real-time statistics of our VPN and SSH tunneling platform
+            {t('stats.subtitle', 'Real-time statistics of our VPN and SSH tunneling platform')}
           </p>
         </div>
 
@@ -57,8 +60,8 @@ export const Statistics: React.FC<StatisticsProps> = ({ stats, isDark }) => {
             </div>
             <div className={`text-sm font-bold mb-0.5 ${
               isDark ? 'text-slate-200' : 'text-slate-700'
-            }`}>Active Servers</div>
-            <div className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Global infrastructure</div>
+            }`}>{t('stats.active_servers', 'Active Servers')}</div>
+            <div className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{t('stats.active_servers_sub', 'Global infrastructure')}</div>
           </div>
 
           {/* Services Today */}
@@ -80,8 +83,8 @@ export const Statistics: React.FC<StatisticsProps> = ({ stats, isDark }) => {
             </div>
             <div className={`text-sm font-bold mb-0.5 ${
               isDark ? 'text-slate-200' : 'text-slate-700'
-            }`}>Services Today</div>
-            <div className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Created today</div>
+            }`}>{t('stats.services_today', 'Services Today')}</div>
+            <div className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{t('stats.services_today_sub', 'Created today')}</div>
           </div>
 
           {/* Total Accounts */}
@@ -103,8 +106,8 @@ export const Statistics: React.FC<StatisticsProps> = ({ stats, isDark }) => {
             </div>
             <div className={`text-sm font-bold mb-0.5 ${
               isDark ? 'text-slate-200' : 'text-slate-700'
-            }`}>Total Accounts</div>
-            <div className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>All time created</div>
+            }`}>{t('stats.total_accounts', 'Total Accounts')}</div>
+            <div className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{t('stats.total_accounts_sub', 'All time created')}</div>
           </div>
 
           {/* Total Web Visitors (Pengunjung Masuk Web) */}
@@ -126,8 +129,8 @@ export const Statistics: React.FC<StatisticsProps> = ({ stats, isDark }) => {
             </div>
             <div className={`text-sm font-bold mb-0.5 ${
               isDark ? 'text-slate-200' : 'text-slate-700'
-            }`}>Total Visitors</div>
-            <div className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Pengunjung masuk ke web</div>
+            }`}>{t('stats.total_visitors', 'Total Visitors')}</div>
+            <div className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{t('stats.total_visitors_sub', 'Website visitors')}</div>
           </div>
         </div>
 
@@ -143,7 +146,7 @@ export const Statistics: React.FC<StatisticsProps> = ({ stats, isDark }) => {
           <h3 className={`text-lg sm:text-xl font-bold text-center mb-6 transition-colors ${
             isDark ? 'text-white' : 'text-slate-900'
           }`}>
-            Today's Service Breakdown
+            {t('stats.breakdown_title', "Today's Service Breakdown")}
           </h3>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
