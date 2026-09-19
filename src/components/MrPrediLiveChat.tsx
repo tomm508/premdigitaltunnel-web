@@ -8,7 +8,59 @@ import {
   Minimize2,
   Maximize2
 } from 'lucide-react';
-import { askGemini } from '../lib/gemini';
+
+// Fungsi Gemini AI
+async function askGemini(prompt: string, history: Array<{ role: 'user' | 'model'; text: string }> = []): Promise<string> {
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY || '';
+  
+  if (!apiKey) {
+    throw new Error('API_KEY_MISSING');
+  }
+
+  const systemInstruction = `
+Kamu adalah Mr. Predi, Customer Support AI Pintar & Resmi dari PremDigital TUNNEL (web penyedia SSH WS, V2Ray VMess/VLESS, Trojan GO, dan bug SNI).
+Gaya bicaramu: Ramah, santai, gaul khas teknisi tunneling Indonesia, panggil pengunjung "Kak" atau "Sobat PremDigital".
+Tugasmu:
+- Menjawab pertanyaan seputar bug SNI (Vidio, Sosmed, YouTube, Belajar),
+- Solusi koneksi bengong / RTO (trik mode pesawat, ganti port TLS 443 / non-TLS 80),
+- Cara pasang di aplikasi v2rayNG, HTTP Custom, OpenTunnel, Clash,
+- Rekomendasi server game low-ping (SG / ID).
+Jawaban harus padat, jelas, akurat, dan solutif.
+`;
+
+  const contents = [
+    ...history.map(h => ({
+      role: h.role,
+      parts: [{ text: h.text }]
+    })),
+    {
+      role: 'user',
+      parts: [{ text: prompt }]
+    }
+  ];
+
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents,
+      system_instruction: {
+        parts: [{ text: systemInstruction }]
+      }
+    })
+  });
+
+  if (!response.ok) {
+    const errData = await response.json().catch(() => ({}));
+    throw new Error(errData?.error?.message || 'Gagal terhubung ke Gemini API');
+  }
+
+  const data = await response.json();
+  const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+  return text || 'Halo Kak, ada yang bisa Mr. Predi bantu lagi?';
+}
 
 interface Message {
   id: string;
@@ -197,9 +249,7 @@ export const MrPrediLiveChat: React.FC<MrPrediLiveChatProps> = ({
       setIsTyping(false);
     }, 650);
   };
-
-  // PANGGIL LANGSUNG KE GOOGLE GEMINI AI TANPA BUTUH SERVER
-  const handleSendMessage = async (e: React.FormEvent) => {
+          const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputVal.trim() || isTyping) return;
 
@@ -224,8 +274,9 @@ export const MrPrediLiveChat: React.FC<MrPrediLiveChatProps> = ({
       { label: '📱 Racikan Bug SNI', action: 'menu_sni' },
       { label: '💎 Akun VIP & Saldo', action: 'action_goto_topup' }
     ];
-            try {
-      // Panggil LIVE Google Gemini AI Asli (Direct Client-Side)
+
+    try {
+      // Direct Client-Side
       const chatHistory = messages.slice(-4).map(m => ({
         role: (m.sender === 'mr_predi' ? 'model' : 'user') as 'model' | 'user',
         text: m.text
