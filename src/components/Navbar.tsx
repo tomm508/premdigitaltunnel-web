@@ -281,9 +281,6 @@ export const Navbar: React.FC<NavbarProps> = ({
         <div id="mobile-menu-drawer" className={`md:hidden border-t px-4 pt-3 pb-6 space-y-3 ${
           isDark ? 'bg-[#120e2d] border-purple-900/40' : 'bg-white border-purple-200 shadow-lg'
         }`}>
-          {/* Mobile Language Selector */}
-          <LanguageSelector isDark={isDark} isMobile={true} />
-
           <div className={`rounded-2xl p-2 border space-y-1 ${
             isDark ? 'bg-[#1a143f] border-purple-500/20' : 'bg-purple-50/70 border-purple-200'
           }`}>
