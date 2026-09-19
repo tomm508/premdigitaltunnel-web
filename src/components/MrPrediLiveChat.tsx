@@ -34,7 +34,7 @@ export const MrPrediLiveChat: React.FC<MrPrediLiveChatProps> = ({
     {
       id: 'welcome',
       sender: 'mr_predi',
-      text: 'Yo halo Kak! Kenalin, gue **Mr. Predi** 😎🎩 Asisten virtual resmi di **PremDigital TUNNEL** (ala Maya AXISnet tapi versi ganteng dan pro tunneling wkwk).\n\nAda yang bisa Mr. Predi bantu hari ini? Mau racik bug kuota, cek server low ping, atau cari config vmess/vless?',
+      text: 'Yo halo Kak! Kenalin, gue **Mr. Predi** 😎🎩\n\nAda yang bisa Mr. Predi bantu hari ini?',
       time: 'Online',
       options: [
         { label: '🚀 Cek Status Server & Kuota', action: 'menu_server' },
@@ -102,7 +102,7 @@ export const MrPrediLiveChat: React.FC<MrPrediLiveChatProps> = ({
           break;
 
         case 'menu_server':
-          replyText = '🌐 **Status Server & Kuota Gratis dari Mr. Predi**\n\n• Server kita ada di **Singapore 🇸🇬, Indonesia 🇮🇩, dan USA 🇺🇸**.\n• Kuota akun free di-reset otomatis berkala.\n• Kalau server favorit Kakak lagi full, tinggal colek server node lainnya atau tunggu reset ya!';
+          replyText = '🌐 **Status Server & Kuota Gratis dari Mr. Predi**\n\n• Server kita ada di **Singapore 🇸🇬 dan Indonesia 🇮🇩**.\n• Kuota akun free di-reset otomatis berkala.\n• Kalau server favorit Kakak lagi full, tinggal colek server node lainnya atau tunggu reset ya!';
           replyOptions = [
             { label: '🔄 Gas Buka Halaman Server', action: 'action_goto_servers' },
             { label: '💎 Mau Server VIP Anti Penuh?', action: 'menu_premium' },
