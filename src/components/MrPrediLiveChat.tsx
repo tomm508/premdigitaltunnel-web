@@ -6,7 +6,8 @@ import {
   RotateCcw, 
   ChevronRight, 
   Minimize2,
-  Maximize2
+  Maximize2,
+  Bot
 } from 'lucide-react';
 
 interface Message {
@@ -14,7 +15,7 @@ interface Message {
   sender: 'mr_predi' | 'user';
   text: string;
   time: string;
-  options?: Array<{ label: string; action: string }>;
+  suggestedPrompts?: string[];
 }
 
 interface MrPrediLiveChatProps {
@@ -24,25 +25,29 @@ interface MrPrediLiveChatProps {
   onOpenTopup?: () => void;
 }
 
+const SYSTEM_PROMPT = `
+Kamu adalah Mr. Predi, Asisten AI Pintar Resmi dari PremDigital TUNNEL.
+Kepribadianmu: Gaul, ramah, ahli seluk-beluk tunneling Indonesia (bug SNI Vidio/Sosmed/Edu/YouTube, v2rayNG, HTTP Custom, SSH WS CDN Cloudflare, VLESS gRPC, Trojan GO, dan solusi bengong/RTO).
+Sapa pengguna dengan "Kak" atau "Sobat PremDigital".
+Format jawaban dengan Markdown rapi, to the point, dan solutif.
+`;
+
 export const MrPrediLiveChat: React.FC<MrPrediLiveChatProps> = ({
   isOpen,
-  onClose,
-  onNavigateToServices,
-  onOpenTopup
+  onClose
 }) => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 'welcome',
       sender: 'mr_predi',
-      text: 'Yo halo Kak! Kenalin, gue **Mr. Predi** 😎🎩 Asisten AI resmi PremDigital TUNNEL.\nAda yang bisa Mr. Predi bantu hari ini? Tanya apa aja bebas atau klik menu di bawah!',
+      text: 'Yo halo Kak! Kenalin, gue **Mr. Predi** 😎🎩 Asisten AI resmi PremDigital TUNNEL.\n\nAda yang bisa Mr. Predi bantu hari ini? Kakak bisa tanya bebas apa saja tentang racikan Bug SNI, rekomendasi server low-ping untuk game, panduan v2rayNG/HTTP Custom, atau kendala koneksi bengong/RTO!',
       time: 'Online',
-      options: [
-        { label: '🚀 Cek Status Server & Kuota', action: 'menu_server' },
-        { label: '📱 Racikan Bug SNI Kuota', action: 'menu_sni' },
-        { label: '⚡ Tutorial Setup SSH WS & V2Ray', action: 'menu_setup' },
-        { label: '🎮 Server Khusus Game (Anti Lag)', action: 'menu_gaming' },
-        { label: '💎 Akun Premium & Topup Saldo', action: 'menu_premium' },
-        { label: '🛠️ Solusi Bengong / Disconnect / RTO', action: 'menu_troubleshoot' }
+      suggestedPrompts: [
+        '🚀 Rekomendasi server buat main game (ML/FF)',
+        '📱 Racikan Bug SNI kuota paling joss',
+        '⚡ Cara pasang akun VLESS di v2rayNG',
+        '🛠️ Kenapa SSH terhubung tapi bengong?',
+        '💎 Info reset kuota gratis & akun VIP'
       ]
     }
   ]);
@@ -65,175 +70,29 @@ export const MrPrediLiveChat: React.FC<MrPrediLiveChatProps> = ({
     return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
-  const handleAction = (action: string, userLabel?: string) => {
-    if (userLabel) {
-      setMessages(prev => [
-        ...prev,
-        {
-          id: Math.random().toString(),
-          sender: 'user',
-          text: userLabel,
-          time: getTimeString()
-        }
-      ]);
-    }
+  // FUNGSI UTAMA: MENGIRIM PERTANYAAN KE OTAK AI GEMINI ASLI
+  const handleSendPrompt = async (promptText: string) => {
+    if (!promptText.trim() || isTyping) return;
 
-    setIsTyping(true);
+    const userMessage: Message = {
+      id: Math.random().toString(),
+      sender: 'user',
+      text: promptText,
+      time: getTimeString()
+    };
 
-    setTimeout(() => {
-      let replyText = '';
-      let replyOptions: Message['options'] = [
-        { label: '🏠 Menu Utama Mr. Predi', action: 'main_menu' },
-        { label: '🚀 Cek Server Gratis', action: 'menu_server' },
-        { label: '📱 Racikan Bug SNI', action: 'menu_sni' }
-      ];
-
-      switch (action) {
-        case 'main_menu':
-          replyText = 'Siap! Ini menu utama Mr. Predi ya Kak. Mau bahas yang mana nih:';
-          replyOptions = [
-            { label: '🚀 Cek Status Server & Kuota', action: 'menu_server' },
-            { label: '📱 Racikan Bug SNI Kuota', action: 'menu_sni' },
-            { label: '⚡ Tutorial Setup SSH WS & V2Ray', action: 'menu_setup' },
-            { label: '🎮 Server Khusus Game (Anti Lag)', action: 'menu_gaming' },
-            { label: '💎 Akun Premium & Topup Saldo', action: 'menu_premium' },
-            { label: '🛠️ Solusi Bengong / RTO', action: 'menu_troubleshoot' }
-          ];
-          break;
-
-        case 'menu_server':
-          replyText = '🌐 **Status Server & Kuota Gratis dari Mr. Predi**\n\n• Server kita ada di **Singapore 🇸🇬 dan Indonesia 🇮🇩**.\n• Kuota akun free di-reset otomatis berkala.\n• Kalau server favorit Kakak lagi full, tinggal colek server node lainnya atau tunggu reset ya!';
-          replyOptions = [
-            { label: '🔄 Gas Buka Halaman Server', action: 'action_goto_servers' },
-            { label: '💎 Mau Server VIP Anti Penuh?', action: 'menu_premium' },
-            { label: '🏠 Menu Utama', action: 'main_menu' }
-          ];
-          break;
-
-        case 'menu_sni':
-          replyText = '🎯 **Racikan SNI / Bug Host Populer ala Mr. Predi**:\n\n1. **Paket Vidio / Streaming**: `quiz.int.vidio.com` atau `m.vidio.com`\n2. **Paket YouTube / Sosmed**: `m.youtube.com`, `v.whatsapp.net`\n3. **Paket Edukasi / Belajar**: `belajar.kemdikbud.go.id`, `ruangguru.com`\n4. **Paket Meeting / Zoom**: `zoom.us`\n\n*Tips Ganteng dari Mr. Predi:* Pasang bug host ini di kolom **SNI / Server Name Indication** pas generate akun atau di aplikasi VPN!';
-          replyOptions = [
-            { label: '⚡ Setting di HTTP Custom', action: 'sni_hc' },
-            { label: '📱 Setting di v2rayNG', action: 'sni_v2ray' },
-            { label: '🏠 Menu Utama', action: 'main_menu' }
-          ];
-          break;
-
-        case 'sni_hc':
-          replyText = '💡 **Cara Pasang di HTTP Custom ala Mr. Predi**:\n\n1. Bikin akun SSH WS di web ini.\n2. Buka HTTP Custom -> Centang **SSH** dan **Payload**.\n3. Masukkan Host/IP dan Port `443` (SSL) atau `80` (Non-TLS).\n4. Pada kolom Bug/SNI, isi bug paket Kakak (contoh: `quiz.int.vidio.com`).\n5. Klik Connect dan nikmati internetan wush! 🚀';
-          replyOptions = [
-            { label: '📱 Cara Pasang di v2rayNG', action: 'sni_v2ray' },
-            { label: '🏠 Menu Utama', action: 'main_menu' }
-          ];
-          break;
-
-        case 'sni_v2ray':
-          replyText = '💡 **Cara Pasang di v2rayNG / V2Box**:\n\n1. Copy config link `vmess://` atau `vless://` yang udah dibuat.\n2. Buka v2rayNG -> Klik tanda **+** -> **Import config from clipboard**.\n3. Klik icon pensil (Edit config) -> cari kolom **SNI / Request Host**.\n4. Isi bug paket Kakak, simpan, lalu pencet Connect!';
-          replyOptions = [
-            { label: '🏠 Menu Utama', action: 'main_menu' },
-            { label: '🛠️ Masih Bengong / RTO?', action: 'menu_troubleshoot' }
-          ];
-          break;
-
-        case 'menu_setup':
-          replyText = '⚡ **Aplikasi Tunneling Rekomendasi Mr. Predi**:\n\n• **Android**: v2rayNG, HTTP Custom, HTTP Injector, NekoBox.\n• **iOS / iPhone**: V2Box, Wings X, Shadowrocket, Streisand.\n• **PC Windows**: v2rayN, NetMod Syna, Clash Verge.\n\nSemua akun di PremDigital TUNNEL udah full CDN Cloudflare, anti ribet!';
-          replyOptions = [
-            { label: '🎮 Rekomendasi Game Low Ping', action: 'menu_gaming' },
-            { label: '🏠 Menu Utama', action: 'main_menu' }
-          ];
-          break;
-
-        case 'menu_gaming':
-          replyText = '🎮 **Server Khusus Gamers (ML, FF, PUBG, Valorant)**:\n\nMr. Predi saranin banget pake **Server Singapore 🇸🇬 atau Indonesia 🇮🇩** jalur **SSH UDP Custom** atau **VLESS gRPC**.\nPing-nya adem bener di kisaran **15ms - 35ms**!';
-          replyOptions = [
-            { label: '🚀 Buka Daftar Server', action: 'action_goto_servers' },
-            { label: '🏠 Menu Utama', action: 'main_menu' }
-          ];
-          break;
-
-        case 'menu_premium':
-          replyText = '💎 **Akun Premium VIP PremDigital TUNNEL**:\n\n• Bandwidth unlimited tanpa kuota harian\n• Port gigabit 1 Gbps ngebut\n• Aktif 30 hari anti expired mendadak\n• Server privat VIP jarang yang make jadi stabil abis!\n\nBisa langsung topup saldo instan via QRIS di web ini loh Kak!';
-          replyOptions = [
-            { label: '💳 Buka Menu Topup Saldo', action: 'action_goto_topup' },
-            { label: '🏠 Menu Utama', action: 'main_menu' }
-          ];
-          break;
-
-        case 'menu_troubleshoot':
-          replyText = '🛠️ **Jurus Sakti Mr. Predi Atasi Bengong / RTO**:\n\n1. **Cek Kuota Asli**: Jangan sampai kuota paketnya 0 KB ya Kak, minimal ada sisa kuota paket bug-nya.\n2. **Jurus Mode Pesawat**: Hidupkan Mode Pesawat 5 detik terus matikan lagi biar dapet IP segar dari BTS provider.\n3. **Cek Bug SNI**: Pastikan SNI masih aktif dan sesuai paket.\n4. **Ganti Port**: Coba ganti antara Port 443 (TLS) dan Port 80 (Non-TLS).';
-          replyOptions = [
-            { label: '📱 Cek Racikan Bug SNI', action: 'menu_sni' },
-            { label: '🚀 Coba Server Lain', action: 'action_goto_servers' },
-            { label: '🏠 Menu Utama', action: 'main_menu' }
-          ];
-          break;
-
-        case 'action_goto_servers':
-          replyText = 'Siaaap! Mr. Predi arahin ke halaman server sekarang ya Kak. Tinggal pilih protokolnya!';
-          if (onNavigateToServices) onNavigateToServices();
-          break;
-
-        case 'action_goto_topup':
-          replyText = 'Mantap Kak! Mr. Predi bukakan popup Topup Saldo ya.';
-          if (onOpenTopup) onOpenTopup();
-          break;
-
-        default:
-          replyText = 'Sip Kak! Ada hal lain yang mau ditanyakan ke Mr. Predi? Monggo tanya aja!';
-          break;
-      }
-
-      setMessages(prev => [
-        ...prev,
-        {
-          id: Math.random().toString(),
-          sender: 'mr_predi',
-          text: replyText,
-          time: getTimeString(),
-          options: replyOptions
-        }
-      ]);
-      setIsTyping(false);
-    }, 650);
-  };
-  const handleSendMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!inputVal.trim() || isTyping) return;
-
-    const query = inputVal.trim();
-    const nowTime = getTimeString();
-
-    setMessages(prev => [
-      ...prev,
-      {
-        id: Math.random().toString(),
-        sender: 'user',
-        text: query,
-        time: nowTime
-      }
-    ]);
+    setMessages(prev => [...prev, userMessage]);
     setInputVal('');
     setIsTyping(true);
 
-    const defaultOptions: Message['options'] = [
-      { label: '🏠 Menu Utama', action: 'main_menu' },
-      { label: '🚀 Buka Daftar Server', action: 'action_goto_servers' },
-      { label: '📱 Racikan Bug SNI', action: 'menu_sni' },
-      { label: '💎 Akun VIP & Saldo', action: 'action_goto_topup' }
-    ];
-
     try {
+      // 1. PANGGIL OTAK AI GEMINI ASLI
       const response = await fetch('/api/ai/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          prompt: query,
-          systemInstruction: `
-Kamu adalah Mr. Predi, Asisten AI Cerdas & Ahli Tunneling Resmi PremDigital TUNNEL.
-Kepribadianmu: Gaul, ramah, ahli seluk-beluk tunneling Indonesia (bug SNI Vidio/Edu/Sosmed/YouTube, v2rayNG, HTTP Custom, SSH WS CDN Cloudflare, VLESS gRPC, Trojan GO, solusi bengong/RTO).
-Sapa pengguna dengan sebutan "Kak" atau "Sobat PremDigital".
-Jawab pertanyaan secara cerdas, to the point, dan solutif dalam bahasa Indonesia santai.
-`,
+          prompt: promptText,
+          systemInstruction: SYSTEM_PROMPT,
           history: messages.slice(-4).map(m => ({
             role: m.sender === 'mr_predi' ? 'model' : 'user',
             parts: [{ text: m.text }]
@@ -246,29 +105,34 @@ Jawab pertanyaan secara cerdas, to the point, dan solutif dalam bahasa Indonesia
       }
 
       const data = await response.json();
-      const replyText = data.reply || 'Yo Kak! Mr. Predi siap bantu seputar SSH WS, V2Ray, bug SNI, atau kendala server.';
+      const aiReply = data.reply || 'Yo Kak! Ada kendala lain yang bisa Mr. Predi bantu?';
 
       setMessages(prev => [
         ...prev,
         {
           id: Math.random().toString(),
           sender: 'mr_predi',
-          text: replyText,
+          text: aiReply,
           time: getTimeString(),
-          options: defaultOptions
+          suggestedPrompts: [
+            '📱 Racikan Bug SNI lainnya',
+            '🎮 Rekomendasi server game',
+            '🛠️ Solusi bengong / RTO'
+          ]
         }
       ]);
     } catch (error) {
-      console.warn("Fallback response:", error);
-      let fallbackText = `Yo Kak! Mr. Predi siap bantu seputar SSH WS, V2Ray, bug SNI, atau error koneksi. Silakan cek menu cepat di bawah ya!`;
-      const q = query.toLowerCase();
+      console.warn("Fallback AI offline response:", error);
+      // Fallback Cerdas jika offline
+      let fallbackText = "Yo Kak! Mr. Predi siap bantu seputar SSH WS, V2Ray, bug SNI, atau error koneksi. Silakan pilih menu di bawah atau coba tanyakan hal spesifik ya!";
+      const q = promptText.toLowerCase();
 
-      if (q.includes('predi') || q.includes('mr') || q.includes('siapa') || q.includes('nama')) {
-        fallbackText = 'Halo Kak! Gua **Mr. Predi** 😎🎩 Asisten AI cerdas serba tahu di PremDigital TUNNEL! Siap bantu racikan bug, server low-ping, dan config anti bengong.';
+      if (q.includes('game') || q.includes('ml') || q.includes('ff') || q.includes('ping')) {
+        fallbackText = "🎮 **Rekomendasi Server Game Low-Ping ala Mr. Predi:**\nBuat Mobile Legends, Free Fire, atau PUBG, Mr. Predi saranin banget pake **Server Singapore 🇸🇬 atau Indonesia 🇮🇩** jalur **SSH UDP Custom** atau **VLESS gRPC**. Ping-nya adem bener di kisaran **15ms - 35ms**!";
       } else if (q.includes('sni') || q.includes('bug') || q.includes('kuota') || q.includes('vidio')) {
-        fallbackText = 'Soal **Bug SNI Kuota**, Kakak tinggal cocokin sama kuota yang lagi aktif di kartu Kakak (Vidio, Ruangguru, YouTube, Sosmed, dll). Klik tombol "Racikan Bug SNI" di bawah!';
-      } else if (q.includes('rto') || q.includes('disconnect') || q.includes('bengong')) {
-        fallbackText = 'Koneksi bengong? Coba trik andalan Mr. Predi: nyalakan **Mode Pesawat** 5 detik lalu matikan lagi biar BTS ngasih IP baru yang seger!';
+        fallbackText = "🎯 **Racikan Bug SNI Populer ala Mr. Predi:**\n1. **Paket Vidio/Streaming**: `quiz.int.vidio.com` atau `m.vidio.com`\n2. **Paket YouTube/Sosmed**: `m.youtube.com`, `v.whatsapp.net`\n3. **Paket Edukasi**: `belajar.kemdikbud.go.id`, `ruangguru.com`\n\n*Tips:* Pasang bug host ini di kolom **SNI / Server Name Indication** pas generate akun!";
+      } else if (q.includes('bengong') || q.includes('rto') || q.includes('disconnect')) {
+        fallbackText = "🛠️ **Jurus Sakti Mr. Predi Atasi Bengong / RTO:**\n1. Lakukan **On/Off Mode Pesawat** selama 5 detik biar dapet IP segar dari BTS provider.\n2. Coba ganti port dari 443 (TLS) ke 80 (Non-TLS).\n3. Pastikan kuota paket bug Anda masih aktif!";
       }
 
       setMessages(prev => [
@@ -278,7 +142,11 @@ Jawab pertanyaan secara cerdas, to the point, dan solutif dalam bahasa Indonesia
           sender: 'mr_predi',
           text: fallbackText,
           time: getTimeString(),
-          options: defaultOptions
+          suggestedPrompts: [
+            '🚀 Cek Server Gratis',
+            '🎯 Racikan Bug SNI',
+            '💎 Info Akun VIP'
+          ]
         }
       ]);
     } finally {
@@ -291,15 +159,13 @@ Jawab pertanyaan secara cerdas, to the point, dan solutif dalam bahasa Indonesia
       {
         id: 'welcome-reset',
         sender: 'mr_predi',
-        text: 'Obrolan baru telah dimulai! Yo Kak, gue **Mr. Predi** siap nemenin lagi. Mau dibantu apa nih?',
+        text: 'Obrolan telah direset! Yo Kak, gue **Mr. Predi AI** siap nemenin lagi. Mau dibantu apa nih seputar tunneling?',
         time: 'Online',
-        options: [
-          { label: '🚀 Cek Status Server & Kuota', action: 'menu_server' },
-          { label: '📱 Racikan Bug SNI Kuota', action: 'menu_sni' },
-          { label: '⚡ Tutorial Setup SSH WS & V2Ray', action: 'menu_setup' },
-          { label: '🎮 Server Khusus Game', action: 'menu_gaming' },
-          { label: '💎 Akun Premium & Topup Saldo', action: 'menu_premium' },
-          { label: '🛠️ Solusi Bengong / RTO', action: 'menu_troubleshoot' }
+        suggestedPrompts: [
+          '🚀 Rekomendasi server buat main game (ML/FF)',
+          '📱 Racikan Bug SNI kuota paling joss',
+          '⚡ Cara pasang akun VLESS di v2rayNG',
+          '🛠️ Kenapa SSH terhubung tapi bengong?'
         ]
       }
     ]);
@@ -310,19 +176,17 @@ Jawab pertanyaan secara cerdas, to the point, dan solutif dalam bahasa Indonesia
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-end sm:right-6 sm:bottom-6 sm:left-auto justify-center pointer-events-none p-0 sm:p-4">
       <div 
-        className={`pointer-events-auto w-full sm:w-[430px] bg-[#0f0a28] border border-purple-500/30 rounded-t-3xl sm:rounded-3xl shadow-2xl shadow-purple-950/90 flex flex-col transition-all duration-300 overflow-hidden ${
+        className={`pointer-events-auto w-full sm:w-[440px] bg-[#0f0a28] border border-purple-500/30 rounded-t-3xl sm:rounded-3xl shadow-2xl shadow-purple-950/90 flex flex-col transition-all duration-300 overflow-hidden ${
           isMinimized ? 'h-[70px]' : 'h-[85vh] sm:h-[630px] max-h-[92vh]'
         }`}
       >
-        {/* Header Mr. Predi */}
+        {/* Header Mr. Predi AI */}
         <div className="bg-gradient-to-r from-[#1b1146] via-[#2d186f] to-[#180e3f] px-4 py-3 border-b border-purple-500/20 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
             <div className="relative">
               <div className="w-11 h-11 rounded-full bg-gradient-to-tr from-purple-500 via-indigo-500 to-pink-500 p-0.5 shadow-lg shadow-purple-500/30 flex items-center justify-center">
                 <div className="w-full h-full rounded-full bg-[#0e0924] flex items-center justify-center text-white relative">
-                  <span className="text-xl font-black tracking-tight bg-gradient-to-br from-purple-200 to-pink-300 bg-clip-text text-transparent">
-                    🎩
-                  </span>
+                  <span className="text-xl select-none">🎩</span>
                 </div>
               </div>
               <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-emerald-400 border-2 border-[#1b1146] ring-1 ring-emerald-400/50"></span>
@@ -333,13 +197,13 @@ Jawab pertanyaan secara cerdas, to the point, dan solutif dalam bahasa Indonesia
                 <h3 className="font-extrabold text-white text-base tracking-wide flex items-center gap-1.5">
                   Mr. Predi
                   <span className="px-1.5 py-0.2 rounded-full text-[9px] font-extrabold bg-purple-900/90 text-purple-200 border border-purple-400/40">
-                    PRO ASSISTANT
+                    GEMINI AI
                   </span>
                 </h3>
               </div>
               <p className="text-[11px] text-purple-300/80 flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                Online
+                Online • Asisten Virtual PremDigital
               </p>
             </div>
           </div>
@@ -377,10 +241,11 @@ Jawab pertanyaan secara cerdas, to the point, dan solutif dalam bahasa Indonesia
             <div className="bg-purple-950/50 border-b border-purple-500/10 px-4 py-2 flex items-center justify-between text-[11px] text-purple-200">
               <span className="flex items-center gap-1.5">
                 <Sparkles className="w-3.5 h-3.5 text-yellow-400 shrink-0" />
-                <span>Tanya bug SNI, V2Ray, SSH WS, atau server ke Mr. Predi!</span>
+                <span>Tanya apa saja seputar SSH WS, V2Ray, atau Bug SNI!</span>
               </span>
             </div>
 
+            {/* Area Pesan Chat */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-[#0a061d]/85 backdrop-blur">
               {messages.map((msg) => (
                 <div 
@@ -390,7 +255,7 @@ Jawab pertanyaan secara cerdas, to the point, dan solutif dalam bahasa Indonesia
                   <div className="flex items-center gap-1.5 mb-1 px-1 text-[10px] text-slate-400">
                     {msg.sender === 'mr_predi' ? (
                       <span className="text-purple-300 font-extrabold flex items-center gap-1">
-                        🎩 Mr. Predi
+                        🎩 Mr. Predi AI
                       </span>
                     ) : (
                       <span className="font-semibold">Kamu</span>
@@ -408,18 +273,19 @@ Jawab pertanyaan secara cerdas, to the point, dan solutif dalam bahasa Indonesia
                     {msg.text}
                   </div>
 
-                  {msg.sender === 'mr_predi' && msg.options && msg.options.length > 0 && (
+                  {/* Tombol Rekomendasi Cepat (Pills) */}
+                  {msg.sender === 'mr_predi' && msg.suggestedPrompts && (
                     <div className="mt-2.5 flex flex-wrap gap-1.5 max-w-[95%]">
-                      {msg.options.map((opt, idx) => (
+                      {msg.suggestedPrompts.map((prompt, idx) => (
                         <button
                           key={idx}
                           type="button"
-                          onClick={() => handleAction(opt.action, opt.label)}
+                          onClick={() => handleSendPrompt(prompt)}
                           disabled={isTyping}
-                          className="px-3 py-1.5 rounded-xl bg-purple-950/70 hover:bg-purple-800/90 border border-purple-500/30 text-purple-200 text-xs font-medium flex items-center gap-1 transition-all active:scale-95 disabled:opacity-50 text-left shadow-sm hover:text-white cursor-pointer"
+                          className="px-3 py-1.5 rounded-xl bg-purple-950/70 hover:bg-purple-800/90 border border-purple-500/30 text-purple-200 text-xs font-medium flex items-center gap-1.5 transition-all active:scale-95 disabled:opacity-50 text-left shadow-sm hover:text-white cursor-pointer"
                         >
-                          <span>{opt.label}</span>
-                          <ChevronRight className="w-3 h-3 text-purple-400 shrink-0" />
+                          <Sparkles className="w-3 h-3 text-yellow-400 shrink-0" />
+                          <span>{prompt}</span>
                         </button>
                       ))}
                     </div>
@@ -430,7 +296,7 @@ Jawab pertanyaan secara cerdas, to the point, dan solutif dalam bahasa Indonesia
               {isTyping && (
                 <div className="flex flex-col items-start">
                   <div className="flex items-center gap-1.5 mb-1 px-1 text-[10px] text-purple-300 font-bold">
-                    <span>🎩 Mr. Predi lagi ngetik...</span>
+                    <span>🎩 Mr. Predi AI lagi mikir & nyusun jawaban...</span>
                   </div>
                   <div className="p-3 rounded-2xl bg-[#150e38] border border-purple-500/30 rounded-tl-none shadow-md flex items-center gap-1.5">
                     <span className="w-2 h-2 rounded-full bg-purple-400 animate-bounce" style={{ animationDelay: '0ms' }}></span>
@@ -443,13 +309,14 @@ Jawab pertanyaan secara cerdas, to the point, dan solutif dalam bahasa Indonesia
               <div ref={messagesEndRef} />
             </div>
 
+            {/* Input Form */}
             <div className="p-3 bg-[#110b2e] border-t border-purple-500/20">
-              <form onSubmit={handleSendMessage} className="flex items-center gap-2">
+              <form onSubmit={(e) => { e.preventDefault(); handleSendPrompt(inputVal); }} className="flex items-center gap-2">
                 <input
                   type="text"
                   value={inputVal}
                   onChange={(e) => setInputVal(e.target.value)}
-                  placeholder="Tanya apa aja ke Mr. Predi..."
+                  placeholder="Tanya apa aja ke Mr. Predi AI..."
                   className="flex-1 bg-[#0a061d] border border-purple-500/30 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-white focus:outline-none focus:border-purple-400 placeholder-slate-500 transition-colors"
                 />
                 <button
