@@ -17,12 +17,13 @@ import {
   RefreshCw,
   Terminal,
   Zap,
-  Info
+  Info,
+  AlertTriangle
 } from 'lucide-react';
 import { ProtocolType, TunnelServer, GeneratedAccount } from '../types';
 import { SERVERS_LIST, PROTOCOL_SERVICES } from '../data/mockData';
 import { subscribeVpsNodes, UnifiedServerNode } from '../lib/serverSync';
-import { db, collection, addDoc, doc, updateDoc } from '../lib/firebase';
+import { db, collection, addDoc, doc, updateDoc, setDoc, increment } from '../lib/firebase';
 import { onSnapshot } from 'firebase/firestore';
 import { User } from 'firebase/auth';
 
@@ -60,8 +61,21 @@ export const AccountModal: React.FC<AccountModalProps> = ({
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [qrDataUrl, setQrDataUrl] = useState<string>('');
   const [activeResultTab, setActiveResultTab] = useState<'info' | 'config' | 'payload' | 'qr'>('info');
+  const [freeLimit, setFreeLimit] = useState<number>(10);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const protocolService = PROTOCOL_SERVICES.find((p) => p.id === protocol) || PROTOCOL_SERVICES[0];
+
+  // Subscribe to platform settings for free account limit
+  useEffect(() => {
+    const unsub = onSnapshot(doc(db, 'platform', 'settings'), (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        setFreeLimit(data.freeAccountLimit || 10);
+      }
+    });
+    return () => unsub();
+  }, []);
 
   // Subscribe to live server heartbeats
   useEffect(() => {
@@ -138,6 +152,16 @@ export const AccountModal: React.FC<AccountModalProps> = ({
     e.preventDefault();
     if (!username.trim()) return;
 
+    setErrorMessage(null);
+
+    // Validate Server Capacity for Free Tier
+    const isFree = Number(expiryDays) <= 7 && !selectedServer.isVip;
+    const curUsed = selectedServer.usedSlots || 0;
+    if (isFree && curUsed >= freeLimit) {
+      setErrorMessage(`Server Full! Kuota pembuatan akun gratis server ${selectedServer.country} telah penuh (${curUsed}/${freeLimit}). Silakan pilih server lain.`);
+      return;
+    }
+
     setIsGenerating(true);
 
     const expiry = new Date();
@@ -209,6 +233,18 @@ export const AccountModal: React.FC<AccountModalProps> = ({
 
     // Add command to VPS queue for auto-creation
     try {
+      if (selectedServer.id) {
+        try {
+          const nodeRef = doc(db, 'vps_nodes', selectedServer.id);
+          await setDoc(nodeRef, {
+            usedSlots: increment(1),
+            onlineUsers: increment(1)
+          }, { merge: true });
+        } catch (nodeErr) {
+          console.warn("Could not increment server node slots:", nodeErr);
+        }
+      }
+
       const cmdRef = await addDoc(collection(db, 'vps_commands'), {
         serverId: selectedServer.id,
         action: 'CREATE_ACCOUNT',
@@ -323,6 +359,17 @@ export const AccountModal: React.FC<AccountModalProps> = ({
         <div className="p-5 sm:p-6 max-h-[80vh] overflow-y-auto space-y-6">
           {!generatedAccount ? (
             <form onSubmit={handleGenerate} className="space-y-5">
+              {/* Error / Capacity Alert */}
+              {errorMessage && (
+                <div className="p-4 rounded-xl bg-rose-950/40 border border-rose-500/50 flex items-start gap-3 text-rose-300 text-xs animate-in fade-in">
+                  <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+                  <div className="flex-1 font-medium leading-relaxed">
+                    <span className="font-bold block text-rose-300 mb-0.5">Pemberitahuan Server:</span>
+                    {errorMessage}
+                  </div>
+                </div>
+              )}
+
               {/* Step 1: Server Selection */}
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-purple-300 mb-2.5">
@@ -332,16 +379,26 @@ export const AccountModal: React.FC<AccountModalProps> = ({
                   {liveServers.map((srv) => {
                     const isSelected = selectedServer.id === srv.id;
                     const isOnline = srv.status === 'Online';
+                    const isFreeFull = !srv.isVip && (srv.usedSlots || 0) >= freeLimit;
                     return (
                       <div
                         key={srv.id}
                         id={`server-select-${srv.id}`}
                         onClick={() => {
-                          if (isOnline) setSelectedServer(srv);
+                          if (isOnline) {
+                            setSelectedServer(srv);
+                            if (isFreeFull) {
+                              setErrorMessage(`Server Full! Kuota pembuatan akun gratis server ${srv.country} telah penuh (${srv.usedSlots || 0}/${freeLimit}). Silakan pilih server lain.`);
+                            } else {
+                              setErrorMessage(null);
+                            }
+                          }
                         }}
                         className={`p-3 rounded-2xl border transition-all flex items-center justify-between ${
                           !isOnline
                             ? 'bg-[#120f28]/60 border-rose-900/30 text-slate-500 opacity-60 cursor-not-allowed'
+                            : isFreeFull
+                            ? 'bg-rose-950/20 border-rose-500/30 text-slate-300 hover:bg-rose-950/30 cursor-pointer'
                             : isSelected
                             ? 'bg-purple-600/20 border-purple-400 text-white shadow-md shadow-purple-600/20 cursor-pointer'
                             : 'bg-[#1b1542] border-purple-900/40 text-slate-300 hover:bg-[#20194e] hover:border-purple-500/30 cursor-pointer'
@@ -362,6 +419,11 @@ export const AccountModal: React.FC<AccountModalProps> = ({
                                   Offline
                                 </span>
                               )}
+                              {isFreeFull && (
+                                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-rose-500/30 text-rose-300 border border-rose-500/40">
+                                  FULL
+                                </span>
+                              )}
                             </div>
                             <span className="text-[11px] sm:text-xs text-slate-400">{srv.city}</span>
                           </div>
@@ -370,8 +432,14 @@ export const AccountModal: React.FC<AccountModalProps> = ({
                           <span className={`text-[11px] sm:text-xs font-semibold ${isOnline ? 'text-emerald-400' : 'text-slate-500'}`}>
                             {isOnline ? `${srv.ping}ms` : 'Timeout'}
                           </span>
-                          <div className="text-[9px] sm:text-[10px] text-slate-400">
-                            {isOnline ? `${srv.usedSlots}/${srv.totalSlots} used` : 'Node Mati'}
+                          <div className={`text-[9px] sm:text-[10px] ${isFreeFull ? 'text-rose-400 font-bold' : 'text-slate-400'}`}>
+                            {isOnline ? (
+                              srv.isVip ? (
+                                `${srv.usedSlots || 0}/${srv.totalSlots} used`
+                              ) : (
+                                `${Math.min(srv.usedSlots || 0, freeLimit)}/${freeLimit} slots`
+                              )
+                            ) : 'Node Mati'}
                           </div>
                         </div>
                       </div>

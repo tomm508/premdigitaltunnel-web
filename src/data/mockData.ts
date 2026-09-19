@@ -80,11 +80,11 @@ export const SERVERS_LIST: TunnelServer[] = [
     load: 12,
     ping: 24,
     totalSlots: 100,
-    usedSlots: 5,
+    usedSlots: 0,
     supportedProtocols: ['ssh', 'vmess', 'vless', 'trojan'],
     isVip: false,
     limitCreated: 100,
-    leftCreated: 95
+    leftCreated: 100
   },
   {
     id: 'my-vps-02',
@@ -98,11 +98,11 @@ export const SERVERS_LIST: TunnelServer[] = [
     load: 25,
     ping: 15,
     totalSlots: 100,
-    usedSlots: 12,
+    usedSlots: 0,
     supportedProtocols: ['ssh', 'vmess', 'vless', 'trojan'],
     isVip: false,
     limitCreated: 100,
-    leftCreated: 88
+    leftCreated: 100
   }
 ];
 

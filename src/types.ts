@@ -87,6 +87,7 @@ export interface VpsNode {
   country?: string;
   countryCode?: string;
   onlineUsers: number;
+  usedSlots?: number;
   cpuLoad: number;
   ramUsage: number;
   status: 'Online' | 'Down';

@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 import { TunnelServer, GeneratedAccount } from '../types';
 import { User } from 'firebase/auth';
-import { db, collection, addDoc, doc, updateDoc } from '../lib/firebase';
+import { db, collection, addDoc, doc, updateDoc, setDoc, increment } from '../lib/firebase';
 import { onSnapshot } from 'firebase/firestore';
 import { Turnstile } from '@marsidev/react-turnstile';
 
@@ -55,6 +55,7 @@ export const SshCreateAccount: React.FC<SshCreateAccountProps> = ({
   const [pricing, setPricing] = useState<{ssh: number, discount: number}>({ ssh: 1500, discount: 50 });
   const [turnstileSiteKey, setTurnstileSiteKey] = useState<string>('');
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [freeLimit, setFreeLimit] = useState<number>(10);
 
   useEffect(() => {
     if (server?.host) {
@@ -71,6 +72,7 @@ export const SshCreateAccount: React.FC<SshCreateAccountProps> = ({
           discount: data.pricing?.discount ?? 50
         });
         setTurnstileSiteKey(data.turnstileSiteKey || '');
+        setFreeLimit(data.freeAccountLimit || 10);
       }
     });
     return () => unsub();
@@ -123,8 +125,10 @@ export const SshCreateAccount: React.FC<SshCreateAccountProps> = ({
     }
 
     // Validate Server Capacity for Free Tier
-    if (selectedPlan === 'free' && server.usedSlots >= server.totalSlots) {
-      setErrorMessage(`Maaf, kapasitas server ${server.country} sedang penuh (${server.usedSlots}/${server.totalSlots}). Silakan pilih server lain atau gunakan paket Premium.`);
+    const currentUsed = Math.max(0, server.usedSlots || 0);
+    const effectiveFreeLimit = freeLimit || 10;
+    if (selectedPlan === 'free' && currentUsed >= effectiveFreeLimit) {
+      setErrorMessage(`Server Full! Kuota pembuatan akun gratis untuk server ${server.country} sedang penuh (${currentUsed}/${effectiveFreeLimit}). Silakan pilih server lain atau gunakan paket Premium.`);
       return;
     }
 
@@ -207,6 +211,19 @@ export const SshCreateAccount: React.FC<SshCreateAccountProps> = ({
 
       // Add command to VPS queue for auto-creation
       try {
+        // Increment server used slots
+        if (server.id) {
+          try {
+            const nodeRef = doc(db, 'vps_nodes', server.id);
+            await setDoc(nodeRef, {
+              usedSlots: increment(1),
+              onlineUsers: increment(1)
+            }, { merge: true });
+          } catch (e) {
+            console.warn("Could not increment server node slots:", e);
+          }
+        }
+
         const cmdRef = await addDoc(collection(db, 'vps_commands'), {
           serverId: server.id,
           action: 'CREATE_ACCOUNT',
@@ -429,18 +446,40 @@ export const SshCreateAccount: React.FC<SshCreateAccountProps> = ({
              
              {/* Free Tier Option */}
              <div 
-                onClick={() => setSelectedPlan('free')}
+                onClick={() => {
+                  const curUsed = server.usedSlots || 0;
+                  const lim = freeLimit || 10;
+                  if (curUsed >= lim) {
+                    setErrorMessage(`Server Full! Kuota pembuatan akun gratis server ${server.country} telah penuh (${curUsed}/${lim}). Silakan pilih paket VIP untuk akses langsung atau pilih server lain.`);
+                  } else {
+                    setSelectedPlan('free');
+                    setErrorMessage(null);
+                  }
+                }}
                 className={`relative flex items-center justify-between p-4 rounded-xl cursor-pointer transition-all mb-3 border ${
-                  selectedPlan === 'free' 
+                  (server.usedSlots || 0) >= (freeLimit || 10)
+                    ? 'bg-rose-950/20 border-rose-500/40 opacity-90'
+                    : selectedPlan === 'free' 
                     ? 'bg-[#2a1b54] border-indigo-500' 
                     : 'bg-[#15112e] border-[#2a234f] hover:border-[#3e2b7a]'
                 }`}
              >
                 <div>
-                   <h4 className="font-bold text-white text-sm">24 Hours Free</h4>
-                   <p className="text-[11px] text-slate-400 mt-0.5">Limited access</p>
+                   <div className="flex items-center gap-2">
+                     <h4 className="font-bold text-white text-sm">24 Hours Free</h4>
+                     {(server.usedSlots || 0) >= (freeLimit || 10) && (
+                       <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-rose-500/30 text-rose-300 border border-rose-500/40">
+                         SERVER FULL ({server.usedSlots || 0}/{freeLimit || 10})
+                       </span>
+                     )}
+                   </div>
+                   <p className={`text-[11px] mt-0.5 ${(server.usedSlots || 0) >= (freeLimit || 10) ? 'text-rose-400 font-medium' : 'text-slate-400'}`}>
+                     {(server.usedSlots || 0) >= (freeLimit || 10) ? `Kuota harian penuh (${server.usedSlots || 0}/${freeLimit || 10}) — Gunakan paket VIP` : 'Limited access'}
+                   </p>
                 </div>
-                <div className="font-bold text-white">Rp 0</div>
+                <div className={`font-bold ${(server.usedSlots || 0) >= (freeLimit || 10) ? 'text-rose-400' : 'text-white'}`}>
+                  {(server.usedSlots || 0) >= (freeLimit || 10) ? 'FULL' : 'Rp 0'}
+                </div>
              </div>
 
              {/* 3 Days Premium Option */}
