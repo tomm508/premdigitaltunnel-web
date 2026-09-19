@@ -38,29 +38,38 @@ Jawaban harus padat, jelas, akurat, dan solutif.
       parts: [{ text: prompt }]
     }
   ];
+  // gemini-2.5-flash
+  const modelsToTry = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-2.5-pro'];
+  let lastError = '';
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+  for (const model of modelsToTry) {
+    try {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents,
+          systemInstruction: {
+            parts: [{ text: systemInstruction }]
+          }
+        })
+      });
 
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents,
-      systemInstruction: {
-        parts: [{ text: systemInstruction }]
+      if (response.ok) {
+        const data = await response.json();
+        const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (text) return text;
+      } else {
+        const errData = await response.json().catch(() => ({}));
+        lastError = errData?.error?.message || `HTTP ${response.status}`;
       }
-    })
-  });
-
-  if (!response.ok) {
-    const errData = await response.json().catch(() => ({}));
-    const errorMsg = errData?.error?.message || `HTTP Error ${response.status}`;
-    throw new Error(errorMsg);
+    } catch (e: any) {
+      lastError = e?.message || 'Network error';
+    }
   }
 
-  const data = await response.json();
-  const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-  return text || 'Halo Kak, ada yang bisa Mr. Predi bantu lagi?';
+  throw new Error(lastError || 'Gagal memanggil model Gemini');
 }
 
 interface Message {
