@@ -459,6 +459,7 @@ export const MrPrediLiveChat: React.FC<MrPrediLiveChatProps> = ({
                   <Send className="w-3.5 h-3.5" />
                   <span className="hidden sm:inline">Kirim</span>
                 </button>
+              </input>
               </form>
             </div>
           </>
