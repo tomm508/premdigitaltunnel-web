@@ -55,7 +55,7 @@ export const AccountModal: React.FC<AccountModalProps> = ({
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('123456');
   const [sni, setSni] = useState('sgdo-premdigital.web.id');
-  const [expiryDays, setExpiryDays] = useState<number>(3);
+  const [expiryDays, setExpiryDays] = useState<number>(1);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedAccount, setGeneratedAccount] = useState<GeneratedAccount | null>(null);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
@@ -155,7 +155,7 @@ export const AccountModal: React.FC<AccountModalProps> = ({
     setErrorMessage(null);
 
     // Validate Server Capacity for Free Tier
-    const isFree = Number(expiryDays) <= 7 && !selectedServer.isVip;
+    const isFree = Number(expiryDays) <= 1 && !selectedServer.isVip;
     const curUsed = selectedServer.usedSlots || 0;
     if (isFree && curUsed >= freeLimit) {
       setErrorMessage(`Server Full! Kuota pembuatan akun gratis server ${selectedServer.country} telah penuh (${curUsed}/${freeLimit}). Silakan pilih server lain.`);
@@ -259,7 +259,7 @@ export const AccountModal: React.FC<AccountModalProps> = ({
 
       // Save account to user collection and transaction history
       if (currentUser) {
-        const isPremium = Number(expiryDays) > 7;
+        const isPremium = Number(expiryDays) > 1;
         addDoc(collection(db, 'users', currentUser.uid, 'accounts'), {
           ...account,
           type: isPremium ? 'premium' : 'free',

@@ -31,7 +31,10 @@ export const SshServerList: React.FC<SshServerListProps> = ({
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [pricing, setPricing] = useState<{ssh: number, discount: number}>({ ssh: 12500, discount: 50 });
-  const [timeLeft, setTimeLeft] = useState<{ hours: number; minutes: number; seconds: number }>({
+  const [resetDays, setResetDays] = useState<number>(1);
+  const [resetTime, setResetTime] = useState<string>('00:00');
+  const [timeLeft, setTimeLeft] = useState<{ days: number; hours: number; minutes: number; seconds: number }>({
+    days: 0,
     hours: 8,
     minutes: 48,
     seconds: 42
@@ -46,7 +49,7 @@ export const SshServerList: React.FC<SshServerListProps> = ({
     return () => unsub();
   }, []);
 
-  // Subscribe to pricing settings
+  // Subscribe to pricing and reset settings
   useEffect(() => {
     const unsub = onSnapshot(doc(db, 'platform', 'settings'), (docSnap) => {
       if (docSnap.exists()) {
@@ -55,32 +58,52 @@ export const SshServerList: React.FC<SshServerListProps> = ({
           ssh: data.pricing?.ssh || 12500,
           discount: data.pricing?.discount ?? 50
         });
+        if (data.resetDays) setResetDays(Number(data.resetDays));
+        if (data.resetTime) setResetTime(data.resetTime);
       }
     });
     return () => unsub();
   }, []);
 
-  // Calculate countdown to next 3-day reset
+  // Calculate countdown according to dynamic resetDays & resetTime
   useEffect(() => {
     const timer = setInterval(() => {
       const now = new Date();
-      // Using arbitrary epoch (e.g. Jan 1, 2024 00:00:00 UTC)
-      const epoch = 1704067200000;
-      const threeDaysMs = 3 * 24 * 60 * 60 * 1000;
-      
-      const timeSinceEpoch = now.getTime() - epoch;
-      const msIntoCycle = timeSinceEpoch % threeDaysMs;
-      const msLeft = threeDaysMs - msIntoCycle;
-      
-      const hours = Math.floor(msLeft / (1000 * 60 * 60));
-      const minutes = Math.floor((msLeft / (1000 * 60)) % 60);
-      const seconds = Math.floor((msLeft / 1000) % 60);
+      const [h, m] = (resetTime || '00:00').split(':').map(Number);
+      const targetHour = isNaN(h) ? 0 : h;
+      const targetMinute = isNaN(m) ? 0 : m;
+      const daysInterval = Number(resetDays) || 1;
+      const cycleMs = daysInterval * 24 * 60 * 60 * 1000;
 
-      setTimeLeft({ hours, minutes, seconds });
+      if (daysInterval === 1) {
+        // Daily cycle: next reset is today or tomorrow at targetHour:targetMinute
+        const nextReset = new Date();
+        nextReset.setHours(targetHour, targetMinute, 0, 0);
+        if (now.getTime() >= nextReset.getTime()) {
+          nextReset.setDate(nextReset.getDate() + 1);
+        }
+        const diffMs = Math.max(0, nextReset.getTime() - now.getTime());
+        const hours = Math.floor(diffMs / (60 * 60 * 1000));
+        const minutes = Math.floor((diffMs % (60 * 60 * 1000)) / (60 * 1000));
+        const seconds = Math.floor((diffMs % (60 * 1000)) / 1000);
+        setTimeLeft({ days: 0, hours, minutes, seconds });
+      } else {
+        // Multi-day cycle (2 days or 3 days)
+        const anchor = new Date(2024, 0, 1, targetHour, targetMinute, 0, 0).getTime();
+        const elapsed = now.getTime() - anchor;
+        const msIntoCycle = ((elapsed % cycleMs) + cycleMs) % cycleMs;
+        const msLeft = cycleMs - msIntoCycle;
+
+        const days = Math.floor(msLeft / (24 * 60 * 60 * 1000));
+        const hours = Math.floor((msLeft % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000));
+        const minutes = Math.floor((msLeft % (60 * 60 * 1000)) / (60 * 1000));
+        const seconds = Math.floor((msLeft % (60 * 1000)) / 1000);
+        setTimeLeft({ days, hours, minutes, seconds });
+      }
     }, 1000);
 
     return () => clearInterval(timer);
-  }, []);
+  }, [resetDays, resetTime]);
 
   const sshServers = servers.filter(s => s.supportedProtocols.includes('ssh'));
   const filteredServers = activeFilter === 'all' 
@@ -139,11 +162,13 @@ export const SshServerList: React.FC<SshServerListProps> = ({
 
         <div className="flex flex-col sm:flex-row items-center justify-between bg-[#15112e] rounded-2xl border border-[#2a234f] px-5 py-4 mb-6">
            <div className="text-[13px] text-slate-300 mb-2 sm:mb-0">
-             <span className="text-purple-400 font-medium">Reset Time:</span> Setiap 3 Hari Sekali
+             <span className="text-purple-400 font-medium">Reset Time:</span>{' '}
+             {resetDays === 1 ? 'Setiap 1 Hari (24 Jam)' : `Setiap ${resetDays} Hari (${resetDays * 24} Jam)`} • Jam {resetTime} WIB
            </div>
            <div className="flex items-center gap-3">
              <span className="text-[13px] text-slate-400 font-medium">Countdown:</span>
              <div className="font-mono text-xl font-bold text-white tracking-widest">
+                {resetDays > 1 && `${timeLeft.days}d `}
                 {format2(timeLeft.hours)}:{format2(timeLeft.minutes)}:{format2(timeLeft.seconds)}
              </div>
            </div>
@@ -168,7 +193,9 @@ export const SshServerList: React.FC<SshServerListProps> = ({
                 <Clock className="w-4 h-4 text-indigo-400" />
               </div>
               <h3 className="font-bold text-white mb-2 text-[15px]">Smart Reset</h3>
-              <p className="text-[13px] text-slate-400 leading-relaxed">Account limits automatically reset every 3 days for fair access to all users.</p>
+              <p className="text-[13px] text-slate-400 leading-relaxed">
+                Account limits automatically reset every {resetDays === 1 ? '24 hours (1 day)' : `${resetDays} days`} for fair access to all users.
+              </p>
            </div>
            {/* Feature 3 */}
            <div className="bg-[#15112e] rounded-2xl border border-[#2a234f] p-5">

@@ -8,7 +8,8 @@ import {
   Globe,
   AlertTriangle,
   XCircle,
-  X
+  X,
+  Clock
 } from 'lucide-react';
 import { ProtocolType, TunnelServer, VpsNode } from '../types';
 import { SERVERS_LIST } from '../data/mockData';
@@ -28,6 +29,8 @@ export const FreeTunneling: React.FC<FreeTunnelingProps> = ({
 }) => {
   const [activeProtocol, setActiveProtocol] = useState<ProtocolType>('ssh');
   const [freeLimit, setFreeLimit] = useState(10);
+  const [resetDays, setResetDays] = useState<number>(1);
+  const [resetTime, setResetTime] = useState<string>('00:00');
   const [liveServers, setLiveServers] = useState<UnifiedServerNode[]>(() => 
     SERVERS_LIST.map(s => ({ ...s, status: 'Down' as const }))
   );
@@ -37,12 +40,14 @@ export const FreeTunneling: React.FC<FreeTunnelingProps> = ({
     limit: number;
   } | null>(null);
 
-  // Subscribe to settings for limit
+  // Subscribe to settings for limit & reset schedule
   useEffect(() => {
     const unsub = onSnapshot(doc(db, 'platform', 'settings'), (docSnap) => {
       if (docSnap.exists()) {
         const data = docSnap.data();
         setFreeLimit(data.freeAccountLimit || 10);
+        if (data.resetDays) setResetDays(Number(data.resetDays));
+        if (data.resetTime) setResetTime(data.resetTime);
       }
     });
     return () => unsub();
@@ -87,13 +92,23 @@ export const FreeTunneling: React.FC<FreeTunnelingProps> = ({
 
         {/* Header */}
         <div className="text-center mb-12">
-          <div className={`inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-xs font-semibold mb-4 shadow-inner ${
-            isDark 
-              ? 'bg-emerald-950/70 border border-emerald-500/30 text-emerald-300' 
-              : 'bg-emerald-100 border border-emerald-300 text-emerald-800'
-          }`}>
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>100% Free Accounts</span>
+          <div className="flex flex-wrap items-center justify-center gap-2.5 mb-4">
+            <div className={`inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-xs font-semibold shadow-inner ${
+              isDark 
+                ? 'bg-emerald-950/70 border border-emerald-500/30 text-emerald-300' 
+                : 'bg-emerald-100 border border-emerald-300 text-emerald-800'
+            }`}>
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>100% Free Accounts</span>
+            </div>
+            <div className={`inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-semibold ${
+              isDark
+                ? 'bg-purple-950/60 border border-purple-500/30 text-purple-300'
+                : 'bg-purple-100 border border-purple-200 text-purple-700'
+            }`}>
+              <Clock className="w-3.5 h-3.5" />
+              <span>Reset Kuota: Setiap {resetDays === 1 ? '1 Hari (24 Jam)' : `${resetDays} Hari`} • {resetTime} WIB</span>
+            </div>
           </div>
           <h1 className={`text-3xl md:text-5xl font-extrabold tracking-tight mb-4 ${isDark ? 'text-white' : 'text-slate-900'}`}>
             Start Free Tunneling
@@ -154,7 +169,7 @@ export const FreeTunneling: React.FC<FreeTunnelingProps> = ({
                       isDark ? 'bg-purple-900/30 text-purple-300 border-purple-500/20' : 'bg-purple-100 text-purple-700 border-purple-200'
                     }`}>
                       <Star className="w-3 h-3 fill-current" />
-                      Free 3-Day
+                      Free 1-Day
                     </div>
                   </div>
 
