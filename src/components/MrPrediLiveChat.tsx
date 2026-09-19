@@ -38,8 +38,15 @@ Jawaban harus padat, jelas, akurat, dan solutif.
       parts: [{ text: prompt }]
     }
   ];
-  // gemini-2.5-flash
-  const modelsToTry = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-2.5-pro'];
+  // Daftar model Gemini generasi baru (Gemini 3.8-flash, 3.5-flash, 2.5-flash)
+  const modelsToTry = [
+    'gemini-3.8-flash',
+    'gemini-3.5-flash',
+    'gemini-3-flash',
+    'gemini-2.5-flash',
+    'gemini-2.0-flash',
+    'gemini-1.5-flash-latest'
+  ];
   let lastError = '';
 
   for (const model of modelsToTry) {
@@ -50,7 +57,7 @@ Jawaban harus padat, jelas, akurat, dan solutif.
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           contents,
-          systemInstruction: {
+          system_instruction: {
             parts: [{ text: systemInstruction }]
           }
         })
