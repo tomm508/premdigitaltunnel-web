@@ -225,9 +225,9 @@ export const MrPrediLiveChat: React.FC<MrPrediLiveChatProps> = ({
         { label: '🎯 Racikan Bug SNI', action: 'menu_sni' }
       ];
 
-      if (q.includes('predi') || q.includes('mr') || q.includes('siapa') || q.includes('nama') || q.includes('maya') || q.includes('axis')) {
-        replyText = 'Halo Kak! Gua **Mr. Predi** 😎🎩 Asisten virtual serba tahu di PremDigital TUNNEL, vibes-nya kayak Maya di AXISnet tapi versi cowok keren ahli tunneling wkwk!\n\nTugas Mr. Predi nemenin Kakak cari bug kuota, config anti bengong, dan server ngebut.';
-      } else if (q.includes('sni') || q.includes('bug') || q.includes('kuota') || q.includes('vidio') || q.includes('axis') || q.includes('tsel') || q.includes('isat') || q.includes('tri') || q.includes('xl')) {
+      if (q.includes('predi') || q.includes('mr') || q.includes('siapa') || q.includes('nama')) {
+        replyText = 'Halo Kak! Gua **Mr. Predi** 😎🎩 Asisten virtual serba tahu di PremDigital TUNNEL!\n\nTugas Mr. Predi nemenin Kakak cari bug kuota, config anti bengong, dan rekomendasi server ngebut.';
+      } else if (q.includes('sni') || q.includes('bug') || q.includes('kuota') || q.includes('vidio') || q.includes('tsel') || q.includes('isat') || q.includes('tri') || q.includes('xl')) {
         replyText = 'Soal **Bug SNI Kuota**, Kakak tinggal cocokin sama kuota yang lagi aktif di kartu Kakak (Vidio, Ruangguru, YouTube, Sosmed, dll).\n\nMau Mr. Predi kasih list SNI yang lagi joss sekarang?';
         replyOptions = [
           { label: '🎯 Buka List SNI Populer', action: 'menu_sni' },
@@ -304,11 +304,11 @@ export const MrPrediLiveChat: React.FC<MrPrediLiveChatProps> = ({
           isMinimized ? 'h-[70px]' : 'h-[85vh] sm:h-[630px] max-h-[92vh]'
         }`}
       >
-        {/* Header ala Maya AXISnet versi Mr. Predi */}
+        {/* Header Mr. Predi */}
         <div className="bg-gradient-to-r from-[#1b1146] via-[#2d186f] to-[#180e3f] px-4 py-3 border-b border-purple-500/20 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
             <div className="relative">
-              {/* Mr. Predi Avatar with Hat/Cool Badge */}
+              {/* Mr. Predi Avatar with Hat */}
               <div className="w-11 h-11 rounded-full bg-gradient-to-tr from-purple-500 via-indigo-500 to-pink-500 p-0.5 shadow-lg shadow-purple-500/30 flex items-center justify-center">
                 <div className="w-full h-full rounded-full bg-[#0e0924] flex items-center justify-center text-white relative">
                   <span className="text-xl font-black tracking-tight bg-gradient-to-br from-purple-200 to-pink-300 bg-clip-text text-transparent">
@@ -366,12 +366,12 @@ export const MrPrediLiveChat: React.FC<MrPrediLiveChatProps> = ({
         {/* Chat Body (hidden if minimized) */}
         {!isMinimized && (
           <>
-            {/* Quick Slogan Bar */}
+            {/* Quick Slogan Bar (Tanpa badge 24 Jam) */}
             <div className="bg-purple-950/50 border-b border-purple-500/10 px-4 py-2 flex items-center justify-between text-[11px] text-purple-200">
               <span className="flex items-center gap-1.5">
                 <Sparkles className="w-3.5 h-3.5 text-yellow-400 shrink-0" />
-                <span>Tanya bug SNI, V2Ray, SSH WS, atau server ke Mr. Predi!
-                </span>
+                <span>Tanya bug SNI, V2Ray, SSH WS, atau server ke Mr. Predi!</span>
+              </span>
             </div>
 
             {/* Messages Scroll Area */}
@@ -441,7 +441,7 @@ export const MrPrediLiveChat: React.FC<MrPrediLiveChatProps> = ({
               <div ref={messagesEndRef} />
             </div>
 
-            {/* Input Form */}
+            {/* Input Form (Rapi & Bebas Error) */}
             <div className="p-3 bg-[#110b2e] border-t border-purple-500/20">
               <form onSubmit={handleSendMessage} className="flex items-center gap-2">
                 <input
@@ -459,7 +459,6 @@ export const MrPrediLiveChat: React.FC<MrPrediLiveChatProps> = ({
                   <Send className="w-3.5 h-3.5" />
                   <span className="hidden sm:inline">Kirim</span>
                 </button>
-              </input>
               </form>
             </div>
           </>
