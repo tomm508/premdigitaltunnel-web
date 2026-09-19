@@ -39,14 +39,14 @@ Jawaban harus padat, jelas, akurat, dan solutif.
     }
   ];
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
 
   const response = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       contents,
-      system_instruction: {
+      systemInstruction: {
         parts: [{ text: systemInstruction }]
       }
     })
@@ -54,7 +54,8 @@ Jawaban harus padat, jelas, akurat, dan solutif.
 
   if (!response.ok) {
     const errData = await response.json().catch(() => ({}));
-    throw new Error(errData?.error?.message || 'Gagal terhubung ke Gemini API');
+    const errorMsg = errData?.error?.message || `HTTP Error ${response.status}`;
+    throw new Error(errorMsg);
   }
 
   const data = await response.json();
@@ -249,7 +250,7 @@ export const MrPrediLiveChat: React.FC<MrPrediLiveChatProps> = ({
       setIsTyping(false);
     }, 650);
   };
-          const handleSendMessage = async (e: React.FormEvent) => {
+  const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputVal.trim() || isTyping) return;
 
@@ -276,7 +277,7 @@ export const MrPrediLiveChat: React.FC<MrPrediLiveChatProps> = ({
     ];
 
     try {
-      // Direct Client-Side
+      // Nyeluk LIVE Gemini AI
       const chatHistory = messages.slice(-4).map(m => ({
         role: (m.sender === 'mr_predi' ? 'model' : 'user') as 'model' | 'user',
         text: m.text
@@ -294,17 +295,12 @@ export const MrPrediLiveChat: React.FC<MrPrediLiveChatProps> = ({
           options: defaultOptions
         }
       ]);
-    } catch (error) {
-      console.warn("Fallback response:", error);
-      let fallbackText = `Yo Kak! Mr. Predi siap bantu seputar SSH WS, V2Ray, bug SNI, atau error koneksi. Silakan cek menu cepat di bawah ya!`;
-      const q = query.toLowerCase();
-
-      if (q.includes('predi') || q.includes('mr') || q.includes('siapa') || q.includes('nama')) {
-        fallbackText = 'Halo Kak! Gua **Mr. Predi** 😎🎩 Asisten AI cerdas serba tahu di PremDigital TUNNEL! Siap bantu racikan bug, server low-ping, dan config anti bengong.';
-      } else if (q.includes('sni') || q.includes('bug') || q.includes('kuota') || q.includes('vidio')) {
-        fallbackText = 'Soal **Bug SNI Kuota**, Kakak tinggal cocokin sama kuota yang lagi aktif di kartu Kakak (Vidio, Ruangguru, YouTube, Sosmed, dll). Klik tombol "Racikan Bug SNI" di bawah!';
-      } else if (q.includes('rto') || q.includes('disconnect') || q.includes('bengong')) {
-        fallbackText = 'Koneksi bengong? Coba trik andalan Mr. Predi: nyalakan **Mode Pesawat** 5 detik lalu matikan lagi biar BTS ngasih IP baru yang seger!';
+    } catch (error: any) {
+      console.error("Gemini Error:", error);
+      
+      let errorReason = error?.message || 'Gagal menghubungi Gemini';
+      if (errorReason === 'API_KEY_MISSING') {
+        errorReason = 'API Key Gemini (VITE_GEMINI_API_KEY) belum terbaca di Cloudflare. Pastikan sudah klik Retry Deployment setelah mengisi Environment Variables.';
       }
 
       setMessages(prev => [
@@ -312,7 +308,7 @@ export const MrPrediLiveChat: React.FC<MrPrediLiveChatProps> = ({
         {
           id: Math.random().toString(),
           sender: 'mr_predi',
-          text: fallbackText,
+          text: `⚠️ [Status AI]: ${errorReason}\n\n*Mr. Predi Mode Cadangan:* Yo Kak! Mau cek menu server atau bug SNI di bawah?`,
           time: getTimeString(),
           options: defaultOptions
         }
