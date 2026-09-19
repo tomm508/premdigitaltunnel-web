@@ -13,6 +13,8 @@ import { Statistics } from './components/Statistics';
 import { Footer } from './components/Footer';
 import { AccountModal } from './components/AccountModal';
 import { ToolsModal } from './components/ToolsModal';
+import { MrPrediLiveChat } from './components/MrPrediLiveChat';
+import { MrPrediFloatingButton } from './components/MrPrediFloatingButton';
 import { AuthModal } from './components/AuthModal';
 import { TopupModal } from './components/TopupModal';
 import { SshServerList } from './components/SshServerList';
@@ -34,6 +36,7 @@ export default function App() {
   const [isAccountModalOpen, setIsAccountModalOpen] = useState<boolean>(false);
   const [recentlyCreatedAccount, setRecentlyCreatedAccount] = useState<GeneratedAccount | null>(null);
   const [isToolsModalOpen, setIsToolsModalOpen] = useState<boolean>(false);
+  const [isMrPrediChatOpen, setIsMrPrediChatOpen] = useState<boolean>(false);
   const [selectedToolId, setSelectedToolId] = useState<string | null>(null);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
   const [isTopupModalOpen, setIsTopupModalOpen] = useState<boolean>(false);
@@ -243,6 +246,10 @@ export default function App() {
   };
 
   const handleOpenTool = (toolId: string) => {
+    if (toolId === 'ai-chat') {
+      setIsMrPrediChatOpen(true);
+      return;
+    }
     setSelectedToolId(toolId);
     setIsToolsModalOpen(true);
   };
@@ -505,11 +512,31 @@ export default function App() {
         userBalance={userBalance}
       />
 
-      {/* Tools Modal (My IP, Ping, DNS, Subdomain, AI Chat) */}
+      {/* Tools Modal (My IP, Ping, DNS, Subdomain, Live Chat) */}
       <ToolsModal
         toolId={selectedToolId}
         isOpen={isToolsModalOpen}
         onClose={() => setIsToolsModalOpen(false)}
+      />
+
+      {/* Floating Mr. Predi Live Chat Button (ala Maya AXISnet) */}
+      <MrPrediFloatingButton
+        isOpen={isMrPrediChatOpen}
+        onClick={() => setIsMrPrediChatOpen(true)}
+      />
+
+      {/* Mr. Predi Live Chat Dialog */}
+      <MrPrediLiveChat
+        isOpen={isMrPrediChatOpen}
+        onClose={() => setIsMrPrediChatOpen(false)}
+        onNavigateToServices={() => {
+          setIsMrPrediChatOpen(false);
+          navigate('/ssh-tunnel');
+        }}
+        onOpenTopup={() => {
+          setIsMrPrediChatOpen(false);
+          setIsTopupModalOpen(true);
+        }}
       />
 
       {/* Login / Member Auth Modal */}

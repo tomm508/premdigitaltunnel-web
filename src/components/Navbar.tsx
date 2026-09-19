@@ -14,7 +14,7 @@ import {
   Globe, 
   Radio, 
   Cpu, 
-  Bot, 
+  MessageSquare, 
   Search, 
   Server,
   Share2,
@@ -70,7 +70,7 @@ export const Navbar: React.FC<NavbarProps> = ({
     { id: 'host-to-ip', label: 'Host to IP', icon: <Server className="w-4 h-4 text-blue-400" /> },
     { id: 'subdomain-finder', label: 'Subdomain Finder', icon: <Search className="w-4 h-4 text-purple-400" /> },
     { id: 'server-status', label: 'Server Status', icon: <Cpu className="w-4 h-4 text-rose-400" /> },
-    { id: 'ai-chat', label: 'Chat With AI', icon: <Bot className="w-4 h-4 text-yellow-400" /> },
+    { id: 'ai-chat', label: 'Mr. Predi (Live Chat)', icon: <MessageSquare className="w-4 h-4 text-emerald-400" /> },
   ];
 
   return (

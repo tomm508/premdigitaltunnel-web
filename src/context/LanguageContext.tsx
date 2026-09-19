@@ -31,7 +31,7 @@ const translations: Record<Language, Record<string, string>> = {
     'nav.ping_test': 'Ping Test',
     'nav.host_to_ip': 'Host to IP',
     'nav.subdomain_finder': 'Subdomain Finder',
-    'nav.ai_chat': 'Chat With AI',
+    'nav.ai_chat': 'Mr. Predi (Live Chat)',
 
     // Hero
     'hero.badge': 'Keep Alive & Secure, by premdigital.web.id',
@@ -234,7 +234,7 @@ const translations: Record<Language, Record<string, string>> = {
     'nav.ping_test': 'Uji Ping',
     'nav.host_to_ip': 'Host ke IP',
     'nav.subdomain_finder': 'Pencari Subdomain',
-    'nav.ai_chat': 'Tanya AI Bot',
+    'nav.ai_chat': 'Mr. Predi (Live Chat)',
 
     // Hero
     'hero.badge': 'Online & Aman, oleh premdigital.web.id',

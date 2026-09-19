@@ -5,7 +5,7 @@ import {
   Globe, 
   Search, 
   Activity, 
-  Bot, 
+  MessageSquare, 
   Cpu, 
   ChevronRight,
   Sparkles
@@ -172,8 +172,8 @@ export const NetworkToolsCard: React.FC<NetworkToolsCardProps> = ({ isDark, onOp
                   : 'bg-purple-50 text-slate-700 hover:bg-purple-100 border border-purple-200'
             }`}
           >
-            <Bot className="w-3.5 h-3.5 text-yellow-400" />
-            <span>Chat With AI</span>
+            <MessageSquare className="w-3.5 h-3.5 text-emerald-400" />
+            <span>Mr. Predi (Live Chat)</span>
           </button>
         </div>
 

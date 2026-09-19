@@ -47,7 +47,7 @@ export const Footer: React.FC<FooterProps> = ({ isDark, onOpenTool }) => {
               </li>
               <li>
                 <button onClick={() => onOpenTool('ai-chat')} className={`hover:text-purple-500 transition-colors flex items-center gap-3 cursor-pointer ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-                  <Activity className="w-4 h-4 text-purple-500" /> <span>{t('nav.ai_chat', 'AI Diagnostics Tool')}</span>
+                  <MessageCircle className="w-4 h-4 text-purple-500" /> <span>{t('nav.ai_chat', 'Live Chat Support')}</span>
                 </button>
               </li>
               <li>

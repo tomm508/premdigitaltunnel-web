@@ -7,7 +7,8 @@ import {
   Server, 
   Search, 
   Cpu, 
-  Bot, 
+  MessageSquare,
+  Headphones, 
   Send, 
   CheckCircle2, 
   RefreshCw,
@@ -55,15 +56,16 @@ export const ToolsModal: React.FC<ToolsModalProps> = ({ toolId, isOpen, onClose 
   const [foundSubdomains, setFoundSubdomains] = useState<string[]>([]);
   const [isFindingSubdomains, setIsFindingSubdomains] = useState(false);
 
-  // AI Chat State
-  const [chatMessages, setChatMessages] = useState<Array<{ role: 'user' | 'assistant'; text: string }>>([
+  // Live Chat (Mr. Predi) State
+  const [chatMessages, setChatMessages] = useState<Array<{ role: 'user' | 'assistant'; text: string; time?: string }>>([
     {
       role: 'assistant',
-      text: 'Halo! Saya AI Tunneling Assistant dari PremDigital TUNNEL. Ada yang bisa saya bantu terkait setup SSH WebSocket, V2Ray VMess, Xray VLESS, Trojan, bug host / SNI, atau error payload?'
+      text: 'Yo halo Kak! Kenalin, gue **Mr. Predi** 😎🎩 Asisten virtual di **PremDigital TUNNEL**.\n\nAda yang bisa Mr. Predi bantu seputar akun SSH WebSocket, V2Ray VMess, Xray VLESS, racikan bug SNI kuota, atau kendala server?',
+      time: 'Online'
     }
   ]);
   const [userInput, setUserInput] = useState('');
-  const [aiTyping, setAiTyping] = useState(false);
+  const [supportTyping, setSupportTyping] = useState(false);
 
   // Dynamic VPS Nodes State
   const [vpsNodes, setVpsNodes] = useState<VpsNode[]>([]);
@@ -222,34 +224,44 @@ export const ToolsModal: React.FC<ToolsModalProps> = ({ toolId, isOpen, onClose 
     }
   };
 
-  const handleSendMessage = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!userInput.trim() || aiTyping) return;
+  const sendChatMessage = (textToSend: string) => {
+    if (!textToSend.trim() || supportTyping) return;
 
-    const query = userInput.trim();
-    setChatMessages((prev) => [...prev, { role: 'user', text: query }]);
+    const query = textToSend.trim();
+    const nowTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    setChatMessages((prev) => [...prev, { role: 'user', text: query, time: nowTime }]);
     setUserInput('');
-    setAiTyping(true);
+    setSupportTyping(true);
 
     setTimeout(() => {
       let reply = '';
       const q = query.toLowerCase();
 
       if (q.includes('sni') || q.includes('bug')) {
-        reply = 'Untuk SNI / Bug Host, Anda bisa gunakan domain yang masuk dalam paket kuota internet Anda (contoh: m.youtube.com untuk kuota YouTube, quiz.int.vidio.com untuk Vidio, atau zoom.us). Masukkan domain ini ke kolom SNI saat generate akun atau di aplikasi v2rayNG/HTTP Injector.';
+        reply = 'Untuk SNI / Bug Host, Anda bisa gunakan domain yang masuk dalam paket kuota internet Anda (contoh: m.youtube.com untuk kuota YouTube, quiz.int.vidio.com untuk Vidio, atau zoom.us). Masukkan domain ini ke kolom SNI saat generate akun atau di aplikasi v2rayNG/HTTP Injector/Custom.';
       } else if (q.includes('vless') || q.includes('vmess')) {
         reply = 'V2Ray VMess dan Xray VLESS kami sudah didukung WebSocket Cloudflare CDN dan Port 443 TLS. Untuk import, copy config link vmess:// atau vless:// lalu pilih "Import from Clipboard" di v2rayNG (Android), V2Box (iOS), atau v2rayN (Windows).';
       } else if (q.includes('ssh') || q.includes('payload') || q.includes('ws')) {
         reply = 'Format HTTP WebSocket Payload untuk SSH:\n\nGET / HTTP/1.1[crlf]Host: [host_bug][crlf]Upgrade: websocket[crlf]Connection: Upgrade[crlf]User-Agent: [ua][crlf][crlf]\n\nGanti [host_bug] dengan bug host yang Anda gunakan!';
       } else if (q.includes('game') || q.includes('ping') || q.includes('lag')) {
         reply = 'Untuk gaming online (Mobile Legends, FF, PUBG), kami sangat merekomendasikan server Singapore 🇸🇬 atau Indonesia 🇮🇩 dengan protokol SSH UDP Custom untuk ping terendah (10-30ms) dan anti-disconnect.';
+      } else if (q.includes('reset') || q.includes('kuota') || q.includes('habis')) {
+        reply = 'Kuota akun gratis diperbarui secara berkala sesuai siklus countdown reset server. Jika server penuh hari ini, silakan coba server node lainnya atau tunggu jadwal reset berikutnya!';
       } else {
-        reply = `Terima kasih! Layanan PremDigital TUNNEL menyediakan server gratis 100% dengan proteksi SSL/TLS dan CDN Cloudflare. Anda bisa langsung generate akun di tab Services. Ada hal teknis lain yang ingin ditanyakan?`;
+        reply = `Terima kasih telah menghubungi Live Chat Support! Layanan PremDigital TUNNEL menyediakan server gratis 100% dengan proteksi SSL/TLS dan CDN Cloudflare. Anda bisa langsung generate akun di tab Services. Ada hal teknis lain yang ingin ditanyakan?`;
       }
 
-      setChatMessages((prev) => [...prev, { role: 'assistant', text: reply }]);
-      setAiTyping(false);
-    }, 900);
+      setChatMessages((prev) => [
+        ...prev, 
+        { role: 'assistant', text: reply, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }
+      ]);
+      setSupportTyping(false);
+    }, 850);
+  };
+
+  const handleSendMessage = (e: React.FormEvent) => {
+    e.preventDefault();
+    sendChatMessage(userInput);
   };
 
   if (!isOpen) return null;
@@ -268,7 +280,7 @@ export const ToolsModal: React.FC<ToolsModalProps> = ({ toolId, isOpen, onClose 
             </div>
             <div>
               <h3 className="font-bold text-base sm:text-lg text-white">Network & Tunneling Tools</h3>
-              <p className="text-xs text-purple-300/80">Diagnostics, IP lookup, DNS testing, and AI Assistant</p>
+              <p className="text-xs text-purple-300/80">Diagnostics, IP lookup, DNS testing, and Live Chat Support</p>
             </div>
           </div>
           <button
@@ -289,7 +301,7 @@ export const ToolsModal: React.FC<ToolsModalProps> = ({ toolId, isOpen, onClose 
             { id: 'host-to-ip', label: 'Host to IP', icon: <Server className="w-3.5 h-3.5" /> },
             { id: 'subdomain-finder', label: 'Subdomain Finder', icon: <Search className="w-3.5 h-3.5" /> },
             { id: 'server-status', label: 'Server Status', icon: <Cpu className="w-3.5 h-3.5" /> },
-            { id: 'ai-chat', label: 'Chat With AI', icon: <Bot className="w-3.5 h-3.5" /> },
+            { id: 'ai-chat', label: 'Mr. Predi (Chat)', icon: <MessageSquare className="w-3.5 h-3.5" /> },
           ].map((tab) => (
             <button
               key={tab.id}
@@ -549,53 +561,130 @@ export const ToolsModal: React.FC<ToolsModalProps> = ({ toolId, isOpen, onClose 
             </div>
           )}
 
-          {/* Tool 7: AI Chat */}
+          {/* Tool 7: Live Chat */}
           {activeTab === 'ai-chat' && (
-            <div className="flex flex-col h-[400px]">
+            <div className="flex flex-col h-[460px]">
+              {/* Mr. Predi Agent Top Banner */}
+              <div className="flex items-center justify-between px-3.5 py-2.5 bg-[#120d2d] rounded-2xl border border-purple-500/20 mb-3 shrink-0">
+                <div className="flex items-center gap-2.5">
+                  <div className="relative">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-purple-600 to-indigo-500 flex items-center justify-center text-white shadow-md text-base">
+                      🎩
+                    </div>
+                    <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-[#120d2d]"></span>
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h4 className="text-xs font-bold text-white">Mr. Predi • Virtual Assistant</h4>
+                      <span className="px-1.5 py-0.2 text-[9px] font-bold rounded-full bg-emerald-950 text-emerald-300 border border-emerald-500/30">
+                        ONLINE
+                      </span>
+                    </div>
+                    <p className="text-[10px] text-purple-300/80">PremDigital Tunnel Helpdesk • Siap Bantu 24/7</p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setChatMessages([
+                    {
+                      role: 'assistant',
+                      text: 'Yo halo Kak! Sesi obrolan baru dimulai bareng Mr. Predi. Ada yang mau ditanyakan seputar akun atau bug kuota?',
+                      time: 'Just now'
+                    }
+                  ])}
+                  className="px-2.5 py-1 rounded-lg text-[10px] text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 transition-colors flex items-center gap-1 cursor-pointer"
+                  title="Reset Obrolan"
+                >
+                  <RefreshCw className="w-3 h-3" />
+                  <span>Mulai Ulang</span>
+                </button>
+              </div>
+
+              {/* Quick Topic Chips */}
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-2 mb-2 scrollbar-none text-[11px] shrink-0">
+                <span className="text-[10px] text-slate-400 font-semibold shrink-0">Topik:</span>
+                {[
+                  { label: '💡 Cara Setting SSH WS', query: 'Bagaimana cara setting SSH WebSocket di HTTP Custom / Injector?' },
+                  { label: '⚡ Rekomendasi Game', query: 'Server mana yang paling bagus untuk main game online low ping?' },
+                  { label: '📦 Cara Import V2Ray', query: 'Bagaimana cara import akun VMess dan VLESS ke v2rayNG?' },
+                  { label: '🎯 Setting Bug SNI', query: 'Bagaimana cara setting SNI bug kuota internet?' },
+                ].map((chip, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => sendChatMessage(chip.query)}
+                    disabled={supportTyping}
+                    className="px-2.5 py-1 rounded-lg bg-purple-950/60 hover:bg-purple-900/80 border border-purple-500/30 text-purple-200 whitespace-nowrap transition-all text-xs shrink-0 disabled:opacity-50"
+                  >
+                    {chip.label}
+                  </button>
+                ))}
+              </div>
+
               {/* Messages Box */}
               <div className="flex-1 overflow-y-auto space-y-3 pr-1 mb-3">
                 {chatMessages.map((msg, idx) => (
                   <div
                     key={idx}
-                    className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                    className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}
                   >
+                    <div className="flex items-center gap-1.5 mb-1 px-1 text-[10px] text-slate-400">
+                      {msg.role === 'user' ? (
+                        <span>Anda</span>
+                      ) : (
+                        <div className="flex items-center gap-1 text-purple-300 font-bold">
+                          <span>🎩 Mr. Predi</span>
+                        </div>
+                      )}
+                      {msg.time && <span>• {msg.time}</span>}
+                    </div>
+
                     <div
-                      className={`max-w-[85%] p-3.5 rounded-2xl text-xs sm:text-sm leading-relaxed whitespace-pre-line ${
+                      className={`max-w-[88%] p-3.5 rounded-2xl text-xs sm:text-sm leading-relaxed whitespace-pre-line ${
                         msg.role === 'user'
-                          ? 'bg-purple-600 text-white rounded-br-none shadow-md'
-                          : 'bg-[#120d2c] border border-purple-500/20 text-slate-200 rounded-bl-none shadow-md'
+                          ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-tr-none shadow-md'
+                          : 'bg-[#120d2c] border border-purple-500/30 text-slate-200 rounded-tl-none shadow-md'
                       }`}
                     >
                       {msg.text}
                     </div>
                   </div>
                 ))}
-                {aiTyping && (
-                  <div className="flex justify-start">
-                    <div className="p-3 rounded-2xl bg-[#120d2c] border border-purple-500/20 text-xs text-purple-300 flex items-center gap-2">
-                      <Bot className="w-4 h-4 " />
-                      <span>PremDigital AI is typing...</span>
+
+                {supportTyping && (
+                  <div className="flex flex-col items-start">
+                    <div className="flex items-center gap-1.5 mb-1 px-1 text-[10px] text-purple-300 font-bold">
+                      <span>🎩 Mr. Predi</span>
+                    </div>
+                    <div className="p-3 rounded-2xl bg-[#120d2c] border border-purple-500/30 text-xs text-purple-300 flex items-center gap-2">
+                      <div className="flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-bounce" style={{ animationDelay: '0ms' }}></span>
+                        <span className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-bounce" style={{ animationDelay: '150ms' }}></span>
+                        <span className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-bounce" style={{ animationDelay: '300ms' }}></span>
+                      </div>
+                      <span>Mr. Predi lagi ngetik...</span>
                     </div>
                   </div>
                 )}
               </div>
 
               {/* Chat Input */}
-              <form onSubmit={handleSendMessage} className="flex gap-2">
+              <form onSubmit={handleSendMessage} className="flex gap-2 shrink-0">
                 <input
                   type="text"
                   value={userInput}
                   onChange={(e) => setUserInput(e.target.value)}
-                  placeholder="Tanya soal bug SNI, vmess, vless, atau format payload..."
+                  placeholder="Tanya Mr. Predi soal bug SNI, vmess, atau setting..."
                   className="flex-1 px-4 py-2.5 rounded-xl bg-[#120d2d] border border-purple-500/30 text-white text-xs sm:text-sm focus:outline-none focus:border-purple-400 placeholder-slate-500"
                 />
                 <button
                   type="submit"
-                  disabled={aiTyping || !userInput.trim()}
-                  className="px-4 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs sm:text-sm flex items-center gap-1.5 transition-colors disabled:opacity-50"
+                  disabled={supportTyping || !userInput.trim()}
+                  className="px-4 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs sm:text-sm flex items-center gap-1.5 transition-colors disabled:opacity-50 cursor-pointer"
                 >
                   <Send className="w-3.5 h-3.5" />
-                  <span>Send</span>
+                  <span>Kirim</span>
                 </button>
               </form>
             </div>
