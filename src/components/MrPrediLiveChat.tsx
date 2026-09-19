@@ -368,9 +368,6 @@ export const MrPrediLiveChat: React.FC<MrPrediLiveChatProps> = ({
               <div className="flex items-center gap-2">
                 <h3 className="font-extrabold text-white text-base tracking-wide flex items-center gap-1.5">
                   Mr. Predi
-                  <span className="px-1.5 py-0.2 rounded-full text-[9px] font-extrabold bg-purple-900/90 text-purple-200 border border-purple-400/40">
-                    LIVE AI
-                  </span>
                 </h3>
               </div>
               <p className="text-[11px] text-purple-300/80 flex items-center gap-1">
